@@ -1,0 +1,1985 @@
+/* printerino.com price page, in the Printerino design system: flat ground, borderless cards, Inter alone, colours
+   only in their jobs. The pixel coin icons are the page's own art. */
+/* Inter 4.1 (rsms), a page subset, SIL OFL (fonts/LICENSE-Inter.txt). Weights 400-800 in one variable file, trimmed to
+   the site's characters (tools/font/trim.py). */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/InterVariable-page.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+/* Two grounds, one identity. :root holds the dark master, the default (index.html says data-theme="dark", so the page
+   is dark with no script too); the light paper below restates only what changes, so dark can be proved unchanged.
+   Rules read these role tokens and never a theme selector; the few light rules that are structure, not colour, sit
+   with the light block. */
+:root {
+  color-scheme: dark;
+  --accent-rgb: 133 187 101;   /* #85BB65 fill, badge, mark, edge. Never a figure; the same in both themes */
+  --gain-rgb: 0 194 120;       /* #00C278 a number going up (a figure's ink) */
+  --loss-rgb: 253 75 78;       /* #FD4B4E a number going down, a failure (a figure's ink) */
+  --warn-rgb: 239 164 17;      /* #EFA411 a warning: the notice's edge, the late dot; the same in both themes */
+  --text-rgb: 244 244 246;     /* #F4F4F6 white, never pure */
+  --dim-c: #c7c7ca;
+  --muted-c: #969faf;
+  --faint-c: #777b8c;          /* 4.21:1 on a card */
+  /* The ladder: 0.06 of OKLCH lightness from the ground to a card, enough to read as raised (0.028 read flat). */
+  --surface-0: #0a0b0f;        /* ground */
+  --surface-1: #17181e;        /* card, and every box on the ground */
+  --surface-2: #25262d;        /* a box on a card (the page draws no hairlines) */
+  /* Fills: the brand colours themselves in both themes (a chart's wash, the down dot). */
+  --gain-fill-rgb: 0 194 120;
+  --loss-fill-rgb: 253 75 78;
+  /* What draws a number: the chart's line, candles, wicks and dots. */
+  --gain-line: rgb(0 194 120);
+  --loss-line: rgb(253 75 78);
+  /* A change chip's tint under its figure. */
+  --gain-chip: rgb(0 194 120 / 0.14);
+  --loss-chip: rgb(253 75 78 / 0.14);
+  /* The accent as a word (a link, the chosen segment) and as the headline's word. */
+  --accent-word: rgb(133 187 101);
+  --accent-display: rgb(133 187 101);
+  /* Every focus ring: white at 90%, never a colour that also means a link or a gain. */
+  --focus: rgb(255 255 255 / 0.9);
+  /* Amber as a word (late, stale), as the notice's mark, and the notice's tint. */
+  --warn-word: rgb(239 164 17);
+  --warn-mark: rgb(239 164 17);
+  --notice-bg: rgb(239 164 17 / 0.1);
+  /* The hero's ghost tape, and the lip of light that presses it into paper (none on the dark card). */
+  --tape-ink: rgb(244 244 246 / 0.07);
+  --tape-lip: none;
+  /* Shadows: black on the dark ground. The card shadow at rest is nothing in dark (an empty shadow, so it can share a
+     list with the notice's edge); the lifts are the hover and the panel. The panel lifts off the blur as the paper's
+     does, a broad shadow and a nearer one, both offset down and pulled in, so it floats with its sides clean and
+     nothing reads as a dark rim; the phone sheet casts the paper sheet's shadow up over the blur above it, in black. */
+  --shade-rgb: 0 0 0;
+  --hover-tint: rgb(244 244 246 / 0.022);
+  --hover-light: rgb(244 244 246 / 0.045);
+  /* At rest a dark card is lit from above: 1px of white at 8% along its top, inside it, on whatever stands on the bare
+     ground (cards, the hero, the notice, the panel). Light keeps its shadow. */
+  --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --card-lift: 0 14px 32px -14px rgb(0 0 0 / 0.75), 0 4px 12px -6px rgb(0 0 0 / 0.5);
+  --panel-lift: 0 40px 90px -30px rgb(0 0 0 / 0.7), 0 14px 34px -14px rgb(0 0 0 / 0.5);
+  --sheet-lift: 0 -10px 40px -10px rgb(0 0 0 / 0.5);
+  /* The chart: the wash's strength at its top, the scrub's halo, the waiting line. */
+  --wash-up: 0.24;
+  --wash-down: 0.24;
+  --wash-flat: 0.24;
+  --halo-o: 0.16;
+  --wait-c: rgb(var(--text-rgb) / 0.06);
+  /* The chart's watermark: the lockup as a ghost, white at 5%. */
+  --wm-ink: rgb(244 244 246 / 0.05);
+  /* The phone sheet's grabber: a little capsule you pull. */
+  --grab: rgb(255 255 255 / 0.24);
+  /* Corners. Content is a solid rounded rectangle with a larger continuous corner:
+     cards, the hero and the notice, the panel, the phone sheet's top. Where the browser draws squircles (corner-shape),
+     --sq makes each one 1.6 times the round value, which hugs a round corner of about 0.9 of it with Apple's longer,
+     softer run-in; everywhere else they are round. Small solid tags stay round; the 24h chip is a flat solid capsule.
+     What you press is a capsule, each one concentric with what sits in it (track 15 = segment 13 + 2px of track). */
+  --sq: 1;
+  --r-card: 20px;
+  --r-panel: 32px;
+  --r-sheet: 36px;
+  --r-chip: 999px;             /* the 24h chip: a capsule */
+  --r-tag: 8px;
+  --r-focus: 8px;
+  --r-cap: 14px;
+  --r-track: 15px;
+  --r-seg: 13px;
+  --r-sw: 12px;
+  /* The glass of the controls, on the dark ground: raised glass (the X link; the notice's toggle on paper), a tint laid
+     on a card (the cross; the notice's toggle in the dark), a track pressed in (the segmented controls, the switch),
+     the droplet riding a track, and the light. No ring round any of them: the rim's light lands on the top edge and is
+     gone before the sides. Every shadow is in --shade-rgb. */
+  --g-fill: linear-gradient(180deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.06));
+  --g-contact: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 10px -4px rgb(0 0 0 / 0.4);
+  /* The lift shadow's strength at rest (0 5px 14px -5px) and lifted (0 10px 22px -8px). */
+  --g-a0: 0.6;
+  --g-a1: 0.75;
+  --g-tint: linear-gradient(180deg, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.09));
+  --g-tint-contact: 0 2px 6px -2px rgb(0 0 0 / 0.45);
+  --g-tint-a1: 0.5;
+  /* The glass (see ".glass" below, the one class every pressable carries). Floating over the page its tone is --g-dock,
+     over a blur. On a card or a sheet it has no blur and needs these: its even tone there, the shadow it rests on, and
+     the ink that stands on it (words and glyphs, and the quieter second ink of a small arrow or a footnote button). */
+  --glass-card: rgb(255 255 255 / 0.11);
+  --glass-card-touch: 0 0 transparent;
+  /* What the glass does to what is behind it: the one thing the visitor's frosted / clear switch changes. Frosted (the
+     default) is UIKit's frost (from the numbers read off iOS 26.5): a blur of about 3 on glass the dock's size, about
+     2.4 on the top bar's smaller capsules (--glass-bd-s), and on the dock's bar itself a light 0.93 everywhere
+     (--glass-bd-edge) under a heavier layer that is whole along the bar's middle and half at its edge (--glass-bd-mid;
+     0.93 and 2.84 together make 3). Clear (html.glass-clear, below the .glass block): a blur of 1, as clear glass has
+     there; where the browser can bend (Chromium on a desktop) the rim bends instead. --glass-pill-bd is the resting
+     pill's inside a dock, a switch or a picker, --glass-strip-bd the top bar's strip. */
+  --glass-bd: blur(3px) saturate(1.3);
+  --glass-bd-s: blur(2.4px) saturate(1.3);
+  --glass-bd-edge: blur(0.93px) saturate(1.3);
+  --glass-bd-mid: blur(2.84px);
+  --glass-pill-bd: blur(6px);
+  --glass-strip-bd: blur(14px) saturate(1.4);
+  --glass-ink: rgb(var(--text-rgb));
+  --glass-ink-2: var(--muted-c);
+  /* The glass's light under the pointer and under a press (.glass). */
+  --glass-glow-h: 0.07;
+  --glass-glow-p: 0.16;
+  /* What stands on the floating glass (the dock's chosen word and arrow, the X link's word, the switch's sun and
+     moon), and the plain tone the floating glass turns to when transparency is reduced. */
+  --float-ink: rgb(255 255 255);
+  --float-ink-soft: rgb(255 255 255 / 0.92);
+  --float-ink-dim: rgb(255 255 255 / 0.55);
+  --float-solid: rgb(64 66 73);
+  /* The panel's pickers: their track's tone (the pill is --g-drop-rest). */
+  --picker-track: var(--g-track);
+  --g-track: rgb(255 255 255 / 0.055);
+  --g-track-shadow: inset 0 2px 3px -1px rgb(0 0 0 / 0.24);
+  --g-rim-a: rgb(255 255 255 / 0.15);
+  --g-rim-b: rgb(255 255 255 / 0.025);
+  --g-rim-c: rgb(255 255 255 / 0);
+  --g-rim-d: rgb(255 255 255 / 0);
+  /* No light gathered inside the edge on the dark ground: a blurred inset light runs round every edge and reads as an
+     outline. */
+  --g-vol: 0 0 transparent;
+  --g-glow: 255 255 255;
+  --g-glow-hover: 0.07;
+  --g-glow-press: 0.16;
+  /* The pickers' resting pill: UIKit's own selection tone in the dark, (193, 193, 204) at 0.47 (white at 0.22 would
+     stand at about 91 on the track, where UIKit's stands at about 115). */
+  --g-drop-rest: rgb(193 193 204 / 0.47);
+  --g-drop-lift: rgb(255 255 255 / 0.05);
+  --g-drop-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  --g-drop-lift-shadow: 0 6px 14px -2px rgb(0 0 0 / 0.55);
+  --g-drop-lift-edge: inset 0 1.5px 2px rgb(255 255 255 / 0.12), inset 0 -2px 4px -2px rgb(255 255 255 / 0.1);
+  /* The chosen segment's word is plain ink in both themes: the droplet under it says "chosen" (a green chosen label is
+     not how Apple marks a segment). */
+  --g-on: rgb(var(--text-rgb));
+  /* The top bar's two controls float over the page, so their glass is frosted: this tone lies under each one's face,
+     over a blur of whatever passes beneath. */
+  --g-bar: rgb(23 24 30 / 0.5);
+  --g-dock: rgb(58 60 68 / 0.32);
+  --dock-rim-a: rgb(255 255 255 / 0.5);
+  --dock-rim-b: rgb(255 255 255 / 0.1);
+  --dock-rim-c: rgb(255 255 255 / 0.32);
+  /* The dock's words (all but full strength, the chosen one full; no shadow behind them, as on iOS's own bars) and its
+     resting pill: a fainter, clearer patch of the glass with light on its top edge. */
+  --dock-word: rgb(255 255 255 / 0.96);
+  --dock-pill: rgb(0 0 0 / 0.34);
+  --g-float: rgb(38 40 49 / 0.55);
+  --g-glyph: var(--muted-c);
+  --g-glyph-on: rgb(var(--text-rgb));
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Springs (SwiftUI response/damping) as linear() curves, with --ease fallbacks where linear() is missing. Each
+     linear() string was generated for exactly its duration: never change a -ms value without regenerating it. */
+  --sp-bud: var(--ease);
+  --sp-snappy: var(--ease); --sp-snappy-ms: 300ms;
+  --sp-smooth: var(--ease); --sp-smooth-ms: 500ms;
+  /* A card's hover lift. The script rounds it to the screen's own pixels (3.33px at 1.5x), so a lifted card, and the
+     panel landing in it, move a whole number of device pixels and draw their words as sharply as at rest. */
+  --lift: -3px;
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --sp-bud: linear(0, 0.0352, 0.1217, 0.2358, 0.3604, 0.4837, 0.5981, 0.699, 0.7847, 0.8546, 0.9098, 0.9517, 0.9822, 1.0032, 1.0167, 1.0244, 1.0278, 1.0282, 1.0266, 1.0238, 1.0205, 1.0169, 1.0135, 1.0103, 1.0076, 1.0054, 1.0035, 1.0021, 1.001, 1);
+    --sp-snappy-ms: 400ms;
+    --sp-snappy: linear(0, 0.0051 1.25%, 0.0231 2.75%, 0.0512 4.25%, 0.0936 6%, 0.1358 7.5%, 0.1817 9%, 0.3936 15.5%, 0.494 18.75%, 0.5443 20.5%, 0.5915 22.25%, 0.6705 25.5%, 0.7381 28.75%, 0.7948 32%, 0.8446 35.5%, 0.8844 39%, 0.9211 43.25%, 0.9504 48%, 0.9719 53.25%, 0.9863 59%, 0.9952 65.5%, 0.9999 73.5%, 1.0015 85.75%, 1);
+    --sp-smooth-ms: 620ms;
+    --sp-smooth: linear(0, 0.004 1%, 0.0189 2.25%, 0.0423 3.5%, 0.079 5%, 0.1147 6.25%, 0.1616 7.75%, 0.3629 13.75%, 0.4659 17%, 0.5583 20.25%, 0.5969 21.75%, 0.6387 23.5%, 0.7071 26.75%, 0.7393 28.5%, 0.7684 30.25%, 0.8181 33.75%, 0.8606 37.5%, 0.8995 42%, 0.9294 46.75%, 0.9535 52.25%, 0.9713 58.5%, 0.9835 65.5%, 0.9915 73.75%, 0.996 83.25%, 1);
+  }
+}
+/* The light theme: cool paper, white cards, and every colour the dark one's twin (the colour law: the same
+   hue family, the contrast dark has). Only what differs is restated. */
+:root:not([data-theme="dark"]) {
+  color-scheme: light;
+  /* Words: dark's ground becomes the ink; the greys keep dark's hue and chroma at the contrast dark has. */
+  --text-rgb: 14 15 20;        /* Text #0E0F14: 19.14:1 on a card */
+  --dim-c: #3c3c3e;            /* Dim: 11.01:1 on a card */
+  --muted-c: #656d7c;          /* Muted: AA on the darkest surface it sits on, 5.21:1 on a card */
+  --faint-c: #8f93a5;          /* Faint: 3.05:1 on the panel, the 3:1 class dark Faint meets */
+  /* The paper, the white card, and a box on a card one step down, as dark's Raised is one step up. */
+  --surface-0: #f1f2f6;
+  --surface-1: #ffffff;
+  --surface-2: #f1f2f6;
+  /* Gain and Loss as figures: the brand colour's twin, AA on its own chip (the brand values stay the fills). */
+  --gain-rgb: 2 122 86;        /* Gain Ink #027A56: 4.57:1 on its chip, 5.36:1 on white */
+  --loss-rgb: 210 20 28;       /* Loss Ink #D2141C: 4.52:1 on its chip, 5.44:1 on white */
+  /* The two lines weigh the same: the brand red's 3.34:1 on white. */
+  --gain-line: #02a072;        /* Gain Line, 3.35:1 */
+  --loss-line: #fd4b4e;        /* the brand red itself */
+  --gain-chip: #daf3e2;        /* Gain Ink on it 4.57:1 */
+  --loss-chip: #ffe4e1;        /* Loss Ink on it 4.52:1 */
+  --accent-word: #3e7b22;      /* Green Ink: 4.62:1 on the paper, 5.17:1 on white */
+  --accent-display: #67a34a;   /* Green Display: 3.04:1 on the hero card, 80px weight 800 */
+  --focus: rgb(14 15 20 / 0.9); /* Text at 90%: white would vanish on the paper */
+  --warn-word: #9d6102;        /* Amber Ink: 4.53:1 on the paper, 5.07:1 on white */
+  --warn-mark: #c07d02;        /* Amber Mark: 3.03:1 on the notice */
+  --notice-bg: #fdf0de;        /* Muted on it 4.64:1 */
+  /* Ink at 8.5%, the ratio dark's white at 7% makes, with a lip of light under each stroke: pressed in, not printed. */
+  --tape-ink: rgb(14 15 20 / 0.085);
+  --tape-lip: 0 1px 0 rgb(255 255 255 / 0.9);
+  /* The chart's watermark: ink at 0.65 of the presence dark's white at 5% has (a ghost on paper shouts sooner). */
+  --wm-ink: rgb(14 15 20 / 0.044);
+  /* Shadows in the ink's own blue-grey, never black; no ring round anything (no hairlines). White light on white
+     hardly shows, so a hover is carried by the lift alone. */
+  --shade-rgb: 18 22 38;
+  --hover-tint: transparent;
+  --hover-light: transparent;
+  --card-shadow: 0 1px 2px rgb(18 22 38 / 0.04), 0 10px 24px -14px rgb(18 22 38 / 0.14);
+  --card-lift: 0 20px 40px -18px rgb(18 22 38 / 0.28), 0 6px 14px -8px rgb(18 22 38 / 0.12);
+  --panel-lift: 0 2px 6px rgb(18 22 38 / 0.05), 0 30px 70px -20px rgb(18 22 38 / 0.3);
+  --sheet-lift: 0 -10px 40px -10px rgb(18 22 38 / 0.2);
+  /* The wash keeps 0.7 of dark's presence on white (a large field). */
+  --wash-up: 0.263;
+  --wash-down: 0.258;
+  --wash-flat: 0.209;
+  --halo-o: 0.14;
+  --grab: rgb(18 22 38 / 0.2);
+  /* The glass on paper: white glass with its light inside the top edge and a breath of shade in the bottom one. White
+     light on white hardly shows, so a hover is carried by the lift (16% to 28%). No ring round anything, and no shadow
+     tight enough to draw one: the contact shadow and the track's pressed-in shade are spread wide, so on a 1x screen
+     neither reads as a line under or along the capsule. */
+  --g-fill: linear-gradient(180deg, rgb(255 255 255 / 0.74), rgb(255 255 255 / 0.5));
+  /* --g-line: the half-pixel edge every body of glass carries on paper. One value: the class's bodies take it through
+     --g-contact, the logo's island likewise, and the merged top-bar body (a free shape, no box shadow) draws it itself. */
+  --g-line: rgb(18 22 38 / 0.2);
+  --g-contact: 0 0 0 0.5px var(--g-line), 0 1px 3px rgb(18 22 38 / 0.06);
+  --g-a0: 0.1;
+  --g-a1: 0.28;
+  --g-tint: linear-gradient(180deg, rgb(18 22 38 / 0.045), rgb(18 22 38 / 0.065));
+  --g-tint-contact: 0 0 transparent;
+  --g-tint-a1: 0.18;
+  /* On paper the glass on a card is light with dark ink, as Apple draws its own light screens (the Health and Calendar
+     pictures on Apple's guideline pages: white buttons with dark glyphs, a pale track with a white pill). The dock's
+     grey smoke with white ink reads on these as grey slabs on a white card.
+     The ink and the pickers' track need no line here: they follow the theme's own text colours and track. */
+  --glass-card: rgb(18 22 38 / 0.03);
+  --glass-card-touch: var(--g-contact);
+  --glass-glow-h: 0.55;
+  --glass-glow-p: 0.9;
+  --g-track: rgb(18 22 38 / 0.065);
+  /* The pickers' track on paper: UIKit's segmented track, under its white pill. */
+  --picker-track: rgb(115 115 123 / 0.12);
+  --g-track-shadow: inset 0 3px 5px -3px rgb(18 22 38 / 0.1);
+  --g-rim-a: rgb(255 255 255 / 0.9);
+  --g-rim-b: rgb(255 255 255 / 0.3);
+  --g-rim-c: rgb(255 255 255 / 0);
+  --g-rim-d: rgb(255 255 255 / 0);
+  --g-vol: inset 0 5px 8px -6px rgb(255 255 255 / 1), inset 0 -5px 8px -6px rgb(18 22 38 / 0.07);
+  --g-glow-hover: 0.55;
+  --g-glow-press: 0.9;
+  --g-drop-rest: #ffffff;
+  --g-drop-lift: rgb(255 255 255 / 0.3);
+  --g-drop-shadow: 0 1px 1px rgb(18 22 38 / 0.06), 0 2px 6px rgb(18 22 38 / 0.11);
+  --g-drop-lift-shadow: 0 8px 18px -4px rgb(18 22 38 / 0.26);
+  --g-drop-lift-edge: inset 0 0 6px -1px rgb(18 22 38 / 0.12), inset 0 -3px 5px -3px rgb(255 255 255 / 1);
+  --g-bar: rgb(255 255 255 / 0.55);
+  /* On paper the floating glass is light glass with dark ink, as Apple's own apps draw it in the light appearance (on
+     iOS, Health's "Add Data"). A grey smoke with white words, as on Safari's address bar, is Safari's own look, not the
+     system's. Its tone is a pale frost that lands on the same grey as the glass on a card (about 241 over white), so
+     the dock, the top bar and the buttons are one family on paper as they are in the dark; its rim is white light, its
+     chosen pill a slightly darker patch.
+     Measured off an iPhone (Health in the light appearance, its tab bar and round buttons):
+     Apple's light glass is a strong white frost, about 248 over white and about 243 over a 211 grey, inside a hair-fine
+     darker edge (a third to two thirds of a point, 10 to 30% black) with next to no drop shadow. So the tone is a
+     near-white four fifths strong, the edge a half-pixel ring in the contact shadow (--g-contact on paper), and the
+     lift shadow is light. */
+  --g-dock: rgb(248 248 250 / 0.82);
+  --dock-rim-a: rgb(255 255 255 / 0.95);
+  --dock-rim-b: rgb(255 255 255 / 0.45);
+  --dock-rim-c: rgb(255 255 255 / 0.8);
+  --dock-word: rgb(14 15 20 / 0.9);
+  --dock-pill: rgb(18 22 38 / 0.11);
+  --float-ink: rgb(var(--text-rgb));
+  --float-ink-soft: var(--dim-c);
+  --float-ink-dim: var(--muted-c);
+  --float-solid: var(--surface-1);
+  --g-float: rgb(255 255 255 / 0.66);
+}
+/* Light structure, not colour: thin dark type on paper is drawn without the subpixel boldening, and the pixel coins sit
+   on the paper like tokens, each with a contact shadow. */
+:root:not([data-theme="dark"]) body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+:root:not([data-theme="dark"]) .icon { filter: drop-shadow(0 1px 1px rgb(var(--shade-rgb) / 0.16)) drop-shadow(0 3px 6px rgb(var(--shade-rgb) / 0.1)); }
+:root:not([data-theme="dark"]) .cd-icon { filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
+/* A theme change lands in one frame: the transitions it sets off (colours, the switch) finish at once, so nothing is
+   seen half way between the two grounds. Motion already running keeps its own timing. The script sets .swap for two
+   frames. */
+html.swap *, html.swap *::before, html.swap *::after { transition-duration: 0s !important; transition-delay: 0s !important; }
+*, ::before, ::after { box-sizing: border-box; }
+/* The gutter stays reserved, so the page never shifts sideways as its height changes. Whatever the keyboard brings into
+   view stops clear of the floating top bar. Under the chart panel the page's scroll is locked: a classic scrollbar
+   (Windows, Linux, a Mac with a mouse) goes, and app.js pads the page by its width instead, so nothing moves and the
+   blur covers the whole window, its right edge too. */
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; background: var(--surface-0); scrollbar-gutter: stable; scroll-padding-top: 64px; }
+html.cd-lock { overflow: hidden; scrollbar-gutter: auto; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--surface-0);
+  color: rgb(var(--text-rgb));
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  font-feature-settings: 'cv01', 'cv03', 'cv04', 'cv09';
+  font-optical-sizing: none;
+}
+h1, h2, p, ol, dl, dd { margin: 0; }
+h1, h2 { font: inherit; }
+img, svg { display: block; }
+a { color: inherit; text-decoration: none; }
+::selection { background: rgb(var(--accent-rgb) / 0.35); color: rgb(var(--text-rgb)); }
+:where(a, button):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+/* A link: the accent word, underlined only on hover. */
+.link { color: var(--accent-word); text-underline-offset: 4px; }
+.link:hover { text-decoration-line: underline; }
+
+/* ---- liquid glass, on the things you press ----
+   The X link, the theme switch, the panel's cross and segmented controls and the notice's toggle are glass capsules;
+   nothing else is. Each draws its glass on its own two layers, in CSS alone, so it is there from the first paint:
+     ::before  the body: its face, the light gathered inside its top edge, its contact and lift shadows, and the
+               pointer's light (--g-l, a glow at --g-mx --g-my);
+     ::after   the rim: light landing on the top edge and gone before the sides (an even ring would be a hairline),
+               turned toward the pointer by --g-la.
+   No frost on a control that sits on a solid surface (a blur of its own would show nothing and cost a layer); the two
+   in the top bar float over the page, so those two are frosted (see the top bar). The motion only ever writes those custom
+   properties (and --g-bt, --g-h, the transform) and clears them at rest; without it a hover lights the glass and a
+   press gives a little, from here. */
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg) {
+  position: relative; isolation: isolate; background: none; -webkit-tap-highlight-color: transparent;
+  /* Raised glass on the ground, unless a rule below makes it a tint or a track. */
+  --g-face: var(--g-fill); --g-touch: var(--g-contact); --g-volume: var(--g-vol); --g-lift0: var(--g-a0); --g-lift1: var(--g-a1);
+}
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::before,
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  transform: var(--g-bt, none);
+}
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::before {
+  background:
+    radial-gradient(circle closest-corner at var(--g-mx, 50%) var(--g-my, 30%), rgb(var(--g-glow) / var(--g-l, 0)), rgb(var(--g-glow) / calc(0.35 * var(--g-l, 0))) 45%, rgb(var(--g-glow) / 0)),
+    var(--g-face);
+  box-shadow: var(--g-volume), var(--g-touch),
+    0 5px 14px -5px rgb(var(--shade-rgb) / calc(var(--g-lift0) * (1 - var(--g-h, 0)))),
+    0 10px 22px -8px rgb(var(--shade-rgb) / calc(var(--g-lift1) * var(--g-h, 0)));
+}
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::after {
+  padding: 1px;
+  background: linear-gradient(var(--g-la, 150deg), var(--g-rim-a), var(--g-rim-b) 30%, var(--g-rim-c) 55%, var(--g-rim-d));
+}
+/* The rim's shape, the controls' and the droplets': a 1px ring (the box less its content box) kept along the top only,
+   whole on the top edge and gone 3.5px down, before 45 degrees round a corner. However the pointer turns the light, it
+   never runs down an end (a crescent round a capsule's end reads as an outline, as an even ring does). */
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .seg-ind, .theme-switch .drop)::after {
+  -webkit-mask: linear-gradient(180deg, #000 1px, transparent 3.5px), linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: source-in, xor, source-over;
+  mask: linear-gradient(180deg, #000 1px, transparent 3.5px) intersect, linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* A tint laid on what it sits on, lifted on a shadow: only the dock's round button still starts from this (its own rule
+   makes it the dock's glass). */
+.cd-x { --g-face: var(--g-tint); --g-touch: var(--g-tint-contact); --g-lift0: 0; --g-lift1: var(--g-tint-a1); }
+/* A track, pressed into what it sits on: no light inside, no lift, no rim. */
+.seg, .theme-switch { --g-face: var(--g-track); --g-touch: var(--g-track-shadow); --g-volume: 0 0 transparent; --g-lift0: 0; --g-lift1: 0; }
+.seg::after, .theme-switch::after { display: none; }
+/* The panel's two pickers keep a plain track, as iOS draws its own segmented control (an even fill, no shade pressed
+   into it), under the lighter pill that turns to glass while it is dragged. */
+.cd-ctrl .seg { --g-touch: 0 0 transparent; --g-face: var(--picker-track); }
+
+/* ---- .glass: the one class for everything you press, so every update stays consistent ----
+   The dock is the reference; every pressable carries this class and draws the same material from the same few lines:
+     the body    an even tone, with the pointer's faint light and a soft light under a press;
+     the rim     light on the top edge only, gone 3.5px down, brightest at the left;
+     the ink     white on the dark glass, dark on paper's light glass (the tokens say which).
+   .glass alone is the glass on a card or a sheet (the hero's links, the panel's circles and its Copy image capsule,
+   the notice's toggle): the same material with no lift shadow.
+   .glass.float is the glass over the page (the dock's bar and its round button, the top bar's switch and X link): the
+   same tone over a 5px blur, lifted on the dock's shadow. The logo's island and the body the top bar's two controls
+   merge into are drawn from the same tokens (--g-dock and the rim below).
+   To change the material everywhere, change it here or in its tokens (--g-dock, --glass-card, --glass-ink, --dock-rim-*).
+   A control's own rule holds only its size, shape and place. The panel's two pickers are not .glass: they are Apple's
+   plain picker (a track and a pill), see ".cd-ctrl .seg". */
+.glass { --g-volume: 0 0 transparent; --g-glow-hover: var(--glass-glow-h); --g-glow-press: var(--glass-glow-p); }
+.glass:not(.float) { --g-face: linear-gradient(var(--glass-card), var(--glass-card)); --g-touch: var(--glass-card-touch); --g-lift0: 0; --g-lift1: 0; }
+.glass.float { --g-face: linear-gradient(transparent, transparent); --g-bar: var(--g-dock); --g-touch: var(--g-contact); --g-lift0: var(--g-a0); }
+.glass.float::before {
+  background:
+    radial-gradient(circle closest-corner at var(--g-mx, 50%) var(--g-my, 30%), rgb(var(--g-glow) / var(--g-l, 0)), rgb(var(--g-glow) / calc(0.35 * var(--g-l, 0))) 45%, rgb(var(--g-glow) / 0)),
+    var(--g-face),
+    linear-gradient(var(--g-bar), var(--g-bar)),
+    linear-gradient(color-mix(in srgb, var(--surface-0) var(--g-solid, 0%), transparent), color-mix(in srgb, var(--surface-0) var(--g-solid, 0%), transparent));
+}
+/* Frosted or clear (the visitor's switch): one rule for every body of glass on the page. The glass on a card and the
+   panel's two pickers take it too, so everything is matched; only the chart panel and the coins stay out, they are not
+   this glass. */
+.glass::before, .cd-ctrl .seg::before, .logo-glass, .top-blob > i { -webkit-backdrop-filter: var(--glass-bd); backdrop-filter: var(--glass-bd); }
+/* The top bar's capsules, the body they merge into and the logo's island are small glass: the lighter frost. */
+.top .glass, .logo-glass, .top-blob > i { --glass-bd: var(--glass-bd-s); }
+/* The dock's bar: the light frost on its body, the heavier one on a layer of its own (index.html's .dock-frost),
+   whole along the bar's middle and half at its top and bottom edge. It swells and is cut with the body. */
+.seg-show::before { -webkit-backdrop-filter: var(--glass-bd-edge); backdrop-filter: var(--glass-bd-edge); }
+.dock-frost {
+  position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  transform: var(--g-bt, none); clip-path: var(--dock-cut, none);
+  -webkit-backdrop-filter: var(--glass-bd-mid); backdrop-filter: var(--glass-bd-mid);
+  -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.5), #000 50%, rgb(0 0 0 / 0.5)); mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.5), #000 50%, rgb(0 0 0 / 0.5));
+}
+.seg-ind > b, .theme-switch .drop > b { -webkit-backdrop-filter: var(--glass-pill-bd); backdrop-filter: var(--glass-pill-bd); }
+html.glass-clear { --glass-bd: blur(1px) saturate(1.3); --glass-bd-s: blur(1px) saturate(1.3); --glass-bd-edge: blur(1px) saturate(1.3); --glass-bd-mid: none; --glass-pill-bd: none; --glass-strip-bd: saturate(1.4); }
+/* Frosted glass in the dark is the lighter of the two: a pale smoke over the blur, about the contrast to the page that
+   a tab bar has on iOS, so the bands under the dock's lifted pill stand out as they do there. Clear glass keeps the
+   dark smoke. It is the one floating tone, so the dock, its round button, the top bar's capsules, the body they merge
+   into and the logo's island all take it together, as they must match. The glass on a card or a sheet takes the same
+   tone (the hero's links, the panel's circles and its Copy image capsule, the notice's toggle), and the pickers' track
+   UIKit's own segmented track, (117, 117, 130) at 0.24, which lands on the same level (all of them are glass, so all of
+   them follow the switch, not the floating ones alone). The quiet ink on that glass turns to white at 72% with it: the
+   muted grey stood at 4:1 or under on the paler tone (the notice's toggle), white at 72% stands above 5:1. Dark theme
+   only: on paper the glass is already near white. */
+html:not(.glass-clear)[data-theme="dark"] { --g-dock: rgb(150 152 164 / 0.36); --glass-card: var(--g-dock); --picker-track: rgb(117 117 130 / 0.24); --glass-ink-2: rgb(255 255 255 / 0.72); }
+.glass::after, .logo-glass::after {
+  display: block; padding: 1px;
+  background: linear-gradient(135deg, var(--dock-rim-a), var(--dock-rim-b) 34%, var(--dock-rim-b) 62%, var(--dock-rim-c));
+  -webkit-mask: linear-gradient(180deg, #000 1px, transparent 3.5px), linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: source-in, xor, source-over;
+  mask: linear-gradient(180deg, #000 1px, transparent 3.5px) intersect, linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+@media (hover: hover) {
+  :is(.xlink, .hlink, .cd-x, .notice-more):hover { --g-l: var(--g-glow-hover); --g-h: 1; }
+}
+:is(.xlink, .hlink, .cd-x, .notice-more):active { --g-l: var(--g-glow-press); }
+/* The droplet: the chosen segment's pill and the switch's, the one piece of glass that travels. At rest it is a pill of
+   brighter glass (b); lifted (--g-e: a tap, a drag, its speed) it turns to a clear lens (u) on a deeper shadow (i), its
+   rim brightening. */
+:is(.seg-ind, .theme-switch .drop) > :is(i, b, u) { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+:is(.seg-ind, .theme-switch .drop) > i { box-shadow: var(--g-drop-lift-shadow); opacity: var(--g-e, 0); }
+:is(.seg-ind, .theme-switch .drop) > b { background: var(--g-drop-rest); box-shadow: var(--g-drop-shadow); opacity: calc(1 - 0.5 * var(--g-e, 0) - 0.45 * var(--g-k, 0)); }
+:is(.seg-ind, .theme-switch .drop) > u { background: var(--g-drop-lift); box-shadow: var(--g-drop-lift-edge); opacity: var(--g-e, 0); }
+:is(.seg-ind, .theme-switch .drop)::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(150deg, var(--g-rim-a), var(--g-rim-b) 30%, var(--g-rim-c) 55%, var(--g-rim-d));
+  opacity: calc(0.5 + 0.5 * var(--g-e, 0));
+}
+/* Lifted (glass.js sets .lifted while it is), the droplet's clear glass frosts what it passes over a little: the one
+   blur a control ever has, and only while it moves or is held. */
+:is(.seg-ind, .theme-switch .drop).lifted > u { -webkit-backdrop-filter: blur(0.5px) saturate(140%); backdrop-filter: blur(0.5px) saturate(140%); }
+/* Chromium: a magnifier over the words while a droplet is lifted, 3px inside it so the seam where the bending stops
+   falls under its rim (glass.js builds its filter, places and sizes it). */
+.drop-lens { position: absolute; left: 0; top: 0; z-index: 2; display: none; pointer-events: none; transform-origin: 0 0; }
+.drop-lens.on { display: block; }
+/* With glass.js in (html.glass-on) the controls' motion is its springs: their own press scale and its quick transition
+   give way (the X link keeps the top bar's slide), and a droplet can be dragged along its track by a finger (a vertical
+   pan still scrolls the page; the labels never select, a long press never opens the callout). */
+/* (Not the dock's round button: its coming and going is the stylesheet's own transition. Reaching it, this rule would
+   outrank its resting rule, so it would grow in on a spring but vanish at once.) */
+html.glass-on :is(.cd-x:not(.totop), .notice-more) { transition: none; }
+html.glass-on .xlink { transition: translate 240ms var(--ease); }
+html.glass-on :is(.xlink, .cd-x, .notice-more):active { transform: none; }
+html.glass-on :is(.seg, .theme-switch) { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* The glyph a change chooses answers (glass.js): the sun's rays turn about its middle, the core and the moon about
+   their own. */
+.theme-glyph * { transform-box: fill-box; transform-origin: center; }
+.theme-sun .sun-rays { transform-box: view-box; transform-origin: 8px 8px; }
+/* The page's one SVG of filter definitions (the lenses glass.js builds): off screen, never undisplayed. */
+svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+
+/* ---- top bar: it floats ----
+   The bar stays at the top as the page scrolls under it. Its controls float; under them one soft strip of the page's
+   own ground over a deep blur comes in over the first 24px of scroll (no line under the bar): a scroll edge, so the
+   coins and prices are seen passing under the bar, softened, and fade out below it. The logo stays bare on it; the
+   switch and the X link are frosted glass. Over the first 48px the bar slims: the strip rises 8px, and the logo (down to 0.9) and the controls rise
+   4px, so they stay centred on it. Only transforms and opacity, so a scroll never lays anything out. The strip spans
+   the window; the bar's contents keep the page's column (16px in, and centred past 2560px). */
+.top {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 56px;
+  padding-block: 0;
+  padding-inline: max(16px, env(safe-area-inset-left), (100% - 2560px) / 2 + 16px) max(16px, env(safe-area-inset-right), (100% - 2560px) / 2 + 16px);
+  background: transparent;
+}
+/* The strip is a scroll edge, not a bar: the page's ground at about three fifths over a deep blur, so what scrolls
+   under the bar is still seen passing, softened, and the bare logo stays readable over it. Its three strengths are
+   registered, so they can ease (the theme change below). */
+@property --bar-a1 { syntax: '<percentage>'; inherits: false; initial-value: 62%; }
+@property --bar-a2 { syntax: '<percentage>'; inherits: false; initial-value: 56%; }
+@property --bar-a3 { syntax: '<percentage>'; inherits: false; initial-value: 28%; }
+.top::before {
+  content: ''; position: absolute; inset: 0 0 -24px; z-index: -1; pointer-events: none; opacity: 0;
+  --bar-a1: 62%; --bar-a2: 56%; --bar-a3: 28%;
+  /* Safari before 16.2 has no color-mix() and would drop the line below: this plain ground keeps the strip there. */
+  background: linear-gradient(180deg, var(--surface-0), var(--surface-0) 60%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-0) var(--bar-a1), transparent), color-mix(in srgb, var(--surface-0) var(--bar-a2), transparent) 60%, color-mix(in srgb, var(--surface-0) var(--bar-a3), transparent) 80%, color-mix(in srgb, var(--surface-0) 0%, transparent));
+  -webkit-backdrop-filter: var(--glass-strip-bd); backdrop-filter: var(--glass-strip-bd);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent); mask-image: linear-gradient(180deg, #000 60%, transparent);
+  transition: --bar-a1 260ms var(--ease), --bar-a2 260ms var(--ease), --bar-a3 260ms var(--ease);
+}
+/* A browser that cannot blur what is behind keeps the strip all but solid: crisp words under the logo would fight it. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .top::before { --bar-a1: 95%; --bar-a2: 92%; --bar-a3: 46%; } }
+/* The bar's two controls are frosted glass: each blurs what passes under it and lays --g-bar and then its own face on
+   that. The switch keeps its track's tone, as a picture so it can lie over --g-bar. */
+/* They are the dock's material: a tone a third strong over a 5px blur, a fine line of light all round, and the switch's
+   knob the same darker, softer patch as the dock's pill. */
+.top .theme-switch .drop > b { background: var(--dock-pill); box-shadow: none; }
+/* What stands on that glass: the X link's mark and word, the sun and the moon (white in the dark, ink on paper). */
+.top > .xlink { color: var(--float-ink-soft); --g-glyph-on: var(--float-ink); }
+.top > .xlink:hover { color: var(--float-ink); }
+.top > .theme-switch { --g-glyph: var(--dock-word); --g-glyph-on: var(--float-ink); }
+.top .lockup { transform-origin: left center; }
+@keyframes bar-strip { to { opacity: 1; } }
+@keyframes bar-strip-up { to { translate: 0 -8px; } }
+@keyframes bar-logo { to { scale: 0.9; translate: 0 -4px; } }
+@keyframes bar-lift { to { translate: 0 -4px; } }
+/* The page's own scroll drives it (nothing runs at rest). animation-timeline comes after the shorthand, which resets
+   it. With reduced motion only the strip fades in. */
+@supports (animation-timeline: scroll()) {
+  .top::before {
+    animation: bar-strip linear both, bar-strip-up linear both;
+    animation-timeline: scroll(root), scroll(root);
+    animation-range: 0 24px, 0 48px;
+  }
+  .top .lockup { animation: bar-logo linear both; animation-timeline: scroll(root); animation-range: 0 48px; }
+  .top > :is(.seg-glass, .theme-switch, .xlink) { animation: bar-lift linear both; animation-timeline: scroll(root); animation-range: 0 48px; }
+  @media (prefers-reduced-motion: reduce) {
+    .top::before { animation: bar-strip linear both; animation-timeline: scroll(root); animation-range: 0 24px; }
+    .top .lockup, .top > :is(.seg-glass, .theme-switch, .xlink) { animation: none; }
+  }
+}
+/* Without scroll timelines the script sets html.scrolled once the page is 4px down, and these transitions do the rest.
+   With scripting off nothing can bring the strip in, so there the bar scrolls away with the page instead of floating
+   over the words with no ground under it. */
+@supports not (animation-timeline: scroll()) {
+  @media (scripting: none) { .top { position: relative; } }
+  .top::before { transition: opacity 240ms var(--ease), translate 240ms var(--ease), --bar-a1 260ms var(--ease), --bar-a2 260ms var(--ease), --bar-a3 260ms var(--ease); }
+  .top .lockup { transition: scale 240ms var(--ease), translate 240ms var(--ease); }
+  .top > :is(.seg-glass, .theme-switch) { transition: translate 240ms var(--ease); }
+  html.scrolled .top::before { opacity: 1; translate: 0 -8px; }
+  html.scrolled .top .lockup { scale: 0.9; translate: 0 -4px; }
+  html.scrolled .top > :is(.seg-glass, .theme-switch, .xlink) { translate: 0 -4px; }
+  @media (prefers-reduced-motion: reduce) {
+    html.scrolled .top::before { translate: none; }
+    html.scrolled .top .lockup { scale: none; translate: none; }
+    html.scrolled .top > :is(.seg-glass, .theme-switch, .xlink) { translate: none; }
+  }
+}
+/* ---- the merge: the glass switch, the theme switch and the X link flow into one body as the page scrolls ----
+   Behind the three controls lies one more piece of frosted glass, cut to a shape that changes with the scroll: at the
+   top of the page it is the three capsules as they stand (and unseen), and over the first 120px each grows while a
+   bridge runs between each pair, the way two drops touch, until they are one capsule.
+   The shape is 24 frames in a sprite (tools/glass/m): the mask of the frost (i), the light on its top edge (b), and the
+   same mask in ink, blurred, as its shadow (u). Over the first 20px the X link's own body gives way to it; the switch
+   keeps its track inside it. The page's own scroll steps the frames until glass.js arrives (html.blob-js); from then a
+   spring follows the scroll, so the body lags and settles like liquid, and in Chromium on a desktop its rim truly bends
+   what passes under it (m-lens.png).
+   Only where the browser has scroll timelines, the window holds the X link's word, and motion is welcome; everywhere
+   else the two controls stay as they are. The X link is 116px wide there, the width the frames were drawn for. */
+.top-blob { display: none; }
+@keyframes blob-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes blob-out { to { opacity: 0; } }
+@keyframes blob-step { to { -webkit-mask-position: 0 100%; mask-position: 0 100%; } }
+@keyframes blob-rim { to { background-position: 0 100%; } }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 360px) {
+    .top .xlink { width: 116px; padding: 0; justify-content: center; }
+    .top-blob {
+      display: block; position: absolute; z-index: -1; top: 8px; width: 268px; height: 40px; pointer-events: none;
+      right: calc(max(16px, env(safe-area-inset-right), (100% - 2560px) / 2 + 16px) - 6px);
+      animation: bar-lift linear both; animation-timeline: scroll(root); animation-range: 0 48px;
+    }
+    .top-blob > :is(u, i, b), .top-blob > u > s { position: absolute; inset: 0; }
+    .top-blob > i {
+      background: var(--g-dock);
+    }
+    .top-blob > i, .top-blob > u > s {
+      -webkit-mask: url(/glass/m-mask.png) 0 0 / 100% 2400% no-repeat; mask: url(/glass/m-mask.png) 0 0 / 100% 2400% no-repeat;
+      animation: blob-in linear both, blob-step steps(23) both; animation-timeline: scroll(root), scroll(root); animation-range: 0 20px, 12px 120px;
+    }
+    /* Its shadow is the dock's own (0 5px 14px -5px at --g-a0), made from the body's shape: 5px down, drawn in 5px a
+       side (the spread), blurred by half the 14px, at the dock's strength. 4px down under a 6px blur with no spread, at
+       0.22 on paper against the dock's 0.1, it would be a wide grey band under the bar that the dock and the three
+       capsules at the top of the page never have. */
+    .top-blob > u { inset: 0; translate: 0 5px; scale: calc(258 / 268) 0.75; filter: blur(7px); opacity: var(--g-a0); }
+    .top-blob > u > s { background: rgb(var(--shade-rgb)); }
+    /* Its edge on paper: the half-pixel line of --g-contact that the logo's island and every capsule carry there, so
+       the body reads as a shape on a white page without a drawn outline (with only the dock's faint shadow it all but
+       vanishes beside the logo's island). A ring just outside the body, cut by glass.js each frame; not drawn in the
+       dark, where --g-contact has no line either. */
+    .top-blob > em { display: none; position: absolute; inset: -1px; background: var(--g-line, transparent); }
+    html.blob-js .top-blob > em { display: block; opacity: var(--blob-o, 0); }
+    .top-blob > b {
+      background: url(/glass/m-rim.png) 0 0 / 100% 2400% no-repeat; opacity: 0;
+      animation: blob-rim-in linear both, blob-rim steps(23) both; animation-timeline: scroll(root), scroll(root); animation-range: 0 20px, 12px 120px;
+    }
+    .top > :is(.xlink, .theme-switch, .seg-glass)::before, .top > :is(.xlink, .theme-switch, .seg-glass)::after { animation: blob-out linear both; animation-timeline: scroll(root); animation-range: 0 20px; }
+    /* glass.js drives it from here on: the frame (--blob-f, 0 to 23) and how far the body has come in (--blob-o). */
+    /* From here glass.js cuts the body's shape itself (a clip path it works out per frame), not the mask: WebKit does
+       not cut a backdrop blur to a mask, so on iOS the blur shows as a rectangle behind the body. A clip path cuts the
+       blur in every engine. */
+    html.blob-js .top-blob > i, html.blob-js .top-blob > u > s { animation: none; opacity: var(--blob-o, 0); -webkit-mask: none; mask: none; }
+    /* Until glass.js arrives WebKit has no way to cut the blur, so there the two controls simply stay as they are. */
+    html.wk:not(.blob-js) .top-blob { display: none; }
+    html.wk:not(.blob-js) .top > :is(.xlink, .theme-switch, .seg-glass)::before, html.wk:not(.blob-js) .top > :is(.xlink, .theme-switch, .seg-glass)::after { animation: none; }
+    html.blob-js .top-blob > b { animation: none; opacity: calc(var(--blob-o, 0) * var(--blob-rim, 0.5)); background-position: 0 calc(var(--blob-f, 0) * 100% / 23); }
+    html.blob-js .top > :is(.xlink, .theme-switch, .seg-glass)::before, html.blob-js .top > :is(.xlink, .theme-switch, .seg-glass)::after { animation: none; opacity: calc(1 - var(--blob-o, 0)); }
+  }
+}
+@keyframes blob-rim-in { from { opacity: 0; } to { opacity: var(--blob-rim, 0.5); } }
+:root:not([data-theme="dark"]) .top-blob { --blob-rim: 0.95; }
+/* The logo's island: once the page has moved, the logo stands in a capsule of the same clear glass (40px, the merged
+   body's height), which comes in by growing a little as it clears, and the logo steps 10px in to sit in its middle.
+   Only with scroll timelines and where motion is welcome; elsewhere the logo stays bare on the scroll edge. */
+.logo-glass { display: none; }
+@keyframes logo-glass-in { to { opacity: 1; scale: 1; } }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .logo-glass {
+      display: block; position: absolute; z-index: -1; top: 8px; width: 131px; height: 40px; border-radius: 20px; pointer-events: none;
+      left: calc(max(16px, env(safe-area-inset-left), (100% - 2560px) / 2 + 16px) - 4px);
+      background: var(--g-dock);
+      box-shadow: var(--g-contact), 0 5px 14px -5px rgb(var(--shade-rgb) / var(--g-a0));
+      opacity: 0; scale: 0.9; transform-origin: 24% 50%;
+      animation: bar-lift linear both, logo-glass-in linear both; animation-timeline: scroll(root), scroll(root); animation-range: 0 48px, 4px 36px;
+    }
+    .logo-glass::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+    .top .lockup { animation-name: bar-logo-in; }
+    /* With the logo in its island and both controls in glass, nothing in the bar stands bare over the page, so the blur
+       strip under the bar has no job here and is not drawn (it would smear the headline in a wide band): the page
+       passes under clear glass, as it does under the Photos bar. Where the islands are not drawn (no scroll timelines,
+       reduced motion), the strip stays, since the logo is bare there. */
+    .top::before { display: none; }
+  }
+}
+@keyframes bar-logo-in { to { scale: 0.9; translate: 10px -4px; } }
+.lockup { width: auto; height: 29px; flex: none; }
+/* The logo for each ground (brand/logo): the white word on dark, the ink word on paper. The one not drawn is out of the
+   layout and of the accessibility tree. */
+.lockup-ink { display: none; }
+:root:not([data-theme="dark"]) .lockup-white { display: none; }
+:root:not([data-theme="dark"]) .lockup-ink { display: block; }
+/* The glass switch: frosted or clear, for every body of glass on the page at once. It stands 10px left of the theme
+   switch: the two are the page's appearance settings and sit together, the broader and more familiar one (light or
+   dark) nearer the edge, this finer one a step further in; the X link, the bar's one way out, keeps the edge. It is a
+   two-segment picker of the house kind (a track of the floating glass, the dock's darker patch for the chosen one, a
+   droplet that moves as the dock's does), the theme switch's own size: 60 by 28, two 28px cells. Frosted is a ring with
+   a hatch across it, clear a ring with one glint. Once the page has moved it flows into the one body with the theme
+   switch and the X link (the merge above).
+   Without JavaScript there is nothing to switch, so it is not drawn. */
+/* (.seg.seg-glass, doubled: the segmented controls' own rules come later in this file.) */
+.seg.seg-glass { flex: none; grid-auto-columns: 28px; padding: 2px; margin: 0 -6px 0 auto; border-radius: var(--r-cap); }
+.seg.seg-glass button { height: 24px; border-radius: var(--r-sw); color: var(--dock-word); }
+.seg.seg-glass button:hover, .seg.seg-glass button[aria-pressed="true"] { color: var(--float-ink); }
+.seg.seg-glass svg { display: block; margin: auto; }
+.seg.seg-glass .seg-ind { width: 28px; height: 24px; border-radius: var(--r-sw); }
+.seg.seg-glass .seg-ind > b { background: var(--dock-pill); box-shadow: none; }
+/* The theme switch, 10px left of the X link: a glass track with the sun and the moon in it, and the droplet over the
+   chosen one. aria-checked says dark; until the script has wired it up (.ready) the theme the boot script set decides,
+   so the first frame is already right. Without JavaScript there is nothing to switch, so it is not drawn. */
+.theme-switch {
+  flex: none; width: 60px; height: 28px; margin: 0 -6px 0 0; padding: 0;
+  border: 0; border-radius: var(--r-cap); color: var(--g-glyph);
+  -webkit-appearance: none; appearance: none; font: inherit; cursor: pointer;
+  touch-action: manipulation;
+}
+.theme-switch .drop {
+  position: absolute; left: 0; top: 0; width: 32px; height: 24px; border-radius: var(--r-sw); pointer-events: none;
+  transform: translate(2px, 2px);
+}
+.theme-switch[aria-checked="true"] .drop, :root[data-theme="dark"] .theme-switch:not(.ready) .drop { transform: translate(26px, 2px); }
+.theme-glyph {
+  position: absolute; top: 6px; z-index: 1; width: 16px; height: 16px; overflow: visible; pointer-events: none;
+  color: var(--g-glyph); transition: color 220ms var(--ease);
+}
+.theme-sun { left: 10px; }
+.theme-moon { left: 34px; }
+.theme-switch[aria-checked="false"] .theme-sun, .theme-switch[aria-checked="true"] .theme-moon { color: var(--g-glyph-on); }
+:root[data-theme="dark"] .theme-switch:not(.ready) .theme-sun { color: var(--g-glyph); }
+:root[data-theme="dark"] .theme-switch:not(.ready) .theme-moon { color: var(--g-glyph-on); }
+@media (hover: hover) { .theme-switch:hover .theme-glyph { color: var(--g-glyph-on); } }
+@media (scripting: none) { .theme-switch, .seg-glass { display: none; } }
+/* The X link: a raised glass capsule, the mark in Text and the name a Dim readout. A press leans after the finger
+   (glass.js), so the link is never torn out from under it by a native drag; it still opens, copies and shares. */
+.xlink {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  height: 28px; padding: 0 12px 0 11px; border-radius: var(--r-cap); color: var(--dim-c);
+  font-size: 12px; font-weight: 500; letter-spacing: -0.005em; line-height: 1; white-space: nowrap;
+  -webkit-user-drag: none;
+  transition: transform 90ms var(--ease), translate 240ms var(--ease);
+}
+.xlink svg { color: var(--g-glyph-on); }
+@media (hover: hover) { .xlink:hover { color: rgb(var(--text-rgb)); } }
+.xlink:active { transform: scale(0.97); }
+/* Under 360px the bar cannot hold the logo, the switch and the X link's word: the X link keeps its mark alone, a 28px
+   circle (its aria-label still names it). */
+/* A phone or a narrow window: the logo is its mark alone (to make room for the glass switch). The same picture, the
+   lockup itself, shown as far as the mark and no further (22 of its 114px; the word begins at 27), so the mark is the
+   very drawing, size and place it has beside its word. Its island is a circle then, and the mark steps 6px in to sit in
+   its middle. The name stays in the picture's own text for a screen reader. */
+@media (max-width: 639px) {
+  .top .lockup { width: 22px; object-fit: cover; object-position: 0 50%; }
+  .logo-glass { width: 40px; }
+  @keyframes bar-logo-in { to { scale: 0.9; translate: 6px -4px; } }
+}
+@media (max-width: 359px) {
+  .top .xlink { width: 28px; padding: 0; gap: 0; justify-content: center; }
+  .top .xlink > span { display: none; }
+}
+
+/* ---- page column ---- */
+/* Very wide 1x screens (ultrawide, 4K at 100%): the page stops at 2560px and centres (the top bar spans the window and
+   keeps its contents in the same column). */
+.page, .foot { max-width: 2560px; margin-inline: auto; }
+.page { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px 0; }
+/* Continuous corners where the browser supports them (Chromium 139 on, and the WebKit tested here, Safari 26.6 in
+   Playwright; the feature is detected, never the engine): content takes the squircle at 1.6 times its round
+   radius (--sq), and every layer that copies a box's radius copies its shape too, as corner-shape is not inherited.
+   Capsules stay true stadiums. Everywhere else the round values hold. */
+@supports (corner-shape: squircle) {
+  :root { --sq: 1.6; }
+  .card, .hero, .empty, .notice, .cd-bg, .cd-shade { corner-shape: squircle; }
+  .js-cards .card::before, .js-cards .card::after, .cd-bg::before, .cd-lift, .cd-shade > span, .cd-edge, .notice::before,
+  :is(.seg-ind, .theme-switch .drop) > :is(i, b, u) { corner-shape: inherit; }
+}
+
+/* ---- hero ---- */
+.hero { position: relative; overflow: hidden; container-type: inline-size; border-radius: calc(var(--r-card) * var(--sq)); background: var(--surface-1); box-shadow: var(--card-shadow); }
+.hero-in { position: relative; padding: 67px 44px 72px; }
+/* The vw size comes first: a browser without container units drops the cqw line and keeps it. */
+/* Whole pixels down the page: a browser draws text on whole pixels but a box wherever it falls, so a capsule that
+   starts at a fraction of a pixel has its digits half a pixel off its middle, in some rows and not in others. The
+   fractions come from five line heights (the headline's and the subtitle's here, a card's symbol, name and stat values,
+   the capsule's own): each is a whole number of pixels, so the grid and every card start on a whole pixel. */
+.headline { font-size: clamp(40px, 5.6vw, 80px); font-size: clamp(40px, 6cqw, 80px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; line-height: round(1.05em, 1px); text-wrap: balance; }
+.accent { color: var(--accent-display); }
+/* The headline's W leans in as it falls (its left side runs about 20px right), so the eye reads it as indented against
+   a straight edge: the lede steps right by 0.05em of headline (4px at 80px) to sit under it. vw first, as above. */
+.lede {
+  max-width: 560px; margin-top: 4px;
+  margin-left: calc(0.05 * clamp(40px, 5.6vw, 80px) - 0.1em); margin-left: calc(0.05 * clamp(40px, 6cqw, 80px) - 0.1em);
+  font-size: calc(0.26 * clamp(40px, 5.6vw, 80px)); font-size: max(16px, calc(0.26 * clamp(40px, 6cqw, 80px)));
+  font-weight: 500; letter-spacing: -0.012em; color: var(--muted-c); line-height: 1.3; line-height: round(1.3em, 1px); text-wrap: balance;
+}
+/* The ghost tape runs behind the card in five rows laid out on the hero's own height (not on its type size, which
+   shrinks with the window while the hero does not): BTC's row is cut by the top edge and only the tops of the fourth
+   row (MET, MU) show above the bottom one, at every width, a strip passing behind the card, cropped on both sides. */
+.tape {
+  position: absolute; top: -0.3em; bottom: -13%; right: 44px;
+  display: none; grid-template-columns: auto auto; grid-template-rows: repeat(5, 1fr); align-items: start; column-gap: 0.96em;
+  font-size: 50px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums;
+  color: var(--tape-ink); text-shadow: var(--tape-lip); white-space: nowrap; pointer-events: none; -webkit-user-select: none; user-select: none;
+}
+.tape > :nth-child(even) { text-align: right; }
+.tape > .stk { display: none; }
+@container (min-width: 1280px) { .tape { display: grid; } }
+/* Room for the stock column beside the crypto one. The tape then shrinks with the hero so it always ends about 40px
+   clear of the headline ("I love beautiful things.", 812px wide at its 80px cap), even when every change has two
+   digits ("-23.45%"): the full tape is 17.4em wide, so (hero width - 940px) / 17.4 is the largest size that fits, and
+   it reaches the 36px floor at 1566px. Below that the crypto column alone (7.4em at 50px) clears it from 1280px. */
+@container (min-width: 1566px) {
+  .tape { grid-template-columns: auto auto auto auto; font-size: clamp(36px, calc(5.747cqw - 54px), 50px); }
+  .tape > .stk { display: block; }
+  .tape > .stk:nth-child(4n+3) { margin-left: 0.96em; }
+}
+
+/* The hero's ratio: the headline and its line are one block (about 95px), the capsules sit that block's height below it
+   (96px) and low in the card, 80px under its top edge and 72px over its bottom. On phones the gap is about 52px. The
+   links to the other tools: true glass capsules (corners at half the height), 44px tall as Apple's touch targets are, a
+   tint laid on the hero card like the panel's cross. */
+.hero-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 90px; margin-left: calc(0.05 * clamp(40px, 5.6vw, 80px)); margin-left: calc(0.05 * clamp(40px, 6cqw, 80px)); }
+.hlink {
+  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px 0 22px; border-radius: 22px;
+  color: var(--glass-ink); font-size: 15px; font-weight: 600; letter-spacing: -0.012em; line-height: 1; white-space: nowrap; text-decoration: none;
+  -webkit-user-drag: none; transition: transform 90ms var(--ease);
+}
+.hlink svg { width: 11px; height: 11px; color: var(--glass-ink-2); }
+.hlink:active { transform: scale(0.97); }
+.hlink:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* ---- picks row ---- */
+/* It labels the grid, not the hero, so it sits close to the cards (10px) and well clear of the hero (28px): nearness
+   does the grouping, no line. */
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-top: 12px; margin-bottom: -6px; }
+/* The status line is a readout, not a control: plain text on the ground like the credit beside it, no box. */
+.status { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; height: 28px; color: var(--muted-c); white-space: nowrap; }
+.dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--faint-c); }
+.dot.live { background: rgb(var(--accent-rgb)); }
+.dot.late { background: rgb(var(--warn-rgb)); }
+/* Three pulses to catch the eye, then it rests: nothing runs forever on an idle page. */
+.dot.down { background: rgb(var(--loss-fill-rgb)); animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 3; }
+.status-key { flex: none; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; line-height: 1; text-transform: uppercase; }
+/* A dot stands between the label and its value, with the row's own 8px either side, so the line reads as two parts
+   ("LIVE PRICES", then how fresh they are) and not as one run of words. Not drawn while there is no value yet. */
+.status-sep { flex: none; font-size: 12px; line-height: 1; color: var(--faint-c); }
+/* The same dot between the two values ("sorted by market cap" and the age), with the same 8px either side. Both go on a
+   phone (.wide), where the line is the key and the age. */
+.status-dot { margin: 0 8px; color: var(--faint-c); }
+@media (max-width: 639px) { .status-sep:has(+ .status-val .upd[hidden]), .status-sep:has(+ .status-val #updated:empty) { display: none; } }
+.status-val { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; letter-spacing: -0.005em; font-variant-numeric: tabular-nums; }
+.d { color: var(--dim-c); }
+.age { display: inline-block; min-width: 3ch; text-align: right; }
+/* Empty until the script runs: with JavaScript off the status line shows no endless "loading". */
+.upd:has(#updated:empty) { display: none; }
+#updated.late { color: var(--warn-word); }
+#updated.down { color: rgb(var(--loss-rgb)); }
+.credit { font-size: 11px; color: var(--muted-c); }
+
+/* ---- coin grid ---- */
+.grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; }
+.card { display: flex; flex-direction: column; min-width: 0; padding: 20px; border-radius: calc(var(--r-card) * var(--sq)); background: var(--surface-1); box-shadow: var(--card-shadow); }
+.head { display: flex; align-items: center; gap: 12px; }
+.icon { width: 48px; height: 48px; flex: none; image-rendering: auto; }
+
+/* ---- a card opens its chart (the script adds .js-cards; without JavaScript there are no cards to click) ----
+   The lift moves the individual translate property and the press the scale property, so neither ever fights the
+   re-rank's transform. The hover tint and the shadow are drawn once on two layers and only their opacity moves. */
+/* No grey tap flash: iOS draws it on the element that listens for the click, which is the grid (and, open, the glass).
+   A card answers a tap at once, never held back for a double-tap zoom. */
+.js-cards { -webkit-tap-highlight-color: transparent; }
+.js-cards .card {
+  position: relative; isolation: isolate; cursor: pointer; touch-action: manipulation;
+  transition: translate var(--sp-smooth-ms) var(--sp-smooth), scale var(--sp-snappy-ms) var(--sp-snappy);
+}
+.js-cards .card::before, .js-cards .card::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: 0; pointer-events: none;
+  transition: opacity 240ms var(--ease);
+}
+/* The hover surface is --hover-tint: in dark, white at 2.2% over the card (#191A20); on paper it is transparent and the
+   lift alone carries the hover. No rim of light on top: no hairlines. */
+/* The dark card also carries a soft light where the pointer is (--hover-light, at most 4.5% white; app.js writes --c-mx
+   and --c-my): a fine pointer only, and nothing on paper, where light on white would not show. */
+.js-cards .card::before { background: radial-gradient(240px circle at var(--c-mx, 50%) var(--c-my, 0%), var(--hover-light, transparent), transparent 72%), var(--hover-tint); }
+.js-cards .card::after { box-shadow: var(--card-lift); }
+@media (hover: hover) and (pointer: fine) {
+  .js-cards .card:hover { translate: 0 var(--lift); transition: translate var(--sp-snappy-ms) var(--sp-snappy), scale var(--sp-snappy-ms) var(--sp-snappy); }
+  .js-cards .card:hover::before { opacity: 1; transition-duration: 160ms; }
+  .js-cards .card:hover::after { opacity: 1; transition-duration: 200ms; }
+}
+/* After :hover, so a press keeps the lift and gives a little. */
+.js-cards .card.pressed { scale: 0.98; transition: translate var(--sp-snappy-ms) var(--sp-snappy), scale 120ms var(--ease); }
+/* While the panel is open no card lifts, so the close lands on a card at rest. The card it came from is hidden, but
+   still takes a click while the panel flies back into it (a reopen). */
+.grid.cd-open .card { translate: none; scale: none; }
+.grid .card.is-source { opacity: 0; }
+/* While the flying panel is on its card (the first moments of an open, the last of a close), the card shows only its
+   shadows, under its neighbours as at rest; its face and words are the panel's (app.js fades it in and out). */
+.grid .card.is-source.handing { background: transparent; }
+.grid .card.is-source.handing > *, .js-cards .card.is-source.handing::before { visibility: hidden; }
+/* As the panel flies home into its card (.landing), that card, still hidden, takes its lift if the pointer is over it,
+   and the flying card takes the same lift on the same spring, from the same frame, with the hover surface and the
+   card's own hover shadow (.cd-shade-lift): it lands exactly where and as the card rests, lifted or not, so nothing
+   moves or changes once it is down. Without :has() the flight lands on the card at rest and the lift follows. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  @supports selector(:has(*)) {
+    .grid.cd-open .card.landing:hover { translate: 0 var(--lift); }
+    .cd-panel { transition: translate var(--sp-smooth-ms) var(--sp-smooth); }
+    :root:has(.card.landing:hover) .cd-panel.morphing { translate: 0 var(--lift); transition: translate var(--sp-snappy-ms) var(--sp-snappy); }
+    :root:has(.card.landing:hover) .cd-panel.morphing .cd-bg::before { opacity: 1; transition-duration: 160ms; }
+    :root:has(.card.landing:hover) dialog.cd.closing .cd-panel.morphing .cd-shade-lift { opacity: 1; transition-duration: 200ms; }
+  }
+}
+/* The symbol is a real button (keyboard and screen readers), drawn as plain text; its focus ring goes round the card. */
+.card-open {
+  display: block; margin: 0; padding: 0; border: 0; background: none; -webkit-appearance: none; appearance: none;
+  font: inherit; letter-spacing: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.card-open:focus-visible { outline: none; }
+.card:has(.card-open:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+@supports not selector(:has(*)) { .card-open:focus-visible { outline: 2px solid var(--focus); } }
+/* The coin: the script tilts it toward the pointer, and a glint crosses it once per hover, cut to the icon's own pixels
+   (the icon is the glint's mask, set from the script). */
+.coin { position: relative; display: block; flex: none; }
+.glint, .cd-glint {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+/* The pixel-art shine: a broad stripe and a thin one, hard-edged like the art, adding light to whatever colour they cross. */
+.glint-band {
+  position: absolute; inset: 0 -20%; transform: translateX(-130%); mix-blend-mode: plus-lighter;
+  background: linear-gradient(118deg, rgb(255 255 255 / 0) 36%, rgb(255 255 255 / 0.42) 37.5%, rgb(255 255 255 / 0.42) 46%, rgb(255 255 255 / 0) 47.5%, rgb(255 255 255 / 0) 52%, rgb(255 255 255 / 0.3) 53.5%, rgb(255 255 255 / 0.3) 56%, rgb(255 255 255 / 0) 57.5%);
+}
+/* ---- the coins sealed in glass ----
+   Every coin sits under a small clear dome. .coin-lens carries the coin's art and its pixel glint through #coin-lens
+   (index.html's svg.fx-defs): a crystal over the face that bends nothing, so the art is drawn pixel for pixel, and a
+   meniscus at the edge that squeezes the coin's outline into a smooth glass circle in its own outline colour, a little
+   darker under the thick rim. .coin-spec is the dome's surface: an empty overlay whose filter draws one light reflected
+   in it, added to the colours under it as light is (plus-lighter). On paper .coin-shade, an ink disc the glass's size,
+   casts the coin's contact shadow (a drop-shadow after the lens would be cut square by WebKit). The script switches the
+   glass on (html.coin-glass) once the maps have decoded, after the first paint; until then, and in a browser the glass
+   was not made for, each coin is its plain art. At rest it is drawn once and kept: only a coin under the pointer or a
+   finger and the panel's coin get a light of their own (#coin-spec-a, -b, -p), and only while it moves. */
+.coin-lens { position: relative; display: block; width: 100%; height: 100%; }
+/* The dome (a card's coin): the lens and its reflection together, the parts of the glass that are the same in either
+   theme, so a theme change in WebKit can hold them as one still picture (glass.js). It is the coin's own box. */
+.coin-dome { position: relative; display: block; }
+.coin-spec, .coin-shade { display: none; position: absolute; inset: 0; pointer-events: none; }
+/* Where the lens is off the art's disc is 0.969 of the coin's box and its outline a staircase: the reflection sits
+   inside it. Where the lens runs, the glass edge is the box (the pixelated blocks below and in the panel's rules). */
+.coin-spec { inset: 2%; }
+.coin-shade { border-radius: 50%; background: rgb(var(--shade-rgb)); }
+html.coin-glass .coin-spec { display: block; filter: url(#coin-spec); mix-blend-mode: plus-lighter; }
+html.coin-glass .coin-lens { filter: var(--coin-lens-card, none); }
+html.coin-glass .cd-coin .coin-lens { filter: var(--coin-lens-panel, none); }
+html.coin-glass .cd-coin .coin-spec { filter: url(#coin-spec-p); }
+/* Nothing of the glass may paint outside the round coin: some GPUs spread a filter's faint light (the reflection is
+   added with plus-lighter) over the element's whole square box, a lit square round the coin on a dark panel. A circle
+   clip runs after the filter and before the blend, in every engine; the reflection's box can be inset 2%, hence 2px. */
+html.coin-glass .coin-lens { clip-path: circle(calc(50% + 1px) at 50% 50%); }
+html.coin-glass .coin-spec { clip-path: circle(calc(50% + 2px) at 50% 50%); }
+/* WebKit: the lens and the reflection each get a layer of their own, drawn once (and app.js sets every coin on whole
+   CSS pixels: off them, WebKit draws a filter's maps off the element's own content). */
+html.wk.coin-glass :is(.coin-lens, .coin-spec) { will-change: transform; }
+/* Until a coin's art has arrived its glass casts no shadow and holds no light (app.js, artWait): on paper the shadow's
+   ink disc alone would read as a black coin. Above every theme and screen rule for the two. */
+html.coin-glass .wait-art :is(.coin-shade, .coin-spec) { display: none !important; }
+/* The panel's coin flying from or to a card whose coin has no lens (a smoothly scaled card coin: a 1x or 3x desktop
+   screen) is that card's coin while it shows its back in the flip (app.js sets .as-card from the moment it is edge on),
+   so it leaves the card and lands in it looking as the card's coin does, with no change at either hand-off. */
+html.coin-glass .cd-coin.as-card .coin-lens { filter: var(--coin-lens-card, none); }
+.cd-coin.as-card .coin-spec { inset: 2%; }
+/* Its art is scaled as the card's is: smoothly, but where the card's is pixelated (the block below). */
+.cd-coin.as-card .cd-icon { image-rendering: auto; }
+:root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .cd-icon { filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
+:root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .coin-shade { display: none; }
+/* The art is a 96-cell grid. Pixelated scaling only where every art cell gets a whole number of device pixels (the 48px
+   icon at 2x and 4x), and on a 3x phone, where a cell is one or two device pixels and the difference is too small to
+   see at that density; anywhere else the browser's smooth scaling keeps every cell the same size, where pixelated
+   would drop rows of the art (1x) or draw some cells visibly wider than others (1.5x). The
+   glass's lens runs on exactly these screens (there are no cells to bend in a smoothly scaled coin), with its
+   reflection on the glass edge and, on paper, its own contact shadow in place of the art's. Each dppx test has its
+   -webkit-device-pixel-ratio twin beside it, the same exact test for Safari before 16 (iOS 15), which has no
+   resolution feature; so do the panel's and the sheet's below. */
+@media (min-width: 640px) and (resolution: 2dppx), (min-width: 640px) and (-webkit-device-pixel-ratio: 2),
+  (min-width: 640px) and (resolution: 4dppx), (min-width: 640px) and (-webkit-device-pixel-ratio: 4),
+  (max-width: 639px) and (resolution: 2dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 2),
+  (max-width: 639px) and (resolution: 3dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 3) {
+  .icon, .cd-coin.as-card .cd-icon { image-rendering: pixelated; }
+  :root { --coin-lens-card: url(#coin-lens); }
+  .grid .coin-spec, .cd-coin.as-card .coin-spec { inset: 0; }
+  :root.coin-glass:not([data-theme="dark"]) .grid .icon, :root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .cd-icon { filter: none; }
+  :root.coin-glass:not([data-theme="dark"]) .grid .coin-shade { display: block; filter: drop-shadow(0 1px 1px rgb(var(--shade-rgb) / 0.16)) drop-shadow(0 3px 6px rgb(var(--shade-rgb) / 0.1)); }
+  :root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .coin-shade { display: block; }
+}
+.id { display: flex; flex-direction: column; min-width: 0; }
+/* A block, like its twin in the panel (an h2): both boxes are then the whole 25.5px line, so the close, which lines up
+   the boxes, lines up the words too (an inline span's box would be the glyphs' 20.6px, 2px lower than the h2's). */
+.sym { display: block; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; line-height: 26px; }
+.name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 16px; color: var(--muted-c); }
+.price { margin-top: 20px; font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* The capsule's digits stand in the capsule's middle (centred as a box they would sit 0.6px above it, the font's own
+   ascent being four times its descent). The capsule is 23px tall for that (a 14px line in 4.5px of padding): its
+   baseline falls exactly 16px down, which leaves the 8.85px digits 7.15 above and 7 below. The key beside it shares
+   their baseline, so the row is one line of text however the pieces differ in size. */
+.move { display: flex; align-items: baseline; gap: 8px; margin-top: 12px; }
+.chg {
+  display: inline-flex; align-items: center; padding: 4.5px 9px; border-radius: var(--r-chip);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em; line-height: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;
+  color: var(--muted-c); background: var(--surface-2);
+}
+/* The plus and the minus sit on the digits' own middle (the font's case-sensitive forms): as the font draws them for
+   lowercase text they hang about 1px low beside figures, the plus most of all, so a gain would read lower than a loss
+   (the digits themselves are at the same height in both). The page's own alternates are kept. */
+.chg, .cd-abs, .tape { font-feature-settings: 'cv01', 'cv03', 'cv04', 'cv09', 'case'; }
+.chg.gain { color: rgb(var(--gain-rgb)); background: var(--gain-chip); }
+.chg.loss { color: rgb(var(--loss-rgb)); background: var(--loss-chip); }
+.chg-key { font-size: 12px; letter-spacing: -0.005em; color: var(--muted-c); }
+/* Side by side with no rule between them: each figure hangs under its own word, and the air between the columns does
+   the separating. */
+.stats { display: flex; column-gap: 24px; margin-top: 16px; }
+.stats > div { flex: 1 1 0; min-width: 0; }
+.stats dt { font-size: 12px; letter-spacing: -0.005em; color: var(--muted-c); }
+.stats dd { margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 20px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--dim-c); }
+.unknown, .stats dd.unknown { color: var(--muted-c); }
+.card.stale .price { color: var(--muted-c); }
+.card.stale .chg { color: var(--muted-c); background: var(--surface-2); }
+.card.stale .chg-key { color: var(--warn-word); }
+
+/* ---- empty grid (no coins, or no JavaScript) ---- */
+.empty { padding: 40px; border-radius: calc(var(--r-card) * var(--sq)); background: var(--surface-1); box-shadow: var(--card-shadow); text-align: center; color: var(--muted-c); }
+.empty-title { color: rgb(var(--text-rgb)); }
+.empty-body { margin-top: 4px; }
+
+/* ---- the chart panel: a native modal dialog over the Control Center blur ---- */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* Drawn only while open, or while its close plays out (.closing): a display value on a closed dialog would show it. */
+/* overflow: clip, not hidden: the dialog must never scroll (focusing the panel's body would scroll a hidden-overflow
+   dialog and lift the phone sheet off its place); hidden stays as the fallback. */
+dialog.cd {
+  position: fixed; inset: 0; z-index: 50; width: auto; height: auto; max-width: none; max-height: none;
+  margin: 0; padding: 32px; border: 0; background: none; color: inherit; overflow: hidden; overflow: clip; overscroll-behavior: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+dialog.cd[open], dialog.cd.closing { display: grid; place-items: center; }
+/* The close animation runs on a dialog that has already closed: the page under it takes clicks again at once. */
+dialog.cd.closing { pointer-events: none; }
+dialog.cd::backdrop { background: transparent; }
+dialog.cd:focus { outline: none; }
+/* The backdrop, as iOS draws Control Center over whatever is behind it. No sheet, no frame, no outline.
+   Measured on an iPhone (iOS 27: Control Center pulled down over the home screen, over Health, and over this very
+   page in both themes, which gave known shapes and colours to measure against):
+     the blur     about 8 points. One of this page's 32pt coins reads 27 to 28pt wide at half its height there, which a
+                  blur of 7 to 8 gives; at a blur of 24 to 28 it would read about 65. So shapes stay
+                  readable as soft shapes: a card is still a card, a row of text a soft bar;
+     the dimming  hard, the same over a dark page and a light one: this page's white comes out near 96 of 255 and its
+                  dark card near 20, so everything is taken to about 37% of itself and lifted by about 11;
+     the colour   a little under its own strength, never lifted.
+   The recipe is a token (--veil-f, and the haze --veil-tint) so the painted copy of the material (glass.js) reads the
+   same numbers; saturation comes last (Chromium clamps after each filter step and WebKit does not, and with saturate
+   at the end both draw the same picture). Only its opacity ever moves, a compositor crossfade between the sharp page
+   and the blurred one. Nothing that makes a backdrop root (opacity, filter, mask, clip-path, will-change) may sit on
+   the dialog, or the veil would blur an empty layer. */
+.cd-veil {
+  position: fixed; inset: 0;
+  --veil-f: blur(10px) brightness(0.37) saturate(90%);
+  --veil-tint: rgb(120 120 128 / 0.09);
+  /* Plain glass (no backdrop filter, reduced transparency, more contrast): a solid ground, darker than the panel by more
+     than the material is lighter, so the panel still stands off it with no edge. */
+  --veil-solid: rgb(6 7 10);
+  /* A device that could not keep up, until (or unless) the material is painted: the window faintly, under a tint. */
+  --veil-lite: rgb(8 9 13 / 0.9);
+  -webkit-backdrop-filter: var(--veil-f); backdrop-filter: var(--veil-f);
+  background: var(--veil-tint);
+}
+/* Paper gets the same backdrop: Control Center dims a light page just as hard as a dark one (this page's paper under it
+   comes out a mid grey, near 96), so the white panel stands on grey, not on bright frost. Only the plain grounds differ
+   (what the backdrop is where it cannot be filtered). */
+:root:not([data-theme="dark"]) .cd-veil {
+  --veil-solid: rgb(96 97 99);
+  --veil-lite: rgb(96 97 99 / 0.92);
+}
+/* A phone's coins and words are smaller: the blur there is the 8 points measured on iOS; a desktop's larger cards take
+   a little more for the same softness. */
+@media (max-width: 639px), (pointer: coarse) and (max-height: 500px) {
+  .cd-veil { --veil-f: blur(8px) brightness(0.37) saturate(90%); }
+}
+/* No pulse under the glass: it would make the compositor re-blur the window every frame. */
+html.cd-lock .dot.down { animation: none; }
+/* Where the live blur cannot or should not run: a browser without backdrop-filter gets the solid ground, a device that
+   could not keep up (.lite) the lite tint. Either way glass.js paints the same material once, a few frames into the
+   open, into a small canvas (.veil-paint) laid over the window (.painted), and nothing is filtered per frame. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .cd-veil { background: var(--veil-solid); } }
+.cd-veil.lite { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--veil-lite); }
+.cd-veil > .veil-paint { display: none; }
+.cd-veil.painted { -webkit-backdrop-filter: none; backdrop-filter: none; background: none; }
+.cd-veil.painted > .veil-paint { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Plain glass, asked for: reduced transparency, or more contrast (Apple's Increase Contrast makes its own materials
+   opaque too). The solid ground, painted or not. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .cd-veil, .cd-veil.lite, .cd-veil.painted { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--veil-solid); }
+  .cd-veil.painted > .veil-paint { display: none; }
+  .cd-panel .cd-bg { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* The panel: centred by the grid (whole pixels, crisp text), never by a -50% translate. Its card is a surface of its
+   own (.cd-bg) that grows out of the price card; the words never scale, they fly to their places. Content is solid in
+   both themes: the same card on the Control Center blur, crisp white on the light frost and the dark Card on the dark
+   one, with the same corner, the same lift and no edge: it stands off the blur by its tone and its lift. */
+.cd-panel { position: relative; width: min(960px, 100%); }
+/* The panel is solid, not a sheet of glass: the page behind is the blurred backdrop, so glass on top of it would have
+   nothing sharp to show and only lay uneven colour behind the candles. A chart reads best on a calm ground. The rules
+   below that keep the card solid in special cases say what the panel always is. */
+.cd-bg {
+  position: absolute; inset: 0; transform-origin: 0 0; border-radius: calc(var(--r-panel) * var(--sq));
+  background: var(--surface-1);
+}
+.cd-veil:is(.lite, .painted) ~ .cd-panel .cd-bg { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .cd-bg { background: var(--surface-1); } }
+/* Its shadows and the card's hover surface are layers of their own, so only their opacity ever moves. While it flies it
+   is, in turn, the card and the panel, and it casts the shadow of whichever it is: the panel's lift (.cd-lift), or the
+   card's own shadow at rest (.cd-shade-rest) and its hover lift (.cd-shade-lift), crossfading over the open and the
+   close (app.js), so it leaves a card and lands on one exactly as that card is drawn at rest, hovered or not. The
+   card's shadows sit on a box the card's size, scaled by the script to the surface's box (.cd-shade), so at the card's
+   size they are the card's own, not the panel's shrunk. */
+.cd-bg::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: var(--hover-tint); opacity: 0; transition: opacity 240ms var(--ease); }
+.cd-lift { position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--panel-lift); pointer-events: none; }
+.cd-shade { position: absolute; left: 0; top: 0; transform-origin: 0 0; border-radius: calc(var(--r-card) * var(--sq)); pointer-events: none; }
+.cd-shade > span { position: absolute; inset: 0; border-radius: inherit; opacity: 0; }
+.cd-shade-rest { box-shadow: var(--card-shadow); background: var(--surface-1); }
+.cd-shade-lift { box-shadow: var(--card-lift); transition: opacity 240ms var(--ease); }
+/* An edge in the accent at 45%: drawn only when more contrast is asked for (Apple's Increase Contrast outlines its own
+   surfaces the same way), the one place an edge is the viewer's choice, not the design's. */
+.cd-edge { display: none; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.45); pointer-events: none; }
+@media (prefers-contrast: more) { .cd-edge { display: block; } }
+
+.cd-grab { display: none; }
+.cd-body {
+  position: relative; max-height: calc(100vh - 64px); max-height: calc(100dvh - 64px); overflow: auto; overscroll-behavior: contain; padding: 28px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 22px;
+  grid-template-areas: "coin main tr" "coin main ctrl" "chart chart chart" "stats stats stats" "src src src";
+}
+/* While the card flies in, its parts start outside this box. */
+.cd-panel.morphing .cd-body { overflow: visible; }
+/* A narrow window: the controls get a row of their own over the chart, so the header keeps its width for the price and
+   the chip row (beside the controls they would have about 60px at 640px). The phone sheet below sets its own order.
+   (963px is set by the pickers' width.) */
+@media (max-width: 963px) {
+  .cd-body { grid-template-areas: "coin main tr" "ctrl ctrl ctrl" "chart chart chart" "stats stats stats" "src src src"; }
+  .cd-tr { align-self: start; }
+  .cd-ctrl { margin-top: 20px; }
+}
+/* The words that fly from the card scale (the price) from their top left corner. */
+.cd-main .sym, .cd-main .name, .cd-price, .cd-chg, .cd-key, .cd-stats > div { transform-origin: 0 0; }
+/* A close nudges each of them by under half a pixel (left, top), so its words land on the card's pixels. */
+.cd-panel.morphing :is(.cd-main .sym, .cd-main .name, .cd-price, .cd-chg, .cd-key, .cd-stats > div) { position: relative; }
+/* A zero-size box on the first baseline, there for one measurement. */
+.cd-probe { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
+/* Its own group: the glass's reflection is a blend, and a blend loose in the dialog would make Chromium draw the whole
+   dialog as one isolated group, whose veil would then blur an empty layer instead of the page. */
+.cd-coin { grid-area: coin; position: relative; width: 96px; height: 96px; transform-origin: 50% 50%; isolation: isolate; }
+.cd-tilt { position: relative; width: 100%; height: 100%; }
+.cd-icon { width: 100%; height: 100%; image-rendering: auto; }
+/* The same rule for the 96px panel coin (and the coin that flies into it, the same image): one device pixel a cell at
+   1x, two at 2x, so pixelated at whole screen scales; at 1.25x or 1.5x it is scaled smoothly. The sheet sets its own.
+   The glass's lens runs where the art is pixelated, as on the cards. */
+@media (resolution: 1dppx), (-webkit-device-pixel-ratio: 1), (resolution: 2dppx), (-webkit-device-pixel-ratio: 2),
+  (resolution: 3dppx), (-webkit-device-pixel-ratio: 3), (resolution: 4dppx), (-webkit-device-pixel-ratio: 4) {
+  .cd-icon { image-rendering: pixelated; }
+  :root { --coin-lens-panel: url(#coin-lens); }
+  .cd-coin .coin-spec { inset: 0; }
+  :root.coin-glass:not([data-theme="dark"]) .cd-coin .cd-icon { filter: none; }
+  :root.coin-glass:not([data-theme="dark"]) .cd-coin .coin-shade { display: block; filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
+}
+/* The two white sparkle stars every icon has baked in, measured from the 192px art: an 18px plus centred at (35, 37) and
+   a 10px plus centred at (153, 149), arms 2px thick. These twins sit exactly on them and twinkle. */
+.cd-star {
+  position: absolute; opacity: 0; pointer-events: none;
+  background: linear-gradient(#fff, #fff) center / 100% var(--arm) no-repeat, linear-gradient(#fff, #fff) center / var(--arm) 100% no-repeat;
+}
+.cd-star::before {
+  content: ''; position: absolute; inset: -70%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.12) 55%, rgb(255 255 255 / 0));
+}
+.cd-star-a { left: 13.5417%; top: 14.5833%; width: 9.375%; height: 9.375%; --arm: 11.1111%; }
+.cd-star-b { left: 77.0833%; top: 75%; width: 5.2083%; height: 5.2083%; --arm: 20%; }
+/* White light on white paper does not show: where a twinkle reaches past the coin onto the panel, a breath of ink round
+   its arms lets it read (the glow is soft, so the ink casts next to nothing). */
+:root:not([data-theme="dark"]) .cd-star { filter: drop-shadow(0 0 0.5px rgb(var(--shade-rgb) / 0.5)); }
+.cd-main { grid-area: main; min-width: 0; align-self: start; }
+.cd-main .id { padding-top: 2px; }
+.cd-main .name { white-space: nowrap; }
+/* Relative: the script keeps its left edge on a whole device pixel (a nudge under half a pixel). */
+.cd-price { position: relative; margin-top: 14px; font-size: 44px; }
+/* One line at every width (the script lets the dollar move give way where it would not fit), so a scrub rewriting it
+   never changes the header's height. */
+/* Its three pieces share one baseline, as a card's row does (centred as boxes, the 13px dollar change stands 0.75px
+   under the 12px digits beside it, a clear pixel or two on a 2x screen). */
+.cd-move { flex-wrap: nowrap; min-height: 23px; }
+.cd-abs { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted-c); }
+.cd-abs.gain { color: rgb(var(--gain-rgb)); }
+.cd-abs.loss { color: rgb(var(--loss-rgb)); }
+.cd-key { white-space: nowrap; }
+.cd-sess { font-size: 12px; color: var(--faint-c); white-space: nowrap; }
+.cd-sess:empty { display: none; }
+/* The circles keep the middle they had at 28px: 4px up, so in a narrow window and the sheet they sit on the symbol's line. */
+.cd-tr { grid-area: tr; position: relative; display: flex; align-items: center; gap: 14px; justify-self: end; margin-top: -4px; }
+/* The house cross: the glyph on a circle of tinted glass, visible at rest. 36px, as iOS sizes the round buttons on its
+   sheets, its glyph a 1.5px stroke like the page's other glyphs. */
+.cd-x {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 36px; height: 36px; margin: 0; padding: 0;
+  border: 0; border-radius: 18px; color: var(--glass-ink);
+  -webkit-appearance: none; appearance: none; cursor: pointer; transition: transform 90ms var(--ease);
+}
+.cd-x:active { transform: scale(0.97); }
+/* The share glyph's three uprights (the arrow's stem and the box's sides) are whole pixels apart at 18px; on a 1x
+   screen half a pixel to the right puts each on a pixel of its own, so the stem is as crisp as the box. */
+@media (max-resolution: 1dppx), (-webkit-max-device-pixel-ratio: 1) {
+  .share-g { transform: translateX(0.5px); }
+}
+/* Left of it, its twin: the share button (the iOS share glyph). A download leaves an offer beside them (share.js): a
+   capsule of the same glass with its word, "Copy image", there until the panel closes or its view changes. It floats
+   left of the circles, on their line, so it never narrows the header's words (no reflow when it comes); its middle is
+   set by margins, as the glass's motion owns its transform. */
+.cd-copy {
+  position: absolute; top: 50%; right: calc(100% + 14px); width: auto; margin-top: -18px; padding: 0 15px;
+  font: inherit; font-size: 13px; font-weight: 600; letter-spacing: 0; white-space: nowrap;
+}
+.cd-copy[hidden] { display: none; }
+.cd-copy[aria-disabled="true"] { cursor: default; }
+.cd-ctrl { grid-area: ctrl; align-self: end; justify-self: end; display: flex; gap: 8px; }
+
+/* Segmented controls: a glass track, the chosen word in the accent, and the droplet that slides under it. Every segment
+   of a row is the same width, so the droplet only ever translates. Track, segment and droplet are concentric capsules. */
+.seg {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 40px; padding: 2px;
+  border-radius: var(--r-track);
+}
+/* Line | Candles are two glyphs in the current colour (each named for screen readers, with a tooltip on hover), in
+   segments as wide as a candle size's on a desktop and a little wider for a finger (the sheet's own sizes below). */
+.seg-type svg { margin: auto; }
+/* The panel's two pickers have 54px segments on a desktop too: lifted, the pill is then 78 by 44, a capsule as on the
+   Health app's picker, where a 40px segment gave 64 by 44, nearly a circle. A phone's sheet sets its own widths
+   below. */
+.seg-size, .seg-type { grid-auto-columns: 54px; }
+.seg-size .seg-ind, .seg-type .seg-ind { width: 54px; }
+.seg button {
+  position: relative; z-index: 1; height: 26px; margin: 0; padding: 0; border: 0; border-radius: var(--r-seg); background: none;
+  -webkit-appearance: none; appearance: none; font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--muted-c); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.seg button:hover { color: var(--dim-c); }
+.seg button[aria-pressed="true"] { color: var(--g-on); }
+.seg button:focus-visible { outline-offset: -2px; }
+/* The panel's two pickers mark the chosen segment with the pill alone, as Apple's own picker does (the Health app's
+   D W M 6M Y above its charts, in Apple's guideline pictures): every label at full strength, the chosen one a weight
+   heavier. Apple does not dim the others. Segments are a fixed width, so the weight moves nothing. */
+/* Its size and type are UIKit's segmented control's: 32 tall with a 28 pill 2 in, the labels 13px regular and the
+   chosen one medium. */
+.cd-ctrl .seg { border-radius: 16px; }
+.cd-ctrl .seg button { height: 28px; border-radius: 14px; color: var(--glass-ink); font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.cd-ctrl .seg button[aria-pressed="true"] { font-weight: 500; }
+.cd-ctrl .seg .seg-ind { height: 28px; border-radius: 14px; }
+/* A finger gets at least 44px of height to hit on each segment (the pill is what is drawn): 9px more above and below. */
+@media (pointer: coarse) { .seg button::after { content: ''; position: absolute; inset: -9px 0; } }
+.seg-ind {
+  position: absolute; top: 2px; left: 2px; width: 40px; height: 26px; border-radius: var(--r-seg);
+  transition: translate var(--sp-snappy-ms) var(--sp-snappy);
+}
+
+/* ---- the dock: All, Coins, Stocks, Commods ----
+   (Commods, the six commodities: the short word traders use, since "Commodities" is 70px wide and four cells beside
+   the round button leave a phone 66 to 74px each.)
+   A segmented control that floats over the grid, as a tab bar does. It is the page's third piece of frosted glass (the
+   top bar's switch and X link are the others): the same 20px blur under a tone and a track's tone, lifted on a shadow,
+   with the rim's top light. 60px tall, its droplet 52px, both true capsules, concentric (30 = 26 + 4). It comes up from
+   under the window once the grid has reached it (app.js sets .on) and stays over the rest of the page; only its place
+   moves, so its frost is whole the moment it arrives. */
+.dock {
+  position: fixed; z-index: 15; left: 0; right: 0; bottom: calc(21px + env(safe-area-inset-bottom, 0px));
+  display: flex; justify-content: center; pointer-events: none;
+  translate: 0 calc(100% + 44px + env(safe-area-inset-bottom, 0px)); visibility: hidden;
+  transition: translate var(--sp-smooth-ms) var(--sp-smooth), visibility 0s linear var(--sp-smooth-ms);
+}
+.dock.on { translate: none; visibility: visible; transition: translate var(--sp-smooth-ms) var(--sp-smooth), visibility 0s; }
+@media (prefers-reduced-motion: reduce) { .dock, .dock.on { transition: none; } }
+@media (scripting: none) { .dock { display: none; } }
+@property --g-solid { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
+/* The reference is the Photos bar on iOS 27. What it shows, and what this follows: clear glass that the page stays
+   recognisable through and that takes the page's colour (an 8px blur under a light tone, colours lifted); words that
+   all read at nearly full strength, with a soft shadow; a resting pill that is only a fainter, clearer patch of the
+   same glass; a pill that grows past the bar, held or in flight (glass.js); and round buttons that swell and light up
+   under a press. 60px tall with a 52px pill (30 = 26 + 4). In Chromium on a desktop the bar's rim truly bends what
+   passes under it (d-lens.png, fitted by glass.js: html.dock-lens) and the pill's lens bends the words; any colour at
+   an edge comes from that bending alone. No colour is ever painted on the glass. */
+/* The numbers, from frames of a screen recording of that bar and from what is published: Apple gives no figures for the
+   material itself, only that clear glass over bright content wants a dark layer of 35%; design kits rebuilt from
+   Apple's own put the regular glass at a frost of about 6, a tint of about a third, a deep bezel and a dispersion of
+   about a fifth. So: a tone a third strong (a dark smoke in the dark theme, white on paper) over a blur of 5px, so what
+   is behind stays plainly readable; a fine line of light all round its edge, brightest top left and bottom right; the
+   chosen pill a darker, softer patch of it (never a lighter one); every word at full strength, medium weight. */
+/* Its size and place are a tab bar's on iOS 26 (from the numbers read off UIKit): 62 tall with a 54 pill 4 in, 21 from
+   the bottom and from the sides, its four tabs as wide as the row lets them be up to 107 (the round button and its gap
+   take 72 of the row; whole pixels, so the pill lands exactly on its cell). */
+.seg-show {
+  --cell: round(down, clamp(56px, calc((100vw - 122px) / 4), 107px), 1px);
+  pointer-events: auto; grid-auto-columns: var(--cell); padding: 4px; border-radius: 31px;
+  --g-off: var(--dock-word); --g-on: var(--float-ink);
+  transition: --g-solid 260ms var(--ease);
+}
+/* Clear glass bends what is behind it at its rim, where the browser can (Chromium on a desktop; glass.js builds the
+   lenses and says when each is in): the dock's bar, its round button (except while a press turns it into a magnifier,
+   .lensing) and the body the top bar's two controls merge into. Frosted glass is an even blur and bends nothing. */
+html.glass-clear.dock-lens .seg-show::before { -webkit-backdrop-filter: url(#dock-lens); backdrop-filter: url(#dock-lens); }
+html.glass-clear.dock-round-lens .dock .totop:not(.lensing)::before { -webkit-backdrop-filter: url(#dock-round-lens); backdrop-filter: url(#dock-round-lens); }
+html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-f); backdrop-filter: url(#m-lens-f); }
+.dock .totop.lensing::before { -webkit-backdrop-filter: var(--press-lens); backdrop-filter: var(--press-lens); }
+/* Each choice is a glyph over its word, as an iOS tab bar's are: the glyph drawn in outline at rest and filled once
+   chosen, the two cross-fading. The word is a tab bar's: 10px, medium at rest and semibold once chosen. */
+.seg-show button {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  height: 54px; border-radius: 27px; font-size: 10px; line-height: 12px; font-weight: 500; letter-spacing: 0; color: var(--dock-word);
+}
+.seg-show button[aria-pressed="true"] { font-weight: 600; }
+.seg-show .dock-ic { display: block; flex: none; }
+/* The same for the top bar's two switches, which move as the dock does: the glass switch's two rings and the theme
+   switch's sun and moon are outlines at rest and filled once chosen. */
+:is(.seg-show, .seg-glass) svg > g { transition: opacity 180ms var(--ease); }
+:is(.seg-show, .seg-glass) .ic-f, :is(.seg-show, .seg-glass) button[aria-pressed="true"] .ic-o { opacity: 0; }
+:is(.seg-show, .seg-glass) button[aria-pressed="true"] .ic-f { opacity: 1; }
+.theme-switch :is(.sun-core, .moon-crescent) { fill: currentColor; fill-opacity: 0; transition: fill-opacity 180ms var(--ease); }
+.theme-switch[aria-checked="false"] .sun-core, .theme-switch[aria-checked="true"] .moon-crescent { fill-opacity: 1; }
+:root[data-theme="dark"] .theme-switch:not(.ready) .sun-core { fill-opacity: 0; }
+:root[data-theme="dark"] .theme-switch:not(.ready) .moon-crescent { fill-opacity: 1; }
+/* The base is shorter under the lifted pill (as on an iOS tab bar, where the base reads about 4pt shorter top and
+   bottom wherever the pill is held). glass.js cuts the bar's glass away under the pill (--dock-cut, on its body and its
+   rim) and the pill draws that stretch of base itself, the bar's own tone and frost, cut 4px short at the top and the
+   bottom (--pinch: how far below the pill's top it begins). Everything else about the lifted pill stays: its patch, its
+   shadow, its rim, its lens. At rest nothing is cut and this layer is not drawn. */
+.seg-show::before, .seg-show::after { clip-path: var(--dock-cut, none); }
+/* That stretch carries the bar's own edges, or it cannot be told from the page (without them the shorter base does not
+   show: in the dark the bar is barely lighter than the page, its shape is its top light and the shadow under it): the
+   light on its top edge, the contact shadow under its bottom edge, and on paper the half-pixel line above and below.
+   --pinch is where it begins and --pinch-b where it ends, in px from the pill's top (glass.js). */
+.seg-show .seg-ind::before {
+  content: ''; display: none; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    linear-gradient(var(--dock-rim-c), var(--dock-rim-c)) 0 var(--pinch, 0px) / 100% 1px no-repeat,
+    linear-gradient(var(--g-line, transparent), var(--g-line, transparent)) 0 calc(var(--pinch, 0px) - 0.5px) / 100% 0.5px no-repeat,
+    linear-gradient(var(--g-line, transparent), var(--g-line, transparent)) 0 var(--pinch-b, 100%) / 100% 0.5px no-repeat,
+    linear-gradient(rgb(var(--shade-rgb) / var(--pinch-shade, 0.45)), rgb(var(--shade-rgb) / 0)) 0 var(--pinch-b, 100%) / 100% 5px no-repeat,
+    linear-gradient(var(--pinch-gap), var(--pinch-gap)) 0 0 / 100% var(--pinch, 0px) no-repeat,
+    linear-gradient(var(--pinch-gap), var(--pinch-gap)) 0 var(--pinch-b, 100%) / 100% var(--pinch, 0px) no-repeat,
+    linear-gradient(var(--g-dock), var(--g-dock)) 0 var(--pinch, 0px) / 100% calc(var(--pinch-b, 100%) - var(--pinch, 0px)) no-repeat;
+  -webkit-backdrop-filter: var(--glass-bd); backdrop-filter: var(--glass-bd);
+  /* Only where the bar itself is (glass.js: the bar's capsule in the pill's box). */
+  clip-path: var(--base-clip, none);
+}
+/* The two bands the base leaves are shaded a little, so the base reads as shorter even where the page behind is the
+   bar's own tone (a dark page under dark smoke, white paper under white glass): unshaded, the bands show in the dark
+   only faintly and on paper not at all. */
+.seg-show .seg-ind { --pinch-gap: rgb(0 0 0 / 0.32); }
+:root:not([data-theme="dark"]) .seg-show .seg-ind { --pinch-shade: 0.1; --pinch-gap: rgb(18 22 38 / 0.1); }
+.seg-show .seg-ind.lifted::before { display: block; }
+/* The dock's lifted pill as UIKit's liquid lens (glass.js buildApple, the numbers Apple's own tab bar uses). Where the
+   pill has its lens (Chromium on a desktop), the pill's own patch, glow and rim are not drawn; its shorter base and
+   shaded bands are (the lens alone makes the base read shorter too faintly on this page), and over them only the lens,
+   edged by a hairline and set on the lens's own small shadow (7pt down, as UIKit's). Without a lens the pill is drawn
+   with its own patch, glow and rim. */
+/* Every pill that can be moved lifts into this lens (on iOS the picker's selection, the switch's thumb and the tab
+   bar's are one lens): the dock's, the panel's two pickers', the glass switch's and the theme switch's. The shorter
+   base and its bands stay the dock's alone (only its bar is glass). */
+:is(.seg, .theme-switch):has(> .drop-lens.on) :is(.seg-ind, .drop).lifted > :is(i, b, u), :is(.seg, .theme-switch):has(> .drop-lens.on) :is(.seg-ind, .drop).lifted::after { opacity: 0; }
+.drop-lens.on { box-shadow: 0 0 0 0.5px var(--pill-line), 0 7px 11px rgb(var(--shade-rgb) / 0.12); }
+/* Its rim as UIKit lights it: a key light from up left and a fill from down right, equal, on a 1px band inside the
+   edge, strongest where the edge faces the light and gone where it runs along it. */
+.drop-lens.on::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.6), rgb(255 255 255 / 0) 36%, rgb(255 255 255 / 0) 64%, rgb(255 255 255 / 0.6));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* The pickers' and the two switches' lens is lit evenly, as the Health app's picker on iOS is:
+   its top and bottom edges equally bright, brightest along the middle of each and fading toward the round ends, the
+   left and right halves alike. The dock's key-and-fill light (from up left and down right) on a capsule this small
+   leaves one corner bright and the opposite one dim, which reads as the lens tilted. The dock keeps it. */
+:is(.cd-ctrl .seg, .seg-glass, .theme-switch) > .drop-lens.on::after {
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0) 4%, rgb(255 255 255 / 0.3) 30%, rgb(255 255 255 / 0.3) 70%, rgb(255 255 255 / 0) 96%) top / 100% 50% no-repeat,
+    linear-gradient(90deg, rgb(255 255 255 / 0) 4%, rgb(255 255 255 / 0.3) 30%, rgb(255 255 255 / 0.3) 70%, rgb(255 255 255 / 0) 96%) bottom / 100% 50% no-repeat;
+}
+/* The tab seen in the lifted pill grows by 16% (UIKit scales the selected tab about its middle at full lift): the one
+   the pill is over while it is dragged, the chosen one while it is only held. Glyph and word together. In every
+   browser, lens or no lens (it needs no bending: on a phone and in Safari it is the one part of the lens's look that
+   can be brought over). */
+.seg-show button :is(.dock-ic, span) { transition: scale 220ms var(--ease); }
+.seg-show.tracking:has(> .seg-ind.lifted) button.over :is(.dock-ic, span),
+.seg-show:not(.tracking):has(> .seg-ind.lifted) button[aria-pressed="true"] :is(.dock-ic, span) { scale: 1.16; }
+@media (prefers-reduced-motion: reduce) { .seg-show button :is(.dock-ic, span) { transition: none; } }
+/* Lifted, the dock's pill is edged by one thin crisp line, not by a soft dark halo: a hairline just outside it, with
+   the pill's own rim light inside. The pickers' and the switches' pills keep their lift shadow; they sit on solid
+   tracks. */
+.seg-show .seg-ind > i { box-shadow: 0 0 0 0.5px var(--pill-line); }
+/* One line only: the lifted layer's soft inner glow at the top and bottom edges is left out here (it would draw a
+   second, wider edge inside the first). */
+.seg-show .seg-ind > u { box-shadow: none; }
+:is(.seg, .theme-switch) { --pill-line: rgb(0 0 0 / 0.7); }
+:root:not([data-theme="dark"]) :is(.seg, .theme-switch) { --pill-line: rgb(18 22 38 / 0.38); }
+/* A filled dock glyph's shapes each turn and grow in their own box (glass.js moves them one by one on a pick). */
+.seg-show .ic-f > * { transform-box: fill-box; }
+/* While a pill is dragged (glass.js: .tracking), the glyph under it is the filled one and every other is an outline,
+   before the finger lets go (an iOS tab bar fills the glyph the pill is over). */
+:is(.seg-show, .seg-glass).tracking button .ic-f { opacity: 0; }
+:is(.seg-show, .seg-glass).tracking button .ic-o { opacity: 1; }
+:is(.seg-show, .seg-glass).tracking button.over .ic-f { opacity: 1; }
+:is(.seg-show, .seg-glass).tracking button.over .ic-o { opacity: 0; }
+.theme-switch.tracking :is(.sun-core, .moon-crescent) { fill-opacity: 0; }
+.theme-switch.tracking[data-over="light"] .sun-core, .theme-switch.tracking[data-over="dark"] .moon-crescent { fill-opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.seg-show, .seg-glass) svg > g, .theme-switch :is(.sun-core, .moon-crescent) { transition: none; }
+}
+.seg-show button:hover { color: var(--float-ink); }
+.seg-show .seg-ind { top: 4px; left: 4px; width: var(--cell); height: 54px; border-radius: 27px; }
+.seg-show .seg-ind > b { background: var(--dock-pill); box-shadow: none; }
+@media (pointer: coarse) { .seg-show button::after { inset: 0; } }
+/* The way back up: a round bud of the same glass beside the dock, 62px, once the LIVE PRICES line has left the top of
+   the window (app.js sets .up). It grows out of nothing with one soft overshoot (a spring of 0.42 s and damping 0.75) and the dock
+   makes room as it comes; no fade, so its frost is whole from the first frame. */
+.dock .totop {
+  pointer-events: auto; width: 0; height: 62px; margin-left: 0; border-radius: 31px; scale: 0; visibility: hidden;
+  transition: width 320ms var(--ease), margin-left 320ms var(--ease), scale 320ms var(--ease), visibility 0s linear 320ms, --g-solid 260ms var(--ease);
+}
+.dock.up .totop {
+  width: 62px; margin-left: 10px; scale: 1; visibility: visible;
+  transition: width 534ms var(--sp-bud), margin-left 534ms var(--sp-bud), scale 534ms var(--sp-bud), visibility 0s, --g-solid 260ms var(--ease);
+}
+.dock .totop { color: var(--float-ink); }
+.dock .totop svg { flex: none; }
+@media (prefers-reduced-motion: reduce) { .dock .totop, .dock.up .totop { transition: none; } }
+/* A card the dock has sorted out of the grid. */
+.card.out { display: none; }
+
+/* The chart: one SVG in CSS pixels (no viewBox, so strokes never scale), the axis words as HTML on top. */
+/* No paint containment: a dot or the scrub's halo on the plot's first point may spill into the panel's padding whole. */
+/* Its height follows the window (220px at 600px tall, 400px from about 1150px). On a short window (a 1080p laptop at
+   150%, about 560px tall) it gives up height, down to 160px, before the panel would have to scroll: the rest of the
+   panel is 309px tall (359px where the controls take a row of their own), and the panel keeps 32px clear above and
+   below it. So the whole panel shows down to about 530px of window. */
+.cd-chart {
+  grid-area: chart; position: relative; margin-top: 24px;
+  height: clamp(160px, min(max(220px, 42vh - 80px), 100vh - 373px), 400px);
+  height: clamp(160px, min(max(220px, 42vh - 80px), 100dvh - 373px), 400px);
+  contain: size layout style; touch-action: none; outline: none; -webkit-user-select: none; user-select: none; cursor: crosshair;
+}
+/* (The same width as the controls' own row above: that row is what the 50px here make room for.) */
+@media (max-width: 963px) {
+  .cd-chart {
+    height: clamp(160px, min(max(220px, 42vh - 80px), 100vh - 423px), 400px);
+    height: clamp(160px, min(max(220px, 42vh - 80px), 100dvh - 423px), 400px);
+  }
+}
+/* A window shorter still: the panel scrolls (wheel, keys, trackpad), with no scrollbar track inside its rounded
+   corners. A phone's sheet keeps its own scroll indicator. */
+@media (min-width: 640px) and (pointer: fine), (min-width: 640px) and (min-height: 501px) {
+  .cd-body { scrollbar-width: none; }
+  .cd-body::-webkit-scrollbar { display: none; }
+}
+.cd-chart:focus-visible { box-shadow: 0 0 0 2px var(--focus); border-radius: var(--r-focus); }
+/* The watermark: the lockup as a ghost in one colour, centred on the plot (app.js gives it the plot's box), under the
+   line, its wash and the candles. The ground's own lockup file is its mask, so the mark, the word and the full stop are
+   one flat colour at one strength. It is still: nothing about it moves, fades or draws at rest. Its width is one rule
+   for every plot: 22% of it plus 92px, at most 280px (278px on the desktop panel, 158px in a 390px phone sheet, 142px
+   at 320px), so a small plot still gets a mark you can read and a wide one never a banner. */
+.cd-wm {
+  --wm-w: min(calc(22% + 92px), 280px);
+  position: absolute; left: 0; top: 0; visibility: hidden; pointer-events: none; background: var(--wm-ink);
+  -webkit-mask: url('/lockup.svg') center / var(--wm-w) auto no-repeat; mask: url('/lockup.svg') center / var(--wm-w) auto no-repeat;
+}
+.cd-wm.on { visibility: visible; }
+:root:not([data-theme="dark"]) .cd-wm { -webkit-mask-image: url('/lockup-ink.svg'); mask-image: url('/lockup-ink.svg'); }
+.cd-svg { position: absolute; inset: 0; overflow: visible; }
+.cd-svg .ln { fill: none; stroke: var(--muted-c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; transition: stroke 300ms var(--ease); }
+.cd-svg.up .ln { stroke: var(--gain-line); }
+.cd-svg.down .ln { stroke: var(--loss-line); }
+.cd-svg .area { stroke: none; opacity: 0; transition: opacity 300ms var(--ease); }
+.cd-svg .area-up { fill: url(#cd-grad-up); }
+.cd-svg .area-down { fill: url(#cd-grad-down); }
+.cd-svg .area-flat { fill: url(#cd-grad-flat); }
+.cd-svg.up .area-up, .cd-svg.down .area-down, .cd-svg.flat .area-flat { opacity: 1; }
+/* The wash: the brand colour (Muted when flat) at the theme's strength at the top, fading to nothing at the bottom. */
+.cd-svg .stop-up { stop-color: rgb(var(--gain-fill-rgb)); }
+.cd-svg .stop-down { stop-color: rgb(var(--loss-fill-rgb)); }
+.cd-svg .stop-flat { stop-color: var(--muted-c); }
+.cd-svg stop { stop-opacity: 0; }
+.cd-svg .stop-up[offset="0"] { stop-opacity: var(--wash-up); }
+.cd-svg .stop-down[offset="0"] { stop-opacity: var(--wash-down); }
+.cd-svg .stop-flat[offset="0"] { stop-opacity: var(--wash-flat); }
+.cd-svg .lines { transition: opacity 180ms var(--ease); }
+.cd-svg.waiting .lines { opacity: 0.35; }
+.cd-svg.waiting .area { opacity: 0; }
+.cd-svg .c-up { fill: var(--gain-line); }
+.cd-svg .c-down { fill: var(--loss-line); }
+.cd-svg .w-up { stroke: var(--gain-line); fill: none; }
+.cd-svg .w-down { stroke: var(--loss-line); fill: none; }
+/* A wick cut at the edge of the chart (one extreme print, say a flash crash) ends in a dotted tail. */
+.cd-svg .w-cut { stroke-dasharray: 1 2; }
+.cd-svg .tf { fill: var(--muted-c); }
+.cd-svg.up .tf { fill: var(--gain-line); }
+.cd-svg.down .tf { fill: var(--loss-line); }
+.cd-svg .dot { stroke: var(--surface-1); stroke-width: 2; }
+.cd-svg .halo { opacity: 0; }
+.cd-svg .scrub { opacity: 0; transition: opacity 160ms var(--ease); }
+.cd-svg .scrub.on { opacity: 1; transition-duration: 120ms; }
+.cd-svg .scrub-line { stroke: var(--faint-c); }
+.cd-svg .scrub-halo { opacity: var(--halo-o); }
+/* In Candles view the scrub dot takes the chosen candle's colour. */
+.cd-svg .scrub.rise .tf { fill: var(--gain-line); }
+.cd-svg .scrub.fall .tf { fill: var(--loss-line); }
+.cd-svg [data-fx] { transform-box: fill-box; transform-origin: center; }
+.cd-axis { position: absolute; inset: 0; pointer-events: none; }
+.cd-axis span {
+  position: absolute; left: 0; top: 0; font-size: 10px; font-weight: 500; line-height: 12px; color: var(--muted-c);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+/* A stock axis's time zone (ET), quieter than the times. */
+.cd-axis .tz { color: var(--faint-c); letter-spacing: 0.04em; }
+.cd-ohlc {
+  position: absolute; left: 0; top: 0; display: flex; gap: 10px; font-size: 11px; line-height: 14px; color: var(--dim-c);
+  font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; opacity: 0;
+}
+.cd-ohlc.on { opacity: 1; }
+.cd-ohlc b { font-weight: 500; color: var(--muted-c); margin-right: 3px; }
+/* Waiting for the first data: a calm flat line with a soft light passing along it, never a spinner. */
+.cd-wait { position: absolute; left: 0; top: 50%; height: 2px; border-radius: 1px; background: var(--wait-c); overflow: hidden; opacity: 0; transition: opacity 200ms var(--ease); }
+.cd-wait.on { opacity: 1; }
+.cd-wait::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%;
+  background: linear-gradient(90deg, rgb(var(--text-rgb) / 0), rgb(var(--text-rgb) / 0.22), rgb(var(--text-rgb) / 0));
+}
+/* The light only travels while the line is shown: an endless animation on the hidden line keeps a phone drawing 60
+   frames a second for as long as a chart was open. */
+.cd-wait.on::after { animation: cd-shimmer 1.8s var(--ease) infinite; }
+@keyframes cd-shimmer { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+.cd-err {
+  position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: var(--muted-c);
+  opacity: 0; transition: opacity 200ms var(--ease); pointer-events: none;
+}
+.cd-err.on { opacity: 1; }
+/* On a small tag of the card's own colour, so it reads over an old line still on show. */
+.cd-err span { padding: 6px 10px; border-radius: var(--r-tag); background: var(--surface-1); }
+.cd-stats { grid-area: stats; margin-top: 20px; }
+.cd-stats > div { min-width: 0; }
+/* Its line is kept while the chart is still on the way, so the panel never grows under a card flying in (or a sheet). */
+.cd-src { grid-area: src; min-height: 16px; margin-top: 16px; font-size: 11px; line-height: 16px; color: var(--faint-c); }
+
+/* ---- notice and foot ---- */
+/* Its last line clears the dock (60px on 16px, and room above it). */
+.foot { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px calc(100px + env(safe-area-inset-bottom, 0px)); }
+/* viewport-fit=cover hands the page the whole screen: a landscape iPhone keeps its notch clear of every column (the
+   top bar's own padding does the same). */
+.page, .foot { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+/* The amber notice as a strip: the head in White, the warning under it, then the data and legal lines as four small
+   labelled blocks, set off by space alone (no hairline). Everything below the head is Muted. The glyph's space is a
+   margin, not flex gap, so it never touches the head in Safari before 14.1. */
+.notice {
+  position: relative; display: flex; align-items: flex-start;
+  padding: 12px 12px 14px 16px; border-radius: calc(var(--r-card) * var(--sq));
+  background: var(--notice-bg); box-shadow: var(--card-shadow);
+}
+/* The amber edge, 3px down the left side and round into the corners, where it fades out while still 2px thick. Drawn
+   to the box's outline it would thin into a long sliver along the top and bottom edges at these large corners, and a
+   sliver reads as a hairline. */
+.notice::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 3px 0 0 rgb(var(--warn-rgb));
+  -webkit-mask-image: linear-gradient(90deg, #000 3px, transparent 8px); mask-image: linear-gradient(90deg, #000 3px, transparent 8px);
+}
+.notice-glyph { flex: none; margin-top: 3px; color: var(--warn-mark); }
+/* A word longer than the column (a link, a translated compound, a phone zoomed far in) breaks instead of pushing the
+   page sideways; break-word is the fallback where anywhere is unknown. */
+.notice-copy { flex: 1; min-width: 0; margin-left: 14px; word-wrap: break-word; overflow-wrap: anywhere; }
+.notice-head { font-size: 13px; font-weight: 500; letter-spacing: -0.01em; line-height: 24px; color: rgb(var(--text-rgb)); }
+/* Muted on the amber tint is 6.2:1 in dark and 4.64:1 on paper, AA for small text (Faint would be 3.8:1 in dark,
+   under it). The warning is two short paragraphs; from 900px they sit side by side on the same two columns as the
+   blocks below (from 1800px each spans two of the four), so every line stays a readable length and the strip has no
+   empty side. */
+.notice-lede { display: grid; gap: 4px; margin-top: 2px; font-size: 13px; line-height: 1.6; color: var(--muted-c); }
+.notice-lede p { text-wrap: pretty; }
+@media (min-width: 900px) {
+  .notice-lede { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+  .notice-lede p { text-wrap: balance; }
+}
+.notice-fine { display: grid; gap: 12px; margin-top: 20px; }
+.notice-fine dt { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; line-height: 1; text-transform: uppercase; color: var(--muted-c); }
+.notice-fine dd { margin-top: 6px; font-size: 12px; line-height: 1.6; letter-spacing: -0.005em; color: var(--muted-c); text-wrap: pretty; }
+/* The notice's toggle: a glass capsule like the X link (tinted glass on the dark note, raised white glass on paper). It
+   ships hidden, with the blocks open, and the script shows it, so without JavaScript nothing ever folds. It is drawn on
+   every screen, and the blocks fold only while it is drawn and says aria-expanded="false" (which it says from the
+   moment they start to close: they stay drawn until the fold is over, .folding): print always shows them all. One line
+   of label is 28px tall like the X link; a label that wraps (big minimum font, zoomed phone) keeps its leading. */
+.notice-more {
+  display: none; align-items: center; width: max-content; max-width: 100%; min-height: 28px; margin: 10px 0 0; padding: 6px 10px 6px 12px;
+  border: 0; border-radius: var(--r-cap); -webkit-appearance: none; appearance: none; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.3333; color: var(--glass-ink-2); text-align: left;
+  transition: transform 90ms var(--ease);
+}
+@media (hover: hover) { .notice-more:hover { color: var(--glass-ink); } }
+.notice-more:active { transform: scale(0.97); }
+/* The page's focus ring, restated so it wins over the high-contrast edge. */
+.notice-more:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.notice-chev { flex: none; margin-left: 6px; color: var(--muted-c); transition: transform 150ms var(--ease); }
+.notice-more[aria-expanded="true"] .notice-chev { transform: rotate(180deg); }
+@media screen {
+  .notice-more:not([hidden]) { display: flex; }
+  .notice-more:not([hidden])[aria-expanded="false"] + .notice-fine:not(.folding) { display: none; }
+}
+/* Two blocks a row, then all four in a row from 1800px, so the fine print never runs to a ribbon. A block that wraps
+   splits evenly, never one word or two alone (browsers balance up to about six lines; a block made longer by a big
+   minimum font size simply wraps). */
+@media (min-width: 640px) {
+  .notice-fine { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 32px; }
+  .notice-fine dd { text-wrap: balance; }
+}
+@media (min-width: 640px) and (max-width: 899px) { .notice-lede p { text-wrap: balance; } }
+@media (min-width: 1800px) { .notice-fine { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* The footer's mark starts on the same left edge as the header's mark, the hero and the cards. */
+.foot-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 4px 0 8px; }
+.copy { font-size: 12px; letter-spacing: -0.005em; color: var(--muted-c); }
+/* CoinGecko's credit closes the footer's line on the right. Below 720px the line no longer fits in one row (mark,
+   copyright and credit need about 707px with the page's side padding), so the credit takes a row of its own above the
+   mark, on the same left edge. */
+.foot-line .credit { margin-left: auto; }
+@media (max-width: 719px) {
+  .foot-line .credit { order: -1; flex-basis: 100%; margin-left: 0; }
+}
+.nw { white-space: nowrap; } /* the footer's byline never splits */
+
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+/* ---- the page's entrance, once per page load: the top bar fades in, the hero and the picks row rise in after it, and
+   the script brings the cards on screen in as a wave behind them. Only with scripting on, so a page without JavaScript
+   is drawn exactly as before; the script ends these at once when the page comes back from history or opens a chart from
+   its address. Opacity and the translate property only (the compositor's work), each with its own curve: the fade on
+   --ease, the rise on the smooth spring. */
+@keyframes page-fade { from { opacity: 0; } }
+@keyframes page-rise { from { translate: 0 14px; } }
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .top { animation: page-fade 420ms var(--ease) backwards; }
+  .hero { animation: page-fade 520ms var(--ease) 60ms backwards, page-rise var(--sp-smooth-ms) var(--sp-smooth) 60ms backwards; }
+  .bar { animation: page-fade 520ms var(--ease) 120ms backwards, page-rise var(--sp-smooth-ms) var(--sp-smooth) 120ms backwards; }
+  /* The grid ships empty and app.js, at the end of the body, fills it. If the script never arrives (a dropped request
+     on a poor link, a connection reset mid-deploy) the grid stays empty, and after 5 s the message shipped hidden under
+     it (index.html) fades in, so the page says something instead of sitting with nothing under its status line. It is
+     the script's own first render that takes it away again. Only with scripting on: with it off the noscript text
+     covers this, and a browser without the scripting feature draws neither. */
+  .grid:empty + .lost { display: block; animation: page-fade 300ms var(--ease) 5s backwards; }
+}
+/* Reduced motion: a short plain fade, nothing moves. The lost-script message keeps its wait and skips its fade. */
+@media (scripting: enabled) and (prefers-reduced-motion: reduce) {
+  .top, .hero, .bar { animation: page-fade 200ms linear backwards; }
+  .grid:empty + .lost { display: block; animation: page-fade 0ms linear 5s backwards; }
+}
+
+/* ---- motion details, numbered (each stands alone) ---- */
+/* 2 and 8: a figure that changes rolls (app.js roll()): the new character comes in from below (.dn: from above) while
+   the old one, drawn here from data-o, leaves the other way. */
+.rc { display: inline-block; position: relative; }
+.rc-n { display: inline-block; animation: rc-in 440ms var(--ease) var(--rd, 0ms) backwards; }
+.rc::before { content: attr(data-o); position: absolute; left: 0; top: 0; animation: rc-out 440ms var(--ease) var(--rd, 0ms) both; }
+.rc.dn { --rc: -0.55em; }
+@keyframes rc-in { from { opacity: 0; translate: 0 var(--rc, 0.55em); filter: blur(2px); } }
+@keyframes rc-out { from { opacity: 1; } to { opacity: 0; translate: 0 calc(-1 * var(--rc, 0.55em)); filter: blur(2px); } }
+/* 4: a card below the fold waits unseen until it scrolls into view (app.js). Never on paper. */
+.grid > li.wait { opacity: 0; }
+@media print { .grid > li.wait { opacity: 1; } }
+/* 7: the notice's blocks while they fold or unfold. */
+.notice-fine.folding { overflow: hidden; }
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  /* 3: the headline's words arrive one after another, each rising out of a blur, and a slow band of light crosses the
+     green word every few seconds. The word's box is deepened a little so the light reaches the tail of its g. */
+  .headline .hw { display: inline-block; animation: hw-in 720ms var(--ease) backwards; }
+  .headline .hw:nth-child(1) { animation-delay: 140ms; }
+  .headline .hw:nth-child(2) { animation-delay: 220ms; }
+  .headline .hw:nth-child(3) { animation-delay: 300ms; }
+  .headline .hw:nth-child(4) { animation-delay: 420ms; }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .headline .hw.accent {
+      padding-bottom: 0.12em; margin-bottom: -0.12em;
+      background: linear-gradient(100deg, var(--accent-display) 42%, color-mix(in oklab, var(--accent-display), white 55%) 50%, var(--accent-display) 58%) 100% 0 / 300% 100% no-repeat;
+      -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+      animation: hw-in 720ms var(--ease) 420ms backwards, accent-sweep 7s cubic-bezier(0.45, 0.05, 0.3, 1) 1.6s infinite;
+    }
+  }
+  /* 5: the ghost tape drifts upward for ever: two copies of its five rows (app.js), moved by exactly one copy. */
+  .tape.drift { bottom: auto; height: calc(2 * (113% + 0.3em)); grid-template-rows: repeat(10, 1fr); animation: tape-drift 90s linear infinite; }
+  .tape.drift.paused { animation-play-state: paused; }
+  /* 6: a hero link's arrow leans the way it points under the pointer. */
+  .hlink svg { transition: translate 240ms var(--ease); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .hlink:hover svg { translate: 1.5px -1.5px; }
+  .hlink[data-scroll]:hover svg { translate: 0 2px; }
+}
+@keyframes hw-in { from { opacity: 0; translate: 0 0.3em; filter: blur(8px); } }
+@keyframes accent-sweep { 0%, 50% { background-position: 100% 0; } 100% { background-position: 0% 0; } }
+@keyframes tape-drift { to { translate: 0 -50%; } }
+
+/* ---- the theme change (glass.js): the new theme spreads out of the switch as a drop of liquid glass ----
+   For the length of the change the page is two still pictures: the old theme stays put, and the new one shows through a
+   disc that grows out of the switch, born as the switch's own capsule, with a lit edge; while small it magnifies what
+   it holds. Toggled again mid-flight the drop is drawn back into the switch. With reduced motion (and on a device too
+   slow for the drop) the new picture fades in over the old one; without view transitions the theme changes in one
+   frame. These rules hold only while glass.js runs a change: html.vt with .vt-drop or .vt-dis. */
+/* The drop's radius: registered, so its mask can be animated (sampled from a spring), and inherited, so the rim's two
+   layers follow their parent. */
+@property --vt-r { syntax: '<length>'; inherits: true; initial-value: 0px; }
+/* Neither picture fades or blends by itself: the script moves them. --vt-x and --vt-y are the switch's middle. */
+html.vt::view-transition-group(root),
+html.vt::view-transition-old(root),
+html.vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; transform-origin: var(--vt-x) var(--vt-y); }
+/* The dissolve: the new picture fades in (the script), from nothing on the first frame. */
+html.vt.vt-dis::view-transition-new(root) { opacity: 0; }
+/* The edge: crisp while the drop is small, never softer than a few pixels (glass has an edge, not a blur). */
+html.vt.vt-drop::view-transition-new(root), .vt-rim { --vt-f: calc(min(var(--vt-r) * 0.012, 3.5px) + 1px); }
+/* The new theme, inside the drop. --vt-ex is how much wider than tall the drop starts (the switch's capsule); the drop's
+   picture is magnified about the switch (--vt-m, then the script) and its mask scaled back with it. */
+html.vt.vt-drop::view-transition-new(root) {
+  transform: scale(var(--vt-m));
+  -webkit-mask-image: radial-gradient(calc(var(--vt-r) + var(--vt-ex)) var(--vt-r) at var(--vt-x) var(--vt-y), #000 calc(100% - var(--vt-f)), #0000 100%);
+  mask-image: radial-gradient(calc(var(--vt-r) + var(--vt-ex)) var(--vt-r) at var(--vt-x) var(--vt-y), #000 calc(100% - var(--vt-f)), #0000 100%);
+}
+/* Chromium on a real GPU: the drop's picture is also bent at its rim, through the lens the script fits to it. */
+html.vt.vt-drop.vt-lens::view-transition-new(root) { filter: url(#vt-lens); }
+/* Only Chromium draws a backdrop filter into the two pictures. Elsewhere (html.vt-flat) the top bar's strip would lose
+   its blur for the length of the change, and the words under it (the CoinGecko credit, the top lines of the cards)
+   would show through it crisp. So for the change it goes without the blur and makes up for it: solid ground as far
+   down as the controls reach, then a fade a little fuller than its own (74% at four fifths, under the same mask). It
+   turns solid at once and eases back to its own strength when the change is over (the registered strengths above),
+   so nothing snaps. Its scroll fade and its rise stay as they are. */
+html.vt.vt-flat .top::before {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  --bar-a1: 100%; --bar-a2: 100%; --bar-a3: 74%; transition: none;
+}
+/* The dock too: without its blur the cards under it would show crisp, so it stands on solid ground for the change and
+   eases back after it. */
+html.vt.vt-flat .seg-show, html.vt.vt-flat .dock .totop { --g-solid: 100%; transition: none; }
+/* WebKit draws the new picture afresh on every frame, every coin's lens and every shadow with it (glass.js, BARE). A
+   coin below the bar is held: its dome is a still picture of its own, taken with the old picture, that the script
+   magnifies with the drop; the new picture keeps only its contact shadow. A card the drop has not reached yet (it
+   cannot be seen there) goes without its shadows, and its coin without its glass and shadow, until just before the
+   drop gets to it; a coin under the top bar's strip, to the end. A change to paper keeps every card so to the end, and
+   then the shadows and the reflections come in (.vt-back, glass.js BACK): drawn on every frame, the paper's shadows
+   and the glass under the strip cost the drop its frame rate. */
+html.vt::view-transition-group(*), html.vt::view-transition-image-pair(*), html.vt::view-transition-old(*) { animation: none; mix-blend-mode: normal; }
+html.vt .coin.vt-held :is(.coin-lens, .coin-spec) { visibility: hidden; filter: none; }
+html.vt .grid .card.vt-out, html.vt .grid .card.vt-out::after { box-shadow: none; }
+html.vt .grid .card.vt-out :is(.coin-lens, .icon) { filter: none; }
+html.vt .grid .card.vt-out :is(.coin-shade, .coin:not(.vt-held) .coin-spec) { visibility: hidden; opacity: 0; }
+.js-cards .card.vt-back { transition: translate var(--sp-smooth-ms) var(--sp-smooth), scale var(--sp-snappy-ms) var(--sp-snappy), box-shadow 320ms var(--ease); }
+.js-cards .card.vt-back::after { transition: opacity 240ms var(--ease), box-shadow 320ms var(--ease); }
+.grid .card.vt-back :is(.coin-shade, .coin-spec) { transition: opacity 320ms var(--ease); }
+.grid .card.vt-back .icon { transition: filter 320ms var(--ease); }
+/* The rim rides above both pictures as a group of its own (Chromium), live and never faded. */
+html.vt::view-transition-group(vt-rim),
+html.vt::view-transition-image-pair(vt-rim),
+html.vt::view-transition-new(vt-rim) { animation: none; mix-blend-mode: normal; }
+html.vt::view-transition-old(vt-rim) { display: none; }
+/* The rim: the drop's lit edge and its body, in the page only while a drop runs, and only in the new state. Elsewhere
+   than Chromium it is a top-layer popover inside the drop's own picture, with none of a popover's own box. */
+.vt-rim { position: fixed; inset: 0; z-index: 2147483647; pointer-events: none; contain: strict; }
+.vt-rim.vt-own { view-transition-name: vt-rim; }
+.vt-rim.vt-pic { width: auto; height: auto; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; overflow: visible; }
+.vt-rim.vt-pic::backdrop { display: none; }
+.vt-rim > i { position: absolute; inset: 0; }
+/* The light on the edge, brightest where it faces the light (top left) and where that light leaves again (bottom
+   right), as the glass controls are lit; a moving edge, there for the length of the drop only. */
+.vt-spec {
+  background: conic-gradient(from 0deg at var(--vt-x) var(--vt-y),
+    rgb(var(--vt-rim) / calc(var(--vt-rim-a) * 0.35)) 0deg, rgb(var(--vt-rim) / calc(var(--vt-rim-a) * 0.2)) 70deg,
+    rgb(var(--vt-rim) / calc(var(--vt-rim-a) * 0.75)) 140deg, rgb(var(--vt-rim) / calc(var(--vt-rim-a) * 0.25)) 215deg,
+    rgb(var(--vt-rim) / var(--vt-rim-a)) 300deg, rgb(var(--vt-rim) / calc(var(--vt-rim-a) * 0.35)) 360deg);
+  -webkit-mask-image: radial-gradient(calc(var(--vt-r) + var(--vt-ex)) var(--vt-r) at var(--vt-x) var(--vt-y), #0000 calc(100% - var(--vt-f) - 1.5px), #000 calc(100% - var(--vt-f) - 0.5px), #000 calc(100% - var(--vt-f) * 0.5), #0000 100%);
+  mask-image: radial-gradient(calc(var(--vt-r) + var(--vt-ex)) var(--vt-r) at var(--vt-x) var(--vt-y), #0000 calc(100% - var(--vt-f) - 1.5px), #000 calc(100% - var(--vt-f) - 0.5px), #000 calc(100% - var(--vt-f) * 0.5), #0000 100%);
+}
+/* The drop's body: its thickness, a band just inside the edge (a little light gathered in a dark drop, a little shade
+   bent into a light one), and a contact shadow on the page just beyond it. */
+.vt-body {
+  background: radial-gradient(calc(var(--vt-r) + var(--vt-ex)) var(--vt-r) at var(--vt-x) var(--vt-y),
+    rgb(var(--vt-band) / 0) calc(100% - var(--vt-f) - 22px), rgb(var(--vt-band) / var(--vt-band-a)) calc(100% - var(--vt-f)),
+    rgb(var(--vt-band) / 0) calc(100% - var(--vt-f) * 0.5), rgb(var(--vt-shade) / var(--vt-shade-a)) 100%,
+    rgb(var(--vt-shade) / calc(var(--vt-shade-a) * 0.62)) calc(100% + 3px), rgb(var(--vt-shade) / calc(var(--vt-shade-a) * 0.3)) calc(100% + 7px),
+    rgb(var(--vt-shade) / calc(var(--vt-shade-a) * 0.1)) calc(100% + 12px), rgb(var(--vt-shade) / 0) calc(100% + 18px));
+}
+/* Per theme the drop holds: a dark drop over paper has a bright rim and casts a shadow on the paper (in the paper's
+   own blue-grey); a light drop over the dark page is drawn by its rim (below full white, an edge, not a glowing ring)
+   and a breath of shade inside it (a shadow would vanish into the dark). */
+.vt-rim.vt-dark { --vt-rim: 255 255 255; --vt-rim-a: 0.55; --vt-band: 255 255 255; --vt-band-a: 0.05; --vt-shade: 18 22 38; --vt-shade-a: 0.08; }
+.vt-rim.vt-light { --vt-rim: 255 255 255; --vt-rim-a: 0.7; --vt-band: 18 22 38; --vt-band-a: 0.06; --vt-shade: 18 22 38; --vt-shade-a: 0; }
+
+/* ---- phone ---- */
+@media (max-width: 639px) {
+  .hero-in { padding: 34px 20px 44px; }
+  /* One link to a row on a phone: three even rows, not two and one. A touch less room inside each capsule, still 44px
+     tall. */
+  .hero-links { flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 48px; }
+  .hlink { padding: 0 13px 0 15px; gap: 6px; font-size: 14px; }
+  .wide { display: none; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .card { padding: 14px; }
+  /* The coin on the card's left edge, its names on the right edge: the coin keeps the desktop card's 48px. */
+  .head { gap: 10px; margin-bottom: 14px; justify-content: space-between; }
+  .id { align-items: flex-end; text-align: right; }
+  .name { white-space: normal; } /* long names (NEAR Protocol) wrap instead of being cut on small phones */
+  .exch { display: block; } /* on a phone card the exchange gets its own line, without the dot */
+  .sep { display: none; }
+  /* auto: the price and everything under it sit at the card's bottom, so a two-line name never knocks a row out of line */
+  .price { margin-top: auto; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+  .move { margin-top: 10px; }
+  .stats { display: block; margin-top: 12px; }
+  .stats > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .stats > div + div { margin-top: 4px; }
+  .stats dd { margin: 0; flex: none; }
+  .notice { padding: 12px 12px 12px 14px; }
+  .notice-copy { margin-left: 12px; }
+  .notice-lede { font-size: 12px; }
+  /* The readout may wrap under its key rather than be cut. */
+  .status { flex-wrap: wrap; height: auto; row-gap: 2px; }
+}
+/* (The status line is the key, a dot and the age, which fits one line at every width.) */
+@media (max-width: 359px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- the chart panel on a phone (and a phone on its side): a bottom sheet ---- */
+@media (max-width: 639px), (pointer: coarse) and (max-height: 500px) {
+  dialog.cd { padding: 0; }
+  dialog.cd[open], dialog.cd.closing { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; }
+  /* The sheet floats 8px in from the screen's sides and bottom, rounded all round, as a part-height sheet does on iOS
+     26. */
+  .cd-panel { width: calc(100% - 16px); margin: 0 8px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .cd-bg { border-radius: calc(var(--r-sheet) * var(--sq)); background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .cd-lift { box-shadow: var(--sheet-lift); }
+  .cd-grab { display: block; position: absolute; top: 6px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--grab); }
+  .cd-body {
+    max-height: calc(100vh - max(24px, env(safe-area-inset-top) + 12px) - 8px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - max(24px, env(safe-area-inset-top) + 12px) - 8px - env(safe-area-inset-bottom, 0px));
+    padding: 22px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+    column-gap: 14px;
+    grid-template-areas: "coin main tr" "chart chart chart" "ctrl ctrl ctrl" "stats stats stats" "src src src";
+  }
+  /* A sheet whose content fits drags from anywhere; one that scrolls drags only from its top. */
+  .cd-body.fits, .cd-grab, .cd-coin, .cd-main, .cd-tr { touch-action: none; }
+  /* The coin's 96-cell art needs a whole number of device pixels per cell to stay crisp: 64px on a 3x screen (2 a cell),
+     48px on a 2x one (1 a cell); anything else is scaled smoothly instead of unevenly. */
+  .cd-coin { width: 64px; height: 64px; }
+  .cd-icon { image-rendering: auto; }
+  /* Scaled smoothly here, so no lens (the two blocks below bring it back with the pixels). */
+  :root { --coin-lens-panel: none; }
+  .cd-coin .coin-spec { inset: 2%; }
+  :root.coin-glass:not([data-theme="dark"]) .cd-coin .cd-icon { filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
+  :root.coin-glass:not([data-theme="dark"]) .cd-coin .coin-shade { display: none; }
+  .cd-price { margin-top: 10px; font-size: 32px; }
+  .cd-main .name { white-space: normal; }
+  .cd-tr { align-self: start; gap: 10px; }
+  .cd-copy { right: calc(100% + 10px); }
+  .cd-chart { height: clamp(180px, 34svh, 280px); margin: 10px -16px 0; margin-left: calc(-1 * max(16px, env(safe-area-inset-left))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right))); }
+  .cd-ctrl { justify-self: stretch; margin-top: 14px; justify-content: space-between; }
+  .seg-size { flex: 1 1 auto; grid-auto-columns: minmax(0, 1fr); max-width: 220px; }
+  .seg-type { grid-auto-columns: 48px; }
+  .seg-type .seg-ind { width: 48px; }
+  .cd-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin-top: 16px; }
+  .cd-stats > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .cd-stats > div + div { margin: 0; }
+  .cd-stats dd { margin: 0; flex: none; }
+}
+@media (max-width: 639px) and (resolution: 3dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 3),
+  (pointer: coarse) and (max-height: 500px) and (resolution: 3dppx),
+  (pointer: coarse) and (max-height: 500px) and (-webkit-device-pixel-ratio: 3),
+  (max-width: 639px) and (resolution: 2dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 2),
+  (pointer: coarse) and (max-height: 500px) and (resolution: 2dppx),
+  (pointer: coarse) and (max-height: 500px) and (-webkit-device-pixel-ratio: 2) {
+  .cd-icon { image-rendering: pixelated; }
+  :root { --coin-lens-panel: url(#coin-lens); }
+  .cd-coin .coin-spec { inset: 0; }
+  :root.coin-glass:not([data-theme="dark"]) .cd-coin .cd-icon { filter: none; }
+  :root.coin-glass:not([data-theme="dark"]) .cd-coin .coin-shade { display: block; }
+}
+@media (max-width: 639px) and (resolution: 2dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 2),
+  (pointer: coarse) and (max-height: 500px) and (resolution: 2dppx),
+  (pointer: coarse) and (max-height: 500px) and (-webkit-device-pixel-ratio: 2) {
+  .cd-coin { width: 48px; height: 48px; }
+}
+/* Under 440px a long name (Robinhood · Nasdaq) runs up to where the offer would float: the download has happened, the
+   offer is left out. */
+@media (max-width: 439px) {
+  .cd-copy { display: none; }
+}
+@media (max-width: 359px) {
+  .seg-type { grid-auto-columns: 44px; }
+  .seg-type .seg-ind { width: 44px; }
+  .cd-stats { grid-template-columns: minmax(0, 1fr); }
+}
+/* A phone on its side: a short, wide screen. The sheet's header is tighter, its controls sit beside the header (the
+   desktop's order) where the width allows, and the chart takes the height that is left, so the chart, its time axis
+   and its controls are all on screen at once; the stats and the source follow below and scroll. */
+@media (pointer: coarse) and (max-height: 500px) {
+  .cd-body { padding-top: 14px; }
+  .cd-price { margin-top: 6px; }
+  .cd-chart { height: max(120px, calc(100vh - 176px)); height: max(120px, calc(100dvh - 176px)); }
+}
+@media (pointer: coarse) and (max-height: 500px) and (min-width: 560px) {
+  .cd-body { grid-template-areas: "coin main tr" "coin main ctrl" "chart chart chart" "stats stats stats" "src src src"; }
+  .cd-ctrl { justify-self: end; align-self: end; margin-top: 0; }
+  .seg-size { flex: none; width: 200px; }
+}
+/* A sheet taller than the screen scrolls from the chart too: a vertical swipe there is the sheet's scroll, a sideways
+   one the scrub (a sheet that fits hands a vertical swipe to its drag instead, app.js). */
+@media (max-width: 639px), (pointer: coarse) and (max-height: 500px) {
+  .cd-body:not(.fits) .cd-chart { touch-action: pan-y; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xlink, html.glass-on .xlink { transition: none; }
+  .xlink:active { transform: none; }
+  .dot.down { animation: none; }
+  .notice-more, .notice-chev { transition: none; }
+  .notice-more:active { transform: none; }
+  /* Crossfades only: no lift, no press, no sliding droplet; the hover tint is a colour change and stays (quicker). */
+  .js-cards .card, .js-cards .card:hover, .js-cards .card.pressed { transition: none; translate: none; scale: none; }
+  .js-cards .card::before, .js-cards .card::after { transition-duration: 120ms; }
+  .seg-ind, .cd-x { transition: none; }
+  .cd-x:active { transform: none; }
+  .cd-svg .ln, .cd-svg .area { transition: none; }
+  .cd-wait.on::after { animation: none; }
+}
+
+/* Glass that is asked to be plain (reduced transparency) or clearer (more contrast): the faces of the raised glass turn
+   solid and the top bar's strip is the page's own ground, unblurred; the light and the shapes stay. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  /* As pictures, not plain colours: in the top bar the face lies over other layers, where only a picture may. */
+  :root[data-theme="dark"] .xlink { --g-face: linear-gradient(#1c1d23, #1c1d23); }
+  :root:not([data-theme="dark"]) .xlink { --g-face: linear-gradient(#ffffff, #ffffff); }
+  :is(.seg-ind, .theme-switch .drop) > u, :is(.seg-ind, .theme-switch .drop).lifted > u { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .top::before { background: var(--surface-0); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  /* The bar's controls lose their frost with it: the switch's track lies on the plain ground, the X link's face is solid. */
+  .glass.float { --g-bar: var(--float-solid); }
+  .top-blob, .logo-glass, .seg-show .seg-ind { --g-dock: var(--float-solid); }
+  :root:root .top > .xlink { --g-face: linear-gradient(transparent, transparent); }
+  .top-blob > i, .logo-glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+  .glass.float::before { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html, html.glass-clear { --glass-bd: none; --glass-bd-s: none; --glass-bd-edge: none; --glass-bd-mid: none; --glass-pill-bd: none; --glass-strip-bd: none; }
+  /* No blur here to lose in a theme change: the strip stays as it is. */
+  html.vt.vt-flat .top::before { background: var(--surface-0); -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent); mask-image: linear-gradient(180deg, #000 60%, transparent); }
+  .drop-lens { display: none !important; }
+}
+
+/* Windows high contrast: the ghost tape would turn into full-strength text, so it goes; the boxes keep an edge. */
+@media (forced-colors: active) {
+  .tape { display: none; }
+  .hero, .card, .notice { outline: 1px solid transparent; }
+  /* The glass goes: each control keeps the system's edge, and the top bar's strip is plain Canvas over the bar's own
+     height (the system drops the strip's paint, and a blur alone would let the page's words show under the controls). */
+  :is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::before, :is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::after { display: none; }
+  .xlink { outline: 1px solid transparent; }
+  .top::before { display: block; inset: 0; background: Canvas; -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
+  .top-blob, .logo-glass { display: none; }
+  /* SVG keeps its own colours here, so the notice's glyph and chevron and the X link's mark take the text colour (amber
+     would be faint on a light theme; the mark's page ink would vanish on a Canvas of the other ground). The toggle keeps
+     an edge (its focus ring still wins). */
+  .notice-glyph, .notice-chev, .xlink svg { color: inherit; }
+  .notice-more { outline: 1px solid transparent; }
+  /* The panel: a real edge, a plain veil (never the painted one), and a chart drawn in system colours (rising candles
+     hollow, falling ones filled, the classic monochrome convention). */
+  .cd-bg { outline: 1px solid CanvasText; }
+  .cd-veil, .cd-veil.lite, .cd-veil.painted { -webkit-backdrop-filter: none; backdrop-filter: none; background: Canvas; opacity: 0.9; }
+  .cd-veil.painted > .veil-paint { display: none; }
+  .cd-x { outline: 1px solid transparent; }
+  .cd-chart, .cd-svg { forced-color-adjust: none; }
+  .cd-wm { display: none; }
+  .cd-svg .ln, .cd-svg.up .ln, .cd-svg.down .ln { stroke: CanvasText; }
+  .cd-svg .area { display: none; }
+  .cd-svg .c-up { fill: Canvas; stroke: CanvasText; stroke-width: 1px; }
+  .cd-svg .c-down { fill: CanvasText; }
+  .cd-svg .w-up, .cd-svg .w-down { stroke: CanvasText; }
+  .cd-svg .tf, .cd-svg.up .tf, .cd-svg.down .tf, .cd-svg .scrub.rise .tf, .cd-svg .scrub.fall .tf { fill: Highlight; }
+  .cd-svg .scrub-line { stroke: Highlight; }
+  .cd-axis span, .cd-axis .tz, .cd-ohlc, .cd-ohlc b, .cd-err { color: CanvasText; }
+  .seg { outline: 1px solid transparent; }
+  .seg-ind, .drop-lens { display: none; }
+  .seg button[aria-pressed="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  .cd-star, .cd-glint, .glint { display: none; }
+  /* The theme switch: the system's edge, and the chosen glyph in Highlight, the other in GrayText (no droplet). */
+  .theme-switch { outline: 1px solid transparent; }
+  .theme-switch:focus-visible { outline: 2px solid var(--focus); }
+  .theme-switch .drop { display: none; }
+  .theme-glyph { forced-color-adjust: none; }
+  .theme-switch .theme-glyph, .theme-switch:hover .theme-glyph { color: GrayText; }
+  .theme-switch[aria-checked="false"] .theme-sun, .theme-switch[aria-checked="true"] .theme-moon,
+  .theme-switch[aria-checked="false"]:hover .theme-sun, .theme-switch[aria-checked="true"]:hover .theme-moon { color: Highlight; }
+  /* The pixel coins' contact shadows go with every other shadow, and so does the glass's reflection; the lens stays (it
+     only draws the art). */
+  :root:not([data-theme="dark"]) :is(.icon, .cd-icon), :root.coin-glass:not([data-theme="dark"]) :is(.grid .icon, .cd-coin .cd-icon) { filter: none; }
+  html.coin-glass .coin-spec, :root.coin-glass:not([data-theme="dark"]) :is(.grid, .cd-coin) .coin-shade { display: none; }
+  /* The logo is a picture the system does not recolour, so it follows the system's ground, not the page's theme: the
+     ink word on a light Canvas (below: the white word on a dark one). */
+  :root .lockup.lockup-white { display: none; }
+  :root .lockup.lockup-ink { display: block; }
+}
+@media (forced-colors: active) and (prefers-color-scheme: dark) {
+  :root .lockup.lockup-white { display: block; }
+  :root .lockup.lockup-ink { display: none; }
+}
+/* Print as on screen, on either ground, so every word and the logo's word stay visible; never split a card. The switch
+   has nothing to do on paper. color-adjust is the name Firefox read before version 97. */
+@media print {
+  html, body { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .card, .notice, .hero { break-inside: avoid; }
+  .theme-switch { display: none; }
+  /* On paper the bar is just the page's first line. */
+  .top { position: static; }
+  .top::before { display: none; }
+  /* A chart panel open at print time is not printed; the page under it is (the share card is the way to take a chart
+     away). The dialog is hidden, not undisplayed, so it stays open and laid out and its chart keeps its box and its
+     scroll; the page's scroll lock is lifted so every page prints, not the first alone; and the card the panel came
+     from, kept blank on screen under it, prints with its neighbours. */
+  dialog.cd[open] { visibility: hidden; }
+  html.cd-lock { overflow: visible; }
+  .grid .card.is-source { opacity: 1; }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "printerino-site-tools",
+  "private": true,
+  "description": "Build-time tools only, run on a developer's machine (never installed on the server, which reads the root package.json and has no dependencies): esbuild minifies the scripts and the stylesheet, sharp writes the lossless WebP copies of the icons and the glass maps. npm install here; see the root README.",
+  "type": "module",
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "sharp": "0.35.5"
+  }
+}

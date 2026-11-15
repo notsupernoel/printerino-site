@@ -1,0 +1,13 @@
+{
+  "name": "printerino-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "printerino.com: live crypto, stock and commodity prices",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node src/web/server.js"
+  }
+}
