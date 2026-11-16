@@ -14,13 +14,19 @@
 // - The painted veil: where the panel's backdrop cannot be blurred live (a lite view, a browser without backdrop
 //   filters), the same material painted once into a small canvas.
 // - The theme change: the new theme spreads out of the switch as a drop of liquid glass (a view transition).
+// - The top bar: its controls flow into one body of glass with the scroll, and once the list's own bar is above the
+//   window the list's switch joins them: the X link gives up its word, a gap springs open and the switch rises in.
 // Everything moves in app.js's one frame loop (api.wake), and only while it moves: at rest this module writes nothing
 // and the page is the stylesheet's again. No colour lives here; every one is a token in style.css.
 // Every comment in this file sits on a line of its own: the server strips comment lines before serving it.
 
 // The contract with app.js. A page from another deploy (an older app.js that imported this newer file) gets null and
-// keeps working without the motion. 4: the chart panel is solid in both themes, so there are no panel hooks.
-const API = 4;
+// keeps working without the motion. 9: app.js hands over the list's switch's twin in the top bar and where its machine
+// stands (api.viewTwin, api.viewAt), this module moves it in and out (viewJoin), says when the bar has room for it
+// (viewRoom) and when it has landed (api.viewLanded); and what app.js's own machines hold is asked of them, never read
+// off the page: the theme chosen and the one drawn now (api.theme, api.ground), whether the open panel keeps the
+// light veil (api.lite), and the choice a placed pill stands for (dropPlace's value).
+const API = 9;
 
 // An explicit state machine (every state machine on the site is declared, not implied):
 // its states are the keys of `moves`, each listing the states it may move to. go() refuses any other move (false,
@@ -155,6 +161,20 @@ export function install(api) {
     }
     return p;
   }
+  // The glass's look, as app.js writes it on the page (html.glass-clear): frosted, an even blur that bends nothing, or
+  // clear, which bends what is behind it through the rim lenses (the dock's, its round button's, the top bar's merged
+  // body's). The stylesheet uses those lenses under html.glass-clear only, so their maps are not asked for under
+  // frosted glass: whenClear(f) runs f at once under clear glass, or the first time the glass turns clear.
+  const glassLook = machine(root.classList.contains('glass-clear') ? 'clear' : 'frosted', { frosted: ['clear'], clear: ['frosted'] });
+  const clearWaits = [];
+  glassLook.on((to) => { if (to === 'clear') for (const f of clearWaits.splice(0)) f(); });
+  const whenClear = (f) => {
+    if (glassLook.is('clear')) f();
+    else clearWaits.push(f);
+  };
+  if (typeof MutationObserver === 'function') {
+    new MutationObserver(() => { glassLook.go(root.classList.contains('glass-clear') ? 'clear' : 'frosted'); }).observe(root, { attributes: true, attributeFilter: ['class'] });
+  }
   // The page's one SVG of filter definitions, made here when the page has none yet. Off screen, never display: none
   // (a filter inside an undisplayed SVG is not drawn).
   let defsEl = null;
@@ -211,9 +231,9 @@ export function install(api) {
   const glowSeen = new WeakMap();
   function glow(el, which) {
     let seen = glowSeen.get(el);
-    if (!seen || seen.theme !== root.dataset.theme) {
+    if (!seen || seen.theme !== api.ground()) {
       const cs = getComputedStyle(el);
-      seen = { theme: root.dataset.theme, hover: parseFloat(cs.getPropertyValue('--g-glow-hover')) || 0, press: parseFloat(cs.getPropertyValue('--g-glow-press')) || 0 };
+      seen = { theme: api.ground(), hover: parseFloat(cs.getPropertyValue('--g-glow-hover')) || 0, press: parseFloat(cs.getPropertyValue('--g-glow-press')) || 0 };
       glowSeen.set(el, seen);
     }
     return seen[which];
@@ -1076,8 +1096,10 @@ export function install(api) {
       unstyle(b, ['color']);
     });
   }
-  // The panel's two controls, the dock and the top bar's glass switch (a page from before either has none).
-  for (const seg of [P?.segS, P?.segT, api.dock, api.glassSeg]) {
+  // The panel's two controls, the dock, the top bar's glass switch, the list's board-or-tiles switch and that switch's
+  // twin in the top bar (a page from before any of them has none).
+  const twoCell = (seg) => seg === api.glassSeg || seg === api.viewSeg || seg === api.viewTwin;
+  for (const seg of [P?.segS, P?.segT, api.dock, api.glassSeg, api.viewSeg, api.viewTwin]) {
     const ind = seg?.querySelector('.seg-ind');
     if (!ind) continue;
     const btns = () => [...seg.querySelectorAll('button')];
@@ -1122,8 +1144,10 @@ export function install(api) {
       // (The top bar's glass switch is a capsule too, on a switch's travel spring: a 60px track gives a droplet no room,
       // and on iOS a switch's thumb is a solid capsule. Only the dock's pill stays the fluid droplet. Lifted, a switch's thumb stands 10.5px past itself across and 7.2 up
       // and down, as UIKit's 37 by 24 thumb lifts to 58 by 38.)
-      capsule: picker || seg === api.glassSeg,
-      ...(seg === api.glassSeg ? { travel: S.CAP_SWITCH } : {}),
+      // (The list's board-or-tiles switch and its twin in the top bar are the same two-cell switch: the same capsule on
+      // the same travel spring.)
+      capsule: picker || twoCell(seg),
+      ...(twoCell(seg) ? { travel: S.CAP_SWITCH } : {}),
       // Dragged over a segment, its glyph is the filled one before the finger lets go (as on an iOS tab bar); the
       // stylesheet draws it from these two classes.
       over: (i) => {
@@ -1136,6 +1160,7 @@ export function install(api) {
         else if (b?.dataset.t) api.setType(b.dataset.t);
         else if (b?.dataset.k) api.setShow?.(b.dataset.k);
         else if (b?.dataset.g) api.setGlass?.(b.dataset.g);
+        else if (b?.dataset.v) api.setView?.(b.dataset.v);
         move(D);
       },
       // The stylesheet's own slide is off while the droplet moves here (its translate is written every frame).
@@ -1163,14 +1188,18 @@ export function install(api) {
     });
     seg.addEventListener('click', swallowClick(D), true);
   }
-  // app.js placed a segmented control's pill (segPlace): the droplet goes there. x and w are the chosen segment's.
-  function dropPlace(seg, x, w, { still = false, byUser = false } = {}) {
+  // app.js placed a segmented control's pill (segPlace): the droplet goes there. x and w are the chosen segment's, and
+  // value is what that segment stands for, as app.js's own machine for the choice says it (the glass switch, the dock
+  // and the list's board-or-tiles switch; the panel's two controls pass none): a choice made by the viewer is answered
+  // on that value's glyph.
+  function dropPlace(seg, x, w, { still = false, byUser = false, value = '' } = {}) {
     const D = segDrops.get(seg);
     if (!D || !Number.isFinite(x) || !Number.isFinite(w)) return false;
     placeDrop(D, x, x + w, { still, byUser });
-    if (seg === api.glassSeg && byUser && !still) glyphPop(seg.querySelector('button[aria-pressed="true"]')?.dataset.g);
-    // The dock's chosen glyph answers too.
-    if (seg === api.dock && byUser && !still) glyphPop(`dock:${seg.querySelector('button[aria-pressed="true"]')?.dataset.k}`);
+    if (!byUser || still || !value) return true;
+    if (seg === api.glassSeg) glyphPop(value);
+    else if (seg === api.dock) glyphPop(`dock:${value}`);
+    else if (seg === api.viewSeg || seg === api.viewTwin) glyphPop(`view:${value}`, seg);
     return true;
   }
 
@@ -1225,13 +1254,13 @@ export function install(api) {
   function syncSw() {
     if (!swD || running(swD) || touched(swD) || !swD.trip.is('still')) return;
     const [[x0, w], [x1]] = swD.opt.cells();
-    const x = sw.getAttribute('aria-checked') === 'true' ? x1 : x0;
+    const x = api.theme() === 'dark' ? x1 : x0;
     if (Math.abs(x - swD.tL) > 0.01 || Math.abs(x + w - swD.tR) > 0.01) placeDrop(swD, x, x + w, { still: true });
   }
   if (swD && typeof MutationObserver === 'function') new MutationObserver(syncSw).observe(sw, { attributes: true, attributeFilter: ['aria-checked'] });
   // The newly chosen glyph answers, as SF Symbols do: the sun's rays turn in and spring out, the moon rocks and settles.
   // The glass switch's two rings answer the same way, beside a sun and a moon that do: the frosted ring turns in and springs out as the sun's rays do, the clear one rocks as the moon does.
-  function glyphPop(next) {
+  function glyphPop(next, seg = api.viewSeg) {
     if (REDUCED.matches || FORCED.matches) return;
     const dur = 700;
     const N = 42;
@@ -1243,20 +1272,40 @@ export function install(api) {
     };
     const opts = { duration: dur, easing: 'linear' };
     if (next.startsWith('dock:')) {
-      // Each in its own way: the grid turns in; the coins rock and settle; the bars fill one after another, short to
-      // tall; the ingots drop and stack one by one, the two below first and the third on top. The parts are the filled glyph's own shapes (the stylesheet
-      // gives each its own box to turn in), a step of 80 ms apart, inside the same 700 ms as every other answer.
+      // Each in its own way: the globe pops and makes a half turn; the coins rock and settle; the bars fill one after
+      // another, short to tall; the ingots drop and stack one by one, the two below first and the third on top. The
+      // parts are the filled glyph's own shapes (the stylesheet gives each its own box to turn in), a step of 80 ms
+      // apart, inside the same 700 ms as every other answer.
       const kind = next.slice(5);
       const glyph = api.dock?.querySelector(`button[data-k="${kind}"] svg`);
       const parts = glyph ? [...glyph.querySelectorAll('.ic-f > *')] : [];
       const later = (i) => ({ ...opts, delay: i * 80, fill: 'backwards' });
-      if (kind === 'all') glyph?.animate(keys(0.42, 0.55, (v) => ({ transform: `rotate(${f2(-90 * (1 - v))}deg) scale(${f4(0.6 + 0.4 * v)})` })), opts);
-      else if (kind === 'coin') glyph?.animate(keys(0.5, 0.42, (v) => ({ transform: `rotate(${f2(-38 * (1 - v))}deg) scale(${f4(0.78 + 0.22 * v)})` })), opts);
+      if (kind === 'all') {
+        // The half turn is the meridians': each closes to a line and swings open past its place, about its own middle
+        // (.mer: the outline's ellipse, and the one cut out of the filled disc, inside its mask).
+        glyph?.animate(keys(0.42, 0.55, (v) => ({ transform: `scale(${f4(0.72 + 0.28 * v)})` })), opts);
+        for (const mer of glyph?.querySelectorAll('.mer') ?? []) mer.animate(keys(0.55, 0.5, (v) => ({ transform: `scaleX(${f4(-1 + 2 * v)})` })), opts);
+      } else if (kind === 'coin') glyph?.animate(keys(0.5, 0.42, (v) => ({ transform: `rotate(${f2(-38 * (1 - v))}deg) scale(${f4(0.78 + 0.22 * v)})` })), opts);
       else if (kind === 'stock') {
         parts.forEach((bar, i) => bar.animate(keys(0.3, 0.62, (v) => ({ transformOrigin: '50% 100%', transform: `scaleY(${f4(Math.max(0, v))})` })), later(i)));
       } else {
         // parts: the top ingot, then the lower left and the lower right; they land in the order they would be stacked
         [parts[1], parts[2], parts[0]].forEach((bar, i) => bar?.animate(keys(0.3, 0.6, (v) => ({ transform: `translateY(${f2(-9 * (1 - v))}px)`, opacity: f4(Math.min(1, Math.max(0, v) * 2)) })), later(i)));
+      }
+      return;
+    }
+    // The board-or-tiles switch's glyphs ('view:board', 'view:tiles'). Tiles: the grid turns in. Board: the glyph pops
+    // whole while its three bars settle from the bottom one up, 60 ms apart; each travels less than the gap to its
+    // neighbour and lands without a bounce, so no bar ever crosses another's place. seg: the switch that answers, the
+    // list's own or its twin in the top bar.
+    if (next.startsWith('view:')) {
+      const kind = next.slice(5);
+      const glyph = seg?.querySelector(`button[data-v="${kind}"] svg`);
+      if (kind === 'tiles') glyph?.animate(keys(0.42, 0.55, (v) => ({ transform: `rotate(${f2(-90 * (1 - v))}deg) scale(${f4(0.6 + 0.4 * v)})` })), opts);
+      else if (kind === 'board') {
+        const bars = glyph ? [...glyph.querySelectorAll('.ic-f > *')] : [];
+        glyph?.animate(keys(0.42, 0.55, (v) => ({ transform: `scale(${f4(0.8 + 0.2 * v)})` })), opts);
+        [bars[2], bars[1], bars[0]].forEach((bar, i) => bar?.animate(keys(0.32, 0.9, (v) => ({ transform: `translateY(${f2(-2.4 * (1 - v))}px)`, opacity: f4(Math.min(1, 0.35 + Math.max(0, v) * 1.3)) })), { ...opts, delay: i * 60, fill: 'backwards' }));
       }
       return;
     }
@@ -1297,6 +1346,10 @@ export function install(api) {
   if (api.dock) glass(api.dock, { lift: false, ratio: 0.033, leanX: 0.01, leanY: 0.01 });
   // The glass switch in the top bar: lit under the pointer like the theme switch beside it, never pressed in or lifted.
   if (api.glassSeg) glass(api.glassSeg, { press: false, lift: false });
+  // The list's board-or-tiles switch, the same kind of switch standing on the page: lit the same way.
+  if (api.viewSeg) glass(api.viewSeg, { press: false, lift: false });
+  // Its twin in the top bar: lit as the glass switch beside it is.
+  if (api.viewTwin) glass(api.viewTwin, { press: false, lift: false });
   if (api.toTop) {
     const el = api.toTop;
     // Its magnifier is made ready at the first sign of use (READY's states; lensing: its filter's steps, once ready),
@@ -1388,9 +1441,7 @@ export function install(api) {
     // The round button's lens (READY's states; html.dock-round-lens once ready). The button is always 62px round, the
     // size its map was drawn for, so it is never judged again.
     const roundRim = machine('idle', READY).on((to) => { if (to === 'ready') root.classList.add('dock-round-lens'); });
-    const armDock = () => {
-      api.dock.removeEventListener('pointerenter', armDock);
-      removeEventListener('scroll', armDock);
+    const wantDock = () => {
       if (!dockRim.is('idle')) return;
       if (!D_LENS || !gpu()) {
         dockRim.go('none');
@@ -1413,6 +1464,12 @@ export function install(api) {
         }, () => { if (roundRim.epoch === rp) roundRim.go('none'); });
       }, () => { if (dockRim.epoch === ep) dockRim.go('none'); });
     };
+    // Wanted at the first sign of use (a pointer over the dock, the first scroll), and then only under clear glass.
+    const armDock = () => {
+      api.dock.removeEventListener('pointerenter', armDock);
+      removeEventListener('scroll', armDock);
+      whenClear(wantDock);
+    };
     api.dock.addEventListener('pointerenter', armDock, { passive: true });
     addEventListener('scroll', armDock, { passive: true, once: true });
   }
@@ -1426,8 +1483,18 @@ export function install(api) {
   const blobGlass = blob?.querySelector('i');
   // The stylesheet's own conditions for drawing the merge (asked here, not read off the element: in WebKit the element
   // stays undrawn until this module has taken over).
-  const MERGE = CSS.supports('animation-timeline: scroll()') && matchMedia('(prefers-reduced-motion: no-preference) and (min-width: 360px)').matches && !FORCED.matches;
-  if (blob && blobGlass && MERGE) {
+  const TIMELINES = CSS.supports('animation-timeline: scroll()');
+  const MERGE_MQ = matchMedia('(prefers-reduced-motion: no-preference) and (min-width: 360px)');
+  // Those conditions as they stand now (a window can be resized across them, a preference changed).
+  const merges = () => TIMELINES && MERGE_MQ.matches && !FORCED.matches;
+  // The merged body's side of the twin's join (set below, once this module draws the merge).
+  let body = null;
+  // This module takes the merge over from the stylesheet once, the first time the bar merges: as it arrives, or later
+  // (a phone turned, a window widened past 360px, reduced motion switched off). Left to the stylesheet from then on,
+  // the body could never hold the twin: its frames are cut for three controls.
+  function mergeTake() {
+    if (body || !merges()) return;
+    for (const mq of [MERGE_MQ, FORCED]) mq.removeEventListener?.('change', mergeTake);
     const bar = blob.parentElement;
     const FRAMES = 24;
     const REACH = 120;
@@ -1438,7 +1505,11 @@ export function install(api) {
     const M_LENS = asset(api.ASSETS?.mLens);
     // The merge has no phases of its own: it is one spring following the scroll (B below), drawn a frame of 24 at a
     // time. Only its rim lens is made ready (READY's states; img: the lens's map, slid a frame at a time, once ready).
-    const mergeLens = machine('idle', READY).on((to) => { if (to === 'ready') root.classList.add('blob-lens'); });
+    const mergeLens = machine('idle', READY).on((to) => {
+      if (to !== 'ready') return;
+      root.classList.add('blob-lens');
+      lensHeld();
+    });
     let img = null;
     // The body's outline at each frame, as a clip path (a mask does not cut a backdrop blur in WebKit, a clip path does
     // everywhere). It is the shape tools/glass/m/gen-merge.mjs draws for the rim's light: the numbers below are that
@@ -1457,23 +1528,12 @@ export function install(api) {
     };
     const outlines = [];
     const rings = [];
-    const outline = (f) => {
-      if (outlines[f]) return outlines[f];
-      const q = f / (FRAMES - 1);
-      const e = q * q * (3 - 2 * q);
-      const ex = e ** 2.1;
-      const L = (a, b, k) => a + (b - a) * k;
-      const y0 = L(6, 0, e);
-      const h = L(28, BH, e);
-      const k = 16 * Math.sin(Math.PI * q);
-      const caps = PARTS.map(([px, pw], j) => {
-        const l = j ? L(px, PARTS[j - 1][0] + PARTS[j - 1][1] * 0.45, ex) : L(px, 0, e);
-        const r = j < PARTS.length - 1 ? L(px + pw, PARTS[j + 1][0] + PARTS[j + 1][1] * 0.55, ex) : L(px + pw, BW, e);
-        return [l, r - l];
-      });
-      const sd = (x, y) => caps.map(([l, w]) => cap(x, y, l, y0, w, h)).reduce((d, c) => smin(d, c, k));
-      const mid = BH / 2;
-      // How far the shape reaches from its middle line in each column, for the edge at distance lvl outside it.
+    // A shape (sd: the distance to its edge, negative inside) in a box w wide, as how far it reaches from its middle
+    // line in each half-pixel column: the body's own edge, and the two edges of the half-pixel ring just outside it
+    // (the stylesheet's edge layer, 1px larger than the box all round).
+    const mid = BH / 2;
+    const edgesOf = (sd, w) => {
+      // For the edge at distance lvl outside the shape.
       const reach = (lvl, x0, x1) => {
         const out = [];
         for (let x = x0; x <= x1; x += 0.5) {
@@ -1490,15 +1550,35 @@ export function install(api) {
         }
         return out;
       };
-      const cols = reach(0, 0, BW);
-      // The half-pixel ring just outside the body (the stylesheet's edge layer, 1px larger than the box all round):
-      // the outer edge, then the body's own as a hole (even-odd), both starting on the middle line at the far left.
-      const loop = (cs) => [...cs.map(([x, d]) => `${x + 1}px ${f2(mid + 1 - d)}px`), ...cs.slice().reverse().map(([x, d]) => `${x + 1}px ${f2(mid + 1 + d)}px`)];
-      const inner = loop(reach(0, -1, BW + 1));
-      rings[f] = `polygon(evenodd, ${[...loop(reach(0.5, -1, BW + 1)), ...inner, inner[0]].join(',')})`;
-      const pts = cols.map(([x, d]) => `${x}px ${f2(mid - d)}px`);
-      for (let i = cols.length - 1; i >= 0; i--) pts.push(`${cols[i][0]}px ${f2(mid + cols[i][1])}px`);
-      outlines[f] = `polygon(${pts.join(',')})`;
+      return [reach(0, 0, w), reach(0.5, -1, w + 1), reach(0, -1, w + 1)];
+    };
+    // Those edges as the body's clip path and as the edge layer's ring: the ring's outer edge, then the body's own as a
+    // hole (even-odd), both starting on the middle line at the far left. at: where a column is drawn (its own x, or
+    // moved: the body holding the list's switch, below).
+    const drawn = ([cols, outer, inner], at = (x) => x) => {
+      const loop = (cs) => [...cs.map(([x, d]) => `${at(x) + 1}px ${f2(mid + 1 - d)}px`), ...cs.slice().reverse().map(([x, d]) => `${at(x) + 1}px ${f2(mid + 1 + d)}px`)];
+      const hole = loop(inner);
+      const ring = `polygon(evenodd, ${[...loop(outer), ...hole, hole[0]].join(',')})`;
+      const pts = cols.map(([x, d]) => `${at(x)}px ${f2(mid - d)}px`);
+      for (let i = cols.length - 1; i >= 0; i--) pts.push(`${at(cols[i][0])}px ${f2(mid + cols[i][1])}px`);
+      return [`polygon(${pts.join(',')})`, ring];
+    };
+    const trace = (sd, w) => drawn(edgesOf(sd, w));
+    const outline = (f) => {
+      if (outlines[f]) return outlines[f];
+      const q = f / (FRAMES - 1);
+      const e = q * q * (3 - 2 * q);
+      const ex = e ** 2.1;
+      const L = (a, b, k) => a + (b - a) * k;
+      const y0 = L(6, 0, e);
+      const h = L(28, BH, e);
+      const k = 16 * Math.sin(Math.PI * q);
+      const caps = PARTS.map(([px, pw], j) => {
+        const l = j ? L(px, PARTS[j - 1][0] + PARTS[j - 1][1] * 0.45, ex) : L(px, 0, e);
+        const r = j < PARTS.length - 1 ? L(px + pw, PARTS[j + 1][0] + PARTS[j + 1][1] * 0.55, ex) : L(px + pw, BW, e);
+        return [l, r - l];
+      });
+      [outlines[f], rings[f]] = trace((x, y) => caps.map(([l, w]) => cap(x, y, l, y0, w, h)).reduce((d, c) => smin(d, c, k)), BW);
       return outlines[f];
     };
     const B = {
@@ -1523,11 +1603,147 @@ export function install(api) {
         }
       },
       rest() { return Math.abs(B.t - B.target) < 0.002 && Math.abs(B.v) < 0.02; },
-      settle() { B.t = B.target; B.v = 0; B.draw(); },
+      settle() {
+        B.t = B.target;
+        B.v = 0;
+        B.draw();
+        // Whoever waited for the one whole body (room, below) hears that it is.
+        if (whole()) for (const heard of wholeWaits.splice(0)) heard();
+      },
     };
     const BLOB = spring(0.46, 0.84);
+    // The body is whole: every control in the one capsule, the spring at rest there.
+    const whole = () => !running(B) && B.t > 0.99;
+    const wholeWaits = [];
+
+    // ---- the body holding the list's switch (its twin, api.viewTwin) as a fourth control ----
+    // The twin only ever joins the whole body, one capsule, and the X link gives up its word for it: the body with
+    // the twin in is that capsule 250px wide, where the three controls took 268, and every width between while the
+    // twin comes or goes. Its outline is cut here at each width, in the box it has at rest with the twin in (its
+    // right end never moves). The rim's light is the stylesheet's, the four-part map in two parts; the lens is the
+    // same two parts of that set's lens map, the left one kept up to LENS_CUT and the right one from there, where
+    // both are flat. gen-merge.mjs draws the set.
+    const SET = { w: 250, rim: asset(api.ASSETS?.m4Rim), lens: asset(api.ASSETS?.m4Lens) };
+    const LENS_CUT = 130;
+    // The room the cut layers have past the box's left end while the twin moves (the stylesheet gives them the same),
+    // for a body wider than its box.
+    const PAD = 24;
+    // The resting capsule's edges in that wider box, for the body on its way (body.shape).
+    let moving = null;
+    // What the body holds, its form:
+    //   three  the three controls it merges from the scroll (the frames above);
+    //   four   those and the twin, or the twin on its way in or out (J below).
+    // While it holds the twin the merge stays whole whatever the scroll says (aim): the twin leaves first, and only
+    // then does the body part into its three controls.
+    const hold = machine('three', { three: ['four'], four: ['three'] }).on((to) => {
+      // .view-fused: the stylesheet moves the twin and its neighbours inside the body (no layout), not as capsules.
+      bar.classList.toggle('view-fused', to === 'four');
+      lensHeld();
+      if (to === 'four') return;
+      // Back to the three controls' own outline.
+      B.f = -1;
+      B.draw();
+      aim();
+    });
+    const cutTo = ([cut, ring]) => {
+      blobGlass.style.clipPath = cut;
+      if (shade) shade.style.clipPath = cut;
+      if (edge) edge.style.clipPath = ring;
+    };
+    // The lens of the body holding the twin: one filter (l4), built when the twin is first taken in where the
+    // three-part body has its lens, and in use (html.blob-lens4) while the body holds the twin. lensLay places its
+    // two parts: pad, the layer's room past the box's left end (none at rest); left, the body's left end in the box.
+    let l4 = null;
+    // The set's lens map: READY's states, but a map that would not load is asked for again (wait back to idle). It is
+    // asked for with the set's rim under clear glass (room), or as the glass turns clear once that rim has been asked
+    // for, and never where the three-part body has no lens.
+    const setLens = machine(SET.lens ? 'idle' : 'none', { idle: ['wait'], wait: ['ready', 'idle'] }).on((to) => { if (to === 'ready') lensHeld(); });
+    const wantSetLens = () => {
+      if (mergeLens.is('none') || !setLens.go('wait')) return;
+      map(SET.lens).then(() => { setLens.go('ready'); }, () => {
+        maps.delete(SET.lens);
+        setLens.go('idle');
+      });
+    };
+    glassLook.on((to) => { if (to === 'clear' && maps.has(SET.rim)) wantSetLens(); });
+    const lensable = () => setLens.is('ready') && mergeLens.is('ready');
+    const lensLay = (pad, left) => {
+      if (!lensable()) return;
+      if (!l4) {
+        const at = { y: 0, height: BH };
+        const f = svgEl('filter', { id: 'm4-lens-f', x: 0, ...at, filterUnits: 'userSpaceOnUse', primitiveUnits: 'userSpaceOnUse', 'color-interpolation-filters': 'sRGB' });
+        const part = (result) => svgEl('feImage', { href: SET.lens, ...at, width: SET.w, preserveAspectRatio: 'none', result });
+        const cut = svgEl('feFlood', { ...at, width: LENS_CUT, 'flood-color': '#000', result: 'cut' });
+        const both = svgEl('feMerge', { result: 'map' });
+        both.append(svgEl('feMergeNode', { in: 'right' }), svgEl('feMergeNode', { in: 'kept' }));
+        l4 = { f, left: part('left'), cut, right: part('right') };
+        f.append(
+          l4.left,
+          cut,
+          svgEl('feComposite', { in: 'left', in2: 'cut', operator: 'in', result: 'kept' }),
+          l4.right,
+          both,
+          svgEl('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 0.5, result: 'pre' }),
+          svgEl('feDisplacementMap', { in: 'pre', in2: 'map', scale: 22, xChannelSelector: 'R', yChannelSelector: 'G', result: 'bent' }),
+          svgEl('feColorMatrix', { in: 'bent', type: 'saturate', values: 1.3 }),
+        );
+        defs().append(f);
+      }
+      l4.f.setAttribute('width', String(pad + SET.w));
+      l4.left.setAttribute('x', f2(pad + left));
+      l4.cut.setAttribute('x', f2(pad + left));
+      l4.right.setAttribute('x', String(pad));
+    };
+    // The body took the twin or let it go, or either lens came in while it held it.
+    function lensHeld() {
+      const on = hold.is('four') && lensable();
+      root.classList.toggle('blob-lens4', on);
+      if (on) lensLay(0, 0);
+    }
+    body = {
+      // Resolves true once the body can take the twin: the set's rim decoded and the merge whole, and under clear
+      // glass the set's lens in too, or given up for now (the body then keeps clear glass's plain blur until a later
+      // ask brings it). Frosted glass bends nothing: there the rim alone is enough. False where the page has no such
+      // rim, or it would not load (asked for again next time).
+      room() {
+        // Separate capsules now (a window narrowed under 360px since this module took the merge): nothing to wait for.
+        if (!merges()) return Promise.resolve(true);
+        if (!SET.rim) return Promise.resolve(false);
+        if (glassLook.is('clear')) wantSetLens();
+        const lens = setLens.is('wait') ? map(SET.lens).catch(() => {}) : null;
+        return Promise.all([map(SET.rim), lens, whole() ? null : new Promise((heard) => { wholeWaits.push(heard); })]).then(() => true, () => {
+          maps.delete(SET.rim);
+          return false;
+        });
+      },
+      // A join or a leave sets off (a leave finds the body holding the twin already).
+      begin() {
+        if (merges() && whole()) hold.go('four');
+      },
+      // Whether the twin moves inside this body (false: the bar's controls are separate capsules).
+      holds: () => hold.is('four'),
+      // The body with its left end at left (px in its resting box: 18 to the left of it with the twin out, none with
+      // the twin in): its outline, cut in the layers' wider box, and its lens. The outline is the resting capsule's
+      // (traced once, its flat runs left out), the columns of its left half carried to where the end is.
+      shape(left) {
+        moving ??= edgesOf((x, y) => cap(x, y, PAD, 0, SET.w, BH), PAD + SET.w).map((cs) => cs.filter(([, d], i) => d !== cs[i - 1]?.[1] || d !== cs[i + 1]?.[1]));
+        cutTo(drawn(moving, (x) => (x < PAD + SET.w / 2 ? Math.round((x + left) * 100) / 100 : x)));
+        lensLay(PAD, left);
+      },
+      // Landed: with the twin in, the set's own outline; with it out, the three controls' body.
+      rest(inBar) {
+        if (!inBar) {
+          hold.go('three');
+          return;
+        }
+        if (merges()) hold.go('four');
+        if (!hold.is('four')) return;
+        cutTo(trace((x, y) => cap(x, y, 0, 0, SET.w, BH), SET.w));
+        lensLay(0, 0);
+      },
+    };
     const aim = () => {
-      B.target = clamp(scrollY / REACH, 0, 1);
+      B.target = hold.is('three') ? clamp(scrollY / REACH, 0, 1) : 1;
       if (REDUCED.matches || document.hidden) B.settle();
       else move(B);
     };
@@ -1535,8 +1751,14 @@ export function install(api) {
     B.settle();
     root.classList.add('blob-js');
     addEventListener('scroll', aim, { passive: true });
-    if (!(ENGINE.chromium && M_LENS && FINE.matches && !CLEAR.matches && CSS.supports('backdrop-filter', 'url(#x)') && gpu())) mergeLens.go('none');
-    else if (mergeLens.go('wait')) {
+    // The rim lens: where there can be one, and only under clear glass (its map is by far the page's largest).
+    if (!(ENGINE.chromium && M_LENS && FINE.matches && !CLEAR.matches && CSS.supports('backdrop-filter', 'url(#x)'))) mergeLens.go('none');
+    else whenClear(() => {
+      if (!mergeLens.go('wait')) return;
+      if (!gpu()) {
+        mergeLens.go('none');
+        return;
+      }
       const ep = mergeLens.epoch;
       map(M_LENS).then(() => {
         if (mergeLens.epoch !== ep) return;
@@ -1549,11 +1771,107 @@ export function install(api) {
           svgEl('feColorMatrix', { in: 'bent', type: 'saturate', values: 1.3 }),
         );
         defs().append(f);
-        // The stylesheet uses it under html.glass-clear only (clear glass bends, frosted glass is an even blur).
         mergeLens.go('ready');
       }, () => { if (mergeLens.epoch === ep) mergeLens.go('none'); });
-    }
+    });
   }
+  if (blob && blobGlass) {
+    mergeTake();
+    if (!body) for (const mq of [MERGE_MQ, FORCED]) mq.addEventListener?.('change', mergeTake);
+  }
+
+  // ---- the list's switch joining the top bar (app.js's viewJoin machine says when; style.css lays it out) ----
+  // One motion, wherever the bar's controls are separate capsules or one body. Two springs (J): g, the gap between
+  // the theme switch and the X link (0 closed, 1 open: the link gives up its word and the two switches make room),
+  // and d, the twin settling into that gap (it rises 14px, grows from 0.8 and clears). On the way in the gap leads
+  // and the twin follows once the gap is seven tenths open, so it never shows over the theme switch; on the way out
+  // the twin sinks first and the gap closes once the twin is all but clear. Each spring is always aimed from where
+  // app.js's machine stands, so a join turned into a leave (or back) turns round from where it is, at the speed it
+  // has. The gap slides on the pickers' slide spring; the twin settles on the spring the phone sheet's coin lands on
+  // (app.js's bounceSheet: 0.36 s, damping 0.75) and sinks on the hover light's (0.22 s). At rest nothing is written:
+  // the stylesheet's own.
+  const twin = api.viewTwin;
+  const twinBar = twin?.parentElement;
+  const xWord = twinBar?.querySelector('.xlink > span');
+  const SETTLE = spring(0.36, 0.75);
+  const viewIn = () => ['joining', 'bar'].includes(api.viewAt?.());
+  const J = {
+    g: 0, vg: 0, d: 0, vd: 0,
+    // The names of the variables written on the bar while the twin moves (put), all taken off as it lands.
+    vars: new Set(),
+    step(h) {
+      const inBar = viewIn();
+      pull(J, 'g', 'vg', inBar || J.d > 0.2 ? 1 : 0, S.CAP_SLIDE, h);
+      pull(J, 'd', 'vd', inBar && J.g > 0.7 ? 1 : 0, inBar ? SETTLE : GS.LIGHT, h);
+    },
+    draw() {
+      const gx = clamp(J.g, 0, 1);
+      J.put('--vjx', f4(gx));
+      J.put('--tw-y', `${f2(14 * (1 - J.d))}px`);
+      J.put('--tw-s', f4(0.8 + 0.2 * J.d));
+      J.put('--vo', f2(smooth(clamp((J.d - 0.08) / 0.62, 0, 1))));
+      if (!body?.holds()) {
+        // Separate capsules: the stylesheet lays the gap out.
+        J.put('--vj', f4(J.g));
+        return;
+      }
+      // One body: nothing is laid out. Its left end, and the two switches with it, stand where the gap's 70px less
+      // the 88 the X link's word gives up put them.
+      const left = 70 * (1 - J.g) - 88 * (1 - gx);
+      J.put('--tw-left', `${f2(left)}px`);
+      body.shape(left);
+    },
+    // One of the stylesheet's variables for the motion, written on the bar and remembered, to be taken off at rest.
+    put(name, value) {
+      J.vars.add(name);
+      twinBar.style.setProperty(name, value);
+    },
+    rest() {
+      const to = viewIn() ? 1 : 0;
+      return Math.abs(J.g - to) < 0.003 && Math.abs(J.d - to) < 0.01 && Math.abs(J.vg) < 0.04 && Math.abs(J.vd) < 0.1;
+    },
+    settle() {
+      const inBar = viewIn();
+      J.land(inBar);
+      api.viewLanded?.(inBar ? 'bar' : 'list');
+    },
+    // At rest, in the bar or out of it: the springs there, nothing of the motion's left written.
+    land(inBar) {
+      J.g = J.d = inBar ? 1 : 0;
+      J.vg = J.vd = 0;
+      unstyle(twinBar, [...J.vars]);
+      body?.rest(inBar);
+    },
+  };
+  // app.js's machine has moved: joining and leaving are the two motions, every other state a place to be at once.
+  function viewJoin(state) {
+    if (!twin) return;
+    if (state !== 'joining' && state !== 'leaving') {
+      J.run?.go('still');
+      J.land(state === 'bar');
+      return;
+    }
+    // The X link's word at its own width (its text's, as its box may be narrowed already), and how far left of its
+    // place as a 28px circle the link's mark stands beside that word: centred with it in the link's 116px inside the
+    // body, on the 64th of a pixel the layout puts it on there (half the room left, rounded down), so the first
+    // frame draws every letter exactly where it stood.
+    if (xWord && !running(J)) {
+      const text = document.createRange();
+      text.selectNodeContents(xWord);
+      const word = text.getBoundingClientRect().width;
+      J.put('--vx-word', `${word}px`);
+      J.put('--vx-from', `${96 - Math.floor((98 - word) * 32) / 64}px`);
+    }
+    body?.begin();
+    move(J);
+    J.draw();
+  }
+  // Whether the bar has room for the twin: at once where its controls are separate capsules, once the merged body can
+  // hold it where this module draws the merge (mergeTake), and never where the stylesheet alone steps the merge (a
+  // page without the body's layers: its frames are cut for three controls). WebKit draws no merge without this module.
+  const viewRoom = () => (body ? body.room() : Promise.resolve(!merges() || ENGINE.webkit));
+  // A twin already in the bar when this module arrives (separate capsules): the springs stand there too.
+  if (twin && api.viewAt?.() === 'bar') J.land(true);
   const more = document.getElementById('nfa-more');
   if (more) glass(more);
   // The panel's cross goes with its dialog: a close leaves no light or lift on it for the next open.
@@ -1882,9 +2200,15 @@ export function install(api) {
 
   // ---- painting ----
   let paintEl = null;
-  // Whether the veil shows its painted picture is read off its class alone, the one record of it: app.js takes the
-  // class off as a panel opens (a flag kept here beside it would still say painted after that, until the next paint).
-  const painted = () => veil.classList.contains('painted');
+  // What the veil shows. Its states:
+  //   plain    the stylesheet's own veil: the live blur, or the lite tint;
+  //   painted  its painted picture (.painted).
+  // veilPaint moves it, by how the paint went; app.js sends it back to plain as a panel opens (veilClear: the picture
+  // was the last panel's) and asks which it is (veilPainted). The class is written here, on the move, and read by the
+  // stylesheet alone.
+  const veilLook = machine('plain', { plain: ['painted'], painted: ['plain'] }).on((to) => veil?.classList.toggle('painted', to === 'painted'));
+  const painted = () => veilLook.is('painted');
+  const veilClear = () => { veilLook.go('plain'); };
   // Pictures the last paint could not draw yet (pics: in, every picture drawn; loading, one or more still on the way,
   // the veil to be painted again as the first of them arrives).
   const pics = machine('in', { in: ['loading'], loading: ['in'] });
@@ -1957,7 +2281,7 @@ export function install(api) {
   // app.js: paints the veil when the open panel wants it painted (and takes the painted one away when not).
   function veilPaint() {
     if (!veil || !dlg) return;
-    const want = dlg.open && !PLAIN.matches && (!LIVE || veil.classList.contains('lite'));
+    const want = dlg.open && !PLAIN.matches && (!LIVE || api.lite());
     let ok = false;
     if (want) {
       try {
@@ -1967,7 +2291,7 @@ export function install(api) {
         ok = false;
       }
     }
-    veil.classList.toggle('painted', ok);
+    veilLook.go(ok ? 'painted' : 'plain');
   }
   if (veil && dlg) {
     // A resize while open (a phone turned, a window dragged) paints it again, once, on the next frame.
@@ -1989,7 +2313,7 @@ export function install(api) {
   // it is gone. Reduced motion (and a device too slow for the drop, judged on its first one, and Firefox, where the drop
   // is untested) gets a dissolve: the new picture fades in. Without view transitions (Safari before 18), in forced
   // colours or a hidden tab it simply changes, in one frame: a fade of every colour on the page there restyled and
-  // repainted the whole page (and every coin's glass) on each frame, 70 to 145 ms a frame in WebKit.
+  // repainted the whole page on each frame, 70 to 145 ms a frame in WebKit.
   // ==================================================================================================================
   const VT = typeof document.startViewTransition === 'function';
   const TS = {
@@ -2030,6 +2354,9 @@ export function install(api) {
   // READY's states; vtLens: the filter's two moving steps, once ready.
   const vtLensReady = machine(VT_LENS_OK ? 'idle' : 'none', READY);
   let vtLens = null;
+  // Whether this change of theme bends the page under its droplet (.vt-lens: the stylesheet draws the lens).
+  const lensOn = machine('off', { off: ['on'], on: ['off'] });
+  lensOn.on((to) => { root.classList.toggle('vt-lens', to === 'on'); });
   function wantVtLens() {
     if (!vtLensReady.go('wait')) return;
     if (!gpu()) {
@@ -2067,32 +2394,21 @@ export function install(api) {
   // Chromium draws the rim as a view-transition group of its own above both pictures, outside the lens and free to cast
   // its shadow beyond the drop. Elsewhere it is a top-layer popover inside the drop's own picture, magnified with it.
   const OWN_GROUP = ENGINE.chromium;
-  // WebKit draws the new theme's picture afresh on every frame of a change, and every coin's lens with it (an SVG filter
-  // on the CPU): on a page of coins that alone costs a frame or two, every frame. Where the coins wear the lens:
-  // - a coin below the top bar is held: its dome (the lens and the reflection, the same in either theme) is a picture
-  //   of its own in the change, taken with the old one, and the new picture leaves the dome out (the contact shadow,
-  //   the part that differs between the themes, stays there). Inside the drop the held dome is magnified with the new
-  //   picture; when the change is over the page's own dome takes its place, drawn the same;
+  // WebKit draws the new theme's picture afresh on every frame of a change, and every shadow in it:
   // - a card the drop has not reached yet cannot be seen in the new picture, so there it goes without its shadows and
-  //   its coin without its glass and contact shadow until just before the drop gets to it (html.vt .card.vt-out); a
-  //   card off screen is not drawn into the pictures at all;
-  // - a coin under the top bar's strip cannot be held (its own picture would ride above the strip), so in the new
-  //   picture it goes without its glass to the end of the change, under the strip's ground: drawn live, the glass of
-  //   one row of coins there cost a light-to-dark drop on a desktop scrolled into the grid about half its frames (a
-  //   28 ms median frame, against 17 ms without);
+  //   its coin without its contact shadow until just before the drop gets to it (html.vt .card.vt-out); a card off
+  //   screen is not drawn into the pictures at all;
   // - a change to paper (light) keeps every card on screen plain for the whole change, inside the drop too: the
   //   paper's card and contact shadows, drawn afresh on every frame, cost a desktop page scrolled into the grid most of
-  //   its frames (a 32 ms median frame, against 17 ms without them). In the drop the paper's cards lie flat; once the
-  //   change is over their shadows and their coins' reflections come in over BACK ms (.card.vt-back), as if they
-  //   settled onto the paper. A dissolve to paper does the same.
+  //   its frames. In the drop the paper's cards lie flat; once the change is over their shadows come in over BACK ms
+  //   (.card.vt-back), as if they settled onto the paper. A dissolve to paper does the same.
   const BARE = ENGINE.webkit;
-  // ms the drop is looked ahead for that (a slow frame's worth and more), and px of room round each coin (the drop's
-  // soft edge and the clip round the glass).
+  // ms the drop is looked ahead for that (a slow frame's worth and more), and px of room round each card (the drop's
+  // soft edge).
   const BARE_LEAD = 70;
   const BARE_PAD = 8;
-  // ms the paper's shadows take to come in after a change (style.css .vt-back), and the timer that ends it.
+  // ms the paper's shadows take to come in after a change (style.css .vt-back).
   const BACK = 320;
-  let backTimer = 0;
   // px a card's shadow reaches beyond its box (style.css --card-shadow, and the lift's while it is hidden).
   const CARD_SHADOW = 44;
   // The lockups are decoded now, so the picture of the new theme never has an empty logo.
@@ -2148,12 +2464,11 @@ export function install(api) {
 
   // ---- one change, and any toggles during it: a chain ----
   // { mode: 'drop' | 'dissolve', ms, vt, x, y, ex, R, target: 'cover' | 'gone', path, anim, rimAnim, keeper, rim,
-  //   run, pending, phase, dts, lastTs, cut, held, out, paper, bare, coinAnims }. A dissolve's path holds the new
-  // picture's opacity where a drop's holds its radius ('cover' = 1, 'gone' = 0). run: the change the transition's
-  // update callback applies; pending: a change waiting for the drop to be gone. WebKit: held (coin domes with pictures
-  // of their own), out (the cards on screen, each with the radius at which it starts to show and whether its coin is
-  // under the strip), paper (the new picture is light: every card stays plain to the end), bare (the cards still
-  // plain), coinAnims (the held domes following the drop's magnification).
+  //   run, pending, phase, dts, lastTs, cut, out, paper, bare, shade }. A dissolve's path holds the new picture's
+  // opacity where a drop's holds its radius ('cover' = 1, 'gone' = 0). run: the change the transition's update callback
+  // applies; pending: a change waiting for the drop to be gone. WebKit: out (the cards on screen, each with the radius
+  // at which it starts to show), paper (the new picture is light: every card stays plain to the end), bare (the cards
+  // that go without their shadows, then get them back) and shade (what those cards show: shadeMachine).
   // A chain's states (c.phase; the drop's target, 'cover' or 'gone', is where its spring is aimed, as a spring's is):
   // capturing: the view transition is asked for and its update callback has not run: the browser is taking the old
   //   picture, so the page must keep the theme it had (a toggle now only changes what the callback will apply);
@@ -2170,7 +2485,37 @@ export function install(api) {
   // The page's side of it (vtState): none, or changing while a chain is current (cur), when the root wears the change's
   // classes and properties; they all come off on the way back to none.
   let cur = null;
+  // The chain last begun. It stays here once it is over: its cards' shadows may still be on their way back, and the
+  // next chain ends that at once.
+  let lastChain = null;
   const vtState = machine('none', { none: ['changing'], changing: ['none'] }).on((to) => { if (to === 'none') cleanup(); });
+  // What a chain's cards show of their shadows (c.shade; only WebKit ever leaves whole: BARE). Its states:
+  //   whole  every card draws its shadows, as the stylesheet has them;
+  //   bare   the cards in c.bare go without theirs (.vt-out) while the change is in flight; the frame takes a card off
+  //          the list, and gives it its shadows, as the drop reaches it (tJob);
+  //   back   the change ended on paper: the cards still in c.bare get their shadows back over BACK ms (.vt-back), and
+  //          the state's own timer ends it (80 ms later, so the stylesheet's transition is over).
+  // The classes and the timer are set and taken away on the moves; back at whole the list is empty.
+  function shadeMachine(c) {
+    let timer = 0;
+    return machine('whole', { whole: ['bare'], bare: ['whole', 'back'], back: ['whole'] }).on((to, from) => {
+      clearTimeout(timer);
+      if (to === 'bare') {
+        for (const b of c.bare) b.el.classList.add('vt-out');
+        return;
+      }
+      if (to === 'back') {
+        for (const b of c.bare) {
+          b.el.classList.add('vt-back');
+          b.el.classList.remove('vt-out');
+        }
+        timer = setTimeout(() => c.shade.go('whole'), BACK + 80);
+        return;
+      }
+      for (const b of c.bare) b.el.classList.remove(from === 'back' ? 'vt-back' : 'vt-out');
+      c.bare = [];
+    });
+  }
   const loose = (c) => {
     if (cur !== c) return;
     cur = null;
@@ -2227,16 +2572,18 @@ export function install(api) {
     const c = {
       mode, ms, x, y, ex: Math.max(0, (box.width - box.height) / 2), R: cover(x, y), target: 'cover', path: null, anim: null,
       rimAnim: null, keeper: null, rim: null, run, pending: null, phase: machine('capturing', CHAIN_MOVES), vt: null, dts: [], lastTs: 0,
-      cut: false, held: [], out: [], paper: false, bare: null, coinAnims: [],
+      cut: false, out: [], paper: false, bare: [],
     };
+    c.shade = shadeMachine(c);
+    // Every card as the page draws it in the old picture: the chain before this one gives its cards their shadows back
+    // at once, whether they were still plain or the shadows were on their way in.
+    lastChain?.shade.go('whole');
+    lastChain = c;
     cur = c;
     vtState.go('changing');
     wheel = 0;
-    // Every coin as the page draws it in the old picture; in WebKit the coins held, and where the others start to show
-    // (a theme moves nothing, so it is all measured now).
-    backDone();
-    bareClear();
-    if (BARE) holdCoins(c);
+    // In WebKit, where each card starts to show in the new picture (a theme moves nothing, so it is all measured now).
+    if (BARE) cardsOut(c);
     // The first frame, before the animations take over: no drop yet (or nothing of the new picture).
     root.style.setProperty('--vt-x', `${x.toFixed(1)}px`);
     root.style.setProperty('--vt-y', `${y.toFixed(1)}px`);
@@ -2244,7 +2591,7 @@ export function install(api) {
     root.style.setProperty('--vt-r', '0px');
     root.style.setProperty('--vt-m', String(1 + TK.LENS));
     root.classList.add('vt', drop ? 'vt-drop' : 'vt-dis');
-    root.classList.toggle('vt-lens', vtLensReady.is('ready') && drop);
+    lensOn.go(vtLensReady.is('ready') && drop ? 'on' : 'off');
     // Only Chromium draws a backdrop filter into a transition's pictures: elsewhere the top bar's strip holds its ground
     // without the blur for the length of the change (style.css).
     root.classList.toggle('vt-flat', !ENGINE.chromium);
@@ -2253,22 +2600,17 @@ export function install(api) {
       c.vt = document.startViewTransition(() => {
         // The old picture is taken: the page takes the theme last asked for before now (c.run).
         swap(c.run);
-        // In the new picture only (not once the change has been cut short: then the page itself shows): the held coins
-        // leave their glass to their own pictures, and the cards the drop's first frames cannot reach (on paper, every
-        // card) go without their shadows and their coins' glass.
+        // In the new picture only (not once the change has been cut short: then the page itself shows): the cards the
+        // drop's first frames cannot reach (on paper, every card) go without their shadows.
         if (c.phase.go('captured')) {
-          for (const h of c.held) {
-            unstyle(h.dome, ['view-transition-name']);
-            h.el.classList.add('vt-held');
-          }
           const first = reach(x, y) + 40;
-          c.paper = root.dataset.theme !== 'dark';
-          c.bare = c.paper ? [...c.out] : c.out.filter((b) => b.under || b.at > first);
-          for (const b of c.bare) b.el.classList.add('vt-out');
+          c.paper = api.ground() === 'light';
+          c.bare = c.paper ? [...c.out] : c.out.filter((b) => b.at > first);
+          if (c.bare.length) c.shade.go('bare');
         }
         if (drop) {
           // The rim belongs to the new state only, lit for the theme it holds.
-          c.rim = mk('div', `vt-rim vt-${root.dataset.theme === 'dark' ? 'dark' : 'light'} ${OWN_GROUP ? 'vt-own' : 'vt-pic'}`);
+          c.rim = mk('div', `vt-rim vt-${api.ground()} ${OWN_GROUP ? 'vt-own' : 'vt-pic'}`);
           c.rim.append(mk('i', 'vt-body'), mk('i', 'vt-spec'));
           c.rim.style.opacity = '0';
           if (!OWN_GROUP) c.rim.setAttribute('popover', 'manual');
@@ -2282,7 +2624,7 @@ export function install(api) {
           }
         }
         // The lockup about to show is decoded (it almost always already is), so the new picture never has an empty logo.
-        const shown = [...document.querySelectorAll(`img.lockup-${root.dataset.theme === 'dark' ? 'white' : 'ink'}`)];
+        const shown = [...document.querySelectorAll(`img.lockup-${api.ground() === 'dark' ? 'white' : 'ink'}`)];
         return Promise.race([Promise.all(shown.map((i) => i.decode?.().catch(() => {}))), new Promise((ok) => setTimeout(ok, 150))]);
       });
     } catch {
@@ -2314,57 +2656,23 @@ export function install(api) {
     c.vt.finished.then(over, over);
   }
 
-  // WebKit: where the coins wear the lens, names the dome of each coin on screen below the bar for a picture of its own
-  // (held; not a coin on a card still moving, rising in or re-ranking, whose still picture it would leave behind). Lists
-  // each card on screen (out) with, for a drop, the radius at which it starts to show: the distance from the switch's
-  // capsule to the card's box with its shadow, and the drop's soft edge. The drop is an ellipse inside that
-  // capsule-shaped reach, and its picture is magnified about the switch (by at most 3%), so a card has all of itself a
-  // little before it shows. In a dissolve the whole new picture shows at once (0).
-  function holdCoins(c) {
-    const lens = document.querySelector('.grid .coin-lens');
-    const hold = Boolean(lens) && getComputedStyle(lens).filter !== 'none';
+  // WebKit: lists each card on screen (out) with, for a drop, the radius at which it starts to show: the distance from
+  // the switch's capsule to the card's box with its shadow, and the drop's soft edge. The drop is an ellipse inside
+  // that capsule-shaped reach, and its picture is magnified about the switch (by at most 3%), so a card has all of
+  // itself a little before it shows. In a dissolve the whole new picture shows at once (0).
+  function cardsOut(c) {
     const h = innerHeight;
-    const below = (document.querySelector('.top')?.getBoundingClientRect().bottom || 0) + 24;
-    for (const li of document.querySelectorAll('.grid .card')) {
+    for (const li of document.querySelectorAll('.stage .card, .grid .card')) {
       const b = li.getBoundingClientRect();
       if (!b.width || b.bottom + CARD_SHADOW <= 0 || b.top >= h) continue;
-      const coin = li.querySelector('.coin');
-      const dome = coin?.querySelector('.coin-dome');
-      const q = coin?.getBoundingClientRect();
       let at = 0;
       if (c.mode === 'drop') {
         const dx = Math.max(0, b.left - CARD_SHADOW - c.x, c.x - b.right - CARD_SHADOW);
         const dy = Math.max(0, b.top - CARD_SHADOW - c.y, c.y - b.bottom - CARD_SHADOW);
         at = Math.hypot(Math.max(0, dx - c.ex), dy) - BARE_PAD;
       }
-      c.out.push({ el: li, at, under: hold && Boolean(q?.width) && q.top < below && q.bottom > 0 });
-      if (!hold || !dome || !q.width || q.top < below || q.top >= h || li.getAnimations().some((a) => a.playState === 'running')) continue;
-      const name = `vt-coin-${c.held.length}`;
-      dome.style.setProperty('view-transition-name', name);
-      c.held.push({ el: coin, dome, name, dx: q.left + q.width / 2 - c.x, dy: q.top + q.height / 2 - c.y });
+      c.out.push({ el: li, at });
     }
-  }
-  // Every coin and card as the page draws it again: at once, or (back, the change ending on paper) with the plain
-  // cards' shadows, their coins' contact shadows and reflections coming in over BACK ms.
-  function bareClear(back = false) {
-    for (const el of document.querySelectorAll('.grid .coin-dome')) if (el.style.getPropertyValue('view-transition-name')) unstyle(el, ['view-transition-name']);
-    let fading = false;
-    for (const el of document.querySelectorAll('.grid .coin.vt-held, .grid .card.vt-out')) {
-      if (back && el.classList.contains('vt-out')) {
-        el.classList.add('vt-back');
-        fading = true;
-      }
-      el.classList.remove('vt-held', 'vt-out');
-    }
-    if (fading) {
-      clearTimeout(backTimer);
-      backTimer = setTimeout(backDone, BACK + 80);
-    }
-  }
-  // The shadows are in (or another change starts): the cards' own transitions again.
-  function backDone() {
-    clearTimeout(backTimer);
-    for (const el of document.querySelectorAll('.grid .card.vt-back')) el.classList.remove('vt-back');
   }
 
   // A dissolve's leg: the new picture's opacity from p0 to p1, eased in and out (a sine), over its share of ms.
@@ -2384,8 +2692,7 @@ export function install(api) {
     c.path = !drop ? fadePath(r, target === 'cover' ? 1 : 0, c.ms)
       : target === 'cover' ? path(r, v, c.R * TK.OVER, TS.OUT, c.R) : path(r, v, -8, TS.BACK, 0);
     if (!c.phase.is('running')) return;
-    for (const a of [c.keeper, c.anim, c.rimAnim, ...c.coinAnims]) a?.cancel();
-    c.coinAnims = [];
+    for (const a of [c.keeper, c.anim, c.rimAnim]) a?.cancel();
     try {
       // Holds the transition open until the chain says it is over, KEEP at most from its last turn.
       c.keeper = root.animate([{ opacity: 1 }, { opacity: 1 }], { duration: TK.KEEP, pseudoElement: '::view-transition-group(root)' });
@@ -2401,14 +2708,6 @@ export function install(api) {
       }), { ...o, pseudoElement: '::view-transition-new(root)' });
       // Inside the drop's picture (a popover) the rim is magnified with it, so it is drawn at r / m to land on the edge.
       c.rimAnim = c.rim?.animate(c.path.map(({ r: rr }) => ({ '--vt-r': `${(OWN_GROUP ? rr : rr / mag(rr, c.R)).toFixed(2)}px`, opacity: rimAlpha(rr) })), o) ?? null;
-      // WebKit's held coins: magnified with the drop's picture about the switch from the frame the drop holds their
-      // middle (the drop's edge passes over them within that frame), and not before.
-      c.coinAnims = c.held.map(({ name, dx, dy }) => root.animate(c.path.map(({ r: rr }) => {
-        const m = mag(rr, c.R);
-        const rl = rr / m;
-        const k = rl > 0 && (dx / (rl + c.ex)) ** 2 + (dy / rl) ** 2 <= 1 ? m - 1 : 0;
-        return { transform: `translate(${f2(dx * k)}px, ${f2(dy * k)}px) scale(${(1 + k).toFixed(5)})` };
-      }), { ...o, pseudoElement: `::view-transition-old(${name})` }));
     } catch {
       // A browser that cannot animate the transition's pictures simply changes.
       end(c, true);
@@ -2432,28 +2731,28 @@ export function install(api) {
         c.pending = null;
         swap(p);
       }
-      c.bare = null;
-      bareClear();
+      // The drop is gone: the page shows its cards whole again.
+      c.shade.go('whole');
       end(c);
       return false;
     }
     if (c.target === 'cover' && last) {
-      c.bare = null;
-      bareClear(c.paper);
+      // The drop covers the page: on paper the cards kept plain get their shadows back over BACK ms, else at once.
+      c.shade.go(c.paper ? 'back' : 'whole');
       end(c);
       return false;
     }
-    // WebKit: the cards the spreading drop is about to reach get their shadows and their coins' glass back (a coin
-    // under the strip, and on paper every card, only once the change is over).
-    if (c.bare?.length && c.mode === 'drop' && c.target === 'cover' && !c.paper) {
+    // WebKit: the cards the spreading drop is about to reach get their shadows back (on paper every card, only once the
+    // change is over).
+    if (c.shade.is('bare') && c.mode === 'drop' && c.target === 'cover' && !c.paper) {
       const ahead = Math.max(r, at(c.path, t + BARE_LEAD).r);
       c.bare = c.bare.filter((b) => {
-        if (b.under || b.at > ahead) return true;
+        if (b.at > ahead) return true;
         b.el.classList.remove('vt-out');
         return false;
       });
     }
-    if (vtLensReady.is('ready') && c.mode === 'drop' && root.classList.contains('vt-lens')) {
+    if (vtLensReady.is('ready') && c.mode === 'drop' && lensOn.is('on')) {
       const m = mag(r, c.R);
       const rl = r / m;
       const el = c.ex / m;
@@ -2491,9 +2790,8 @@ export function install(api) {
   // A chain's animations name their pseudo-elements, not one transition's: left alive they would act on the next
   // transition's pictures (and its keeper would hold it open), so they go once nothing of them can be seen.
   function retire(c) {
-    for (const a of [c.keeper, c.anim, c.rimAnim, ...c.coinAnims]) a?.cancel();
+    for (const a of [c.keeper, c.anim, c.rimAnim]) a?.cancel();
     c.keeper = c.anim = c.rimAnim = null;
-    c.coinAnims = [];
   }
   // Completes a change in flight at once (the page is wanted for something else).
   function finishNow() {
@@ -2509,8 +2807,12 @@ export function install(api) {
   }
   // What the change put on the root comes off (vtState, on its way back to none).
   function cleanup() {
-    bareClear(root.dataset.theme !== 'dark');
-    root.classList.remove('vt', 'vt-drop', 'vt-dis', 'vt-lens', 'vt-flat');
+    // A chain cut short still holds cards plain: they get their shadows back now, over BACK ms where the page ends on
+    // paper, else at once. (One that ran to its end has already done so: its frame moved the cards on.)
+    const c = lastChain;
+    if (c.shade.is('bare')) c.shade.go(api.ground() === 'light' && c.bare.length ? 'back' : 'whole');
+    root.classList.remove('vt', 'vt-drop', 'vt-dis', 'vt-flat');
+    lensOn.go('off');
     unstyle(root, ['--vt-x', '--vt-y', '--vt-ex', '--vt-r', '--vt-m']);
     if (vtLensReady.is('ready')) vtLens.fdm.setAttribute('scale', '0');
     for (const el of document.querySelectorAll('.vt-rim')) el.remove();
@@ -2519,7 +2821,7 @@ export function install(api) {
   function reconcile() {
     if (cur) return;
     const want = api.theme();
-    if (root.dataset.theme !== want) swap(() => api.applyTheme(want));
+    if (api.ground() !== want) swap(() => api.applyTheme(want));
   }
 
   // ---- input during the change ----
@@ -2628,5 +2930,5 @@ export function install(api) {
     return true;
   }
 
-  return Object.freeze({ themeChange, dropPlace, grab, veilPaint });
+  return Object.freeze({ themeChange, dropPlace, grab, veilPaint, veilPainted: painted, veilClear, viewJoin, viewRoom });
 }

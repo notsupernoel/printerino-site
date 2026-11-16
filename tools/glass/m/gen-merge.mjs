@@ -4,10 +4,18 @@
 // scroll (white, the alpha holds the picture):
 //   m-mask.png   the body's shape: the mask of the frosted layer, and of the shadow the stylesheet casts from it
 //   m-rim.png    the light on its top edge (the dock's rim)
-//   m-lens.png   how the body bends what is behind it at its rim (Chromium on a desktop; glass.js fits it)
+//   m-lens.png   how the body bends what is behind it at its rim (Chromium on a desktop, clear glass; glass.js fits it)
 // Frame 0 is the three controls as they stand (60, 60 and 116 by 28, 10px apart, 6px in from the box's edges); by the
 // last frame they are one capsule, 268 by 40, one clean body.
 // The shape is a smooth union of the capsules (a distance field), so each bridge forms the way two drops touch.
+// Once the page is scrolled past the list's bar, the board-or-tiles switch joins that one body as a fourth control,
+// between the theme switch and the X link, and the X link keeps its mark alone to make the room. The body is whole by
+// then (the last frame), so that set is that one frame alone, drawn for its own width, with no mask (glass.js cuts the
+// shape itself):
+//   m4-rim.png, m4-lens.png     four controls, 60, 60, 60 and 28: one capsule, 250 by 40
+// Its two ends are the three-part body's own two ends, pixel for pixel (the light's run is measured from the nearer
+// end, below), and its middle is flat, so the body goes from one width to the other with the set's left and right
+// parts meeting in the flat middle, and nothing changes on the frame the maps are swapped.
 // Usage: node tools/glass/m/gen-merge.mjs [out folder, default src/web/public/glass or $OUT]
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -15,17 +23,26 @@ import { fileURLToPath } from 'node:url';
 import { encodeSmall } from '../e/png.mjs';
 
 const OUT = process.argv[2] || process.env.OUT || fileURLToPath(new URL('../../../src/web/public/glass/', import.meta.url));
-// The box (CSS px), the frames, and the scale the sprites are drawn at.
-const W = 268, H = 40, N = 24, S = 2;
-// The controls at rest, left to right (glass.js's outline() holds the same numbers).
-const P0 = [{ x: 6, w: 60 }, { x: 76, w: 60 }, { x: 146, w: 116 }], A0 = { y: 6, h: 28 };
+// The box's height (CSS px), the frames, and the scale the sprites are drawn at.
+const H = 40, N = 24, S = 2;
+// The controls at rest, left to right, 10px apart and 6px in from the box's ends (glass.js's PARTS and SET hold the
+// same numbers), and the three-part box's width, which every set's light is measured against.
+const parts = (...ws) => { let x = 6; return ws.map((w) => { const p = { x, w }; x += w + 10; return p; }); };
+const W0 = 268, A0 = { y: 6, h: 28 };
+// Each set: its files' prefix, its controls, the frames it draws (the three-part body all 24, the four-part one the
+// last) and whether it has a mask.
+const SETS = [
+  { name: 'm', P0: parts(60, 60, 116), frames: Array.from({ length: N }, (_, i) => i), mask: true },
+  { name: 'm4', P0: parts(60, 60, 60, 28), frames: [N - 1], mask: false },
+];
 const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
 const sstep = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 const capsule = (x, y, x0, y0, w, h) => { const r = h / 2, cx = clamp(x, x0 + r, x0 + w - r); return Math.hypot(x - cx, y - (y0 + r)) - r; };
 const smin = (a, b, k) => { if (k <= 0) return Math.min(a, b); const h = clamp(0.5 + (0.5 * (b - a)) / k); return b + (a - b) * h - k * h * (1 - h); };
-// The shape at frame i: distance to its edge, negative inside. Each capsule grows to the box's full height and reaches
-// across its neighbours, so the last frame is one whole capsule; the smooth union is widest half way, where the bridges run.
-function shape(i) {
+// A set's shape at frame i: distance to its edge, negative inside. Each capsule grows to the box's full height and
+// reaches across its neighbours, so the last frame is one whole capsule; the smooth union is widest half way, where the
+// bridges run.
+function shape(P0, W, i) {
   const q = i / (N - 1), e = q * q * (3 - 2 * q), ex = e ** 2.1, L = (a, b, k) => a + (b - a) * k;
   const y = L(A0.y, 0, e), h = L(A0.h, H, e), k = 16 * Math.sin(Math.PI * q);
   const caps = P0.map((p, j) => {
@@ -48,37 +65,44 @@ const BEZEL = 13;
 // strength (0.5, the dock's). No colour. The shadow is not drawn here: the stylesheet casts it from the mask itself.
 // Not a whole ring, brightest top left and bottom right: the dock has none.
 const RUN = (t) => (t < 0.34 ? 1 - 0.8 * (t / 0.34) : t < 0.62 ? 0.2 : 0.2 + 0.44 * ((t - 0.62) / 0.38));
+// The run is the three-part body's at every width: measured from the left end up to a set's turn and from the right end
+// after it, so a wider or narrower body keeps both ends' light and only its even middle (the run's flat 0.2, which on
+// the rim's rows spans FLAT) is longer or shorter. The turn sits in the middle of what is flat from both ends.
+const FLAT = [W0 / 2 + H / 2 - 0.16 * (W0 + H), W0 / 2 + H / 2 + 0.12 * (W0 + H) - 3.5];
 
-const mw = W * S, mh = H * S, mask = Buffer.alloc(mw * mh * N * 4, 255), rim = Buffer.alloc(mw * mh * N * 4, 255);
-// The lens (Chromium on a desktop): one map a frame at 1x, R and G the way in times the bezel's throw (128 = none), B
-// where the middle is frosted (0 at the rim, where the glass stays clear and bends).
-const lens = Buffer.alloc(W * H * N * 4, 255);
-for (let i = 0; i < N; i++) {
-  const sd = shape(i);
-  // The body's top at this frame (shape() eases it from the controls' own top to the box's).
-  const q = i / (N - 1), top = A0.y * (1 - q * q * (3 - 2 * q));
-  for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) {
-    const px = (x + 0.5) / S, py = (y + 0.5) / S, d = sd(px, py), o = ((i * mh + y) * mw + x) * 4, ci = clamp(0.5 - d * S);
-    mask[o + 3] = Math.round(255 * ci);
-    let a = 0;
-    if (ci > 0) {
-      const dist = -d, fade = clamp(1 - (py - top - 1) / 2.5), run = RUN(clamp((px - W / 2 + py - H / 2) / (W + H) + 0.5));
-      a = clamp((1 - sstep(0.4, 1.3, dist)) * run * fade) * ci;
-    }
-    rim[o + 3] = Math.round(255 * a);
-  }
-}
-for (let i = 0; i < N; i++) {
-  const sd = shape(i);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const px = x + 0.5, py = y + 0.5, d = sd(px, py), o = ((i * H + y) * W + x) * 4, dist = -d;
-    let nx = sd(px + 1, py) - sd(px - 1, py), ny = sd(px, py + 1) - sd(px, py - 1);
-    const l = Math.hypot(nx, ny) || 1, m = dist <= 0 ? 1 : dist >= BEZEL ? 0 : PROF[Math.floor((dist / BEZEL) * 256)];
-    lens[o] = Math.round(128 - (nx / l) * m * 127); lens[o + 1] = Math.round(128 - (ny / l) * m * 127);
-    lens[o + 2] = Math.round(255 * sstep(BEZEL * 0.3, BEZEL * 1.05, dist));
-  }
-}
 const put = (name, w, h, rgba) => { const png = encodeSmall(w, h, rgba); writeFileSync(path.join(OUT, name), png); console.log(name, png.length, 'bytes', `${w}x${h}`); };
-put('m-mask.png', mw, mh * N, mask);
-put('m-rim.png', mw, mh * N, rim);
-put('m-lens.png', W, H * N, lens);
+for (const { name, P0, frames, mask: masked } of SETS) {
+  const last = P0[P0.length - 1], W = last.x + last.w + 6, F = frames.length, turn = (FLAT[0] + FLAT[1] + (W - W0)) / 2;
+  const mw = W * S, mh = H * S, mask = Buffer.alloc(mw * mh * F * 4, 255), rim = Buffer.alloc(mw * mh * F * 4, 255);
+  // The lens (Chromium on a desktop): one map a frame at 1x, R and G the way in times the bezel's throw (128 = none),
+  // B where the middle is frosted (0 at the rim, where the glass stays clear and bends).
+  const lens = Buffer.alloc(W * H * F * 4, 255);
+  frames.forEach((i, fi) => {
+    const sd = shape(P0, W, i);
+    // The body's top at this frame (shape() eases it from the controls' own top to the box's).
+    const q = i / (N - 1), top = A0.y * (1 - q * q * (3 - 2 * q));
+    for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) {
+      const px = (x + 0.5) / S, py = (y + 0.5) / S, d = sd(px, py), o = ((fi * mh + y) * mw + x) * 4, ci = clamp(0.5 - d * S);
+      mask[o + 3] = Math.round(255 * ci);
+      let a = 0;
+      if (ci > 0) {
+        const dist = -d, fade = clamp(1 - (py - top - 1) / 2.5), u = px < turn ? px : px - (W - W0), run = RUN(clamp((u - W0 / 2 + py - H / 2) / (W0 + H) + 0.5));
+        a = clamp((1 - sstep(0.4, 1.3, dist)) * run * fade) * ci;
+      }
+      rim[o + 3] = Math.round(255 * a);
+    }
+  });
+  frames.forEach((i, fi) => {
+    const sd = shape(P0, W, i);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const px = x + 0.5, py = y + 0.5, d = sd(px, py), o = ((fi * H + y) * W + x) * 4, dist = -d;
+      let nx = sd(px + 1, py) - sd(px - 1, py), ny = sd(px, py + 1) - sd(px, py - 1);
+      const l = Math.hypot(nx, ny) || 1, m = dist <= 0 ? 1 : dist >= BEZEL ? 0 : PROF[Math.floor((dist / BEZEL) * 256)];
+      lens[o] = Math.round(128 - (nx / l) * m * 127); lens[o + 1] = Math.round(128 - (ny / l) * m * 127);
+      lens[o + 2] = Math.round(255 * sstep(BEZEL * 0.3, BEZEL * 1.05, dist));
+    }
+  });
+  if (masked) put(`${name}-mask.png`, mw, mh * F, mask);
+  put(`${name}-rim.png`, mw, mh * F, rim);
+  put(`${name}-lens.png`, W, H * F, lens);
+}

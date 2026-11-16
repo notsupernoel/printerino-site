@@ -4,7 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Printerino · by notsupernoel</title>
-  <meta name="description" content="Noel's crypto and stock picks with live prices, ranked by market cap and refreshed every minute. Not financial advice.">
+  <meta name="description" content="Noel's crypto, stock and commodity picks with live prices, ranked by market cap and refreshed every minute. Not financial advice.">
+  <meta name="application-name" content="Printerino">
+  <meta name="apple-mobile-web-app-title" content="Printerino">
+  <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#0a0b0f">
   <script src="/theme-boot.js"></script>
   <link rel="canonical" href="https://printerino.com/">
@@ -21,77 +24,28 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="The Printerino logo, with the line By notsupernoel">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@notsupernoel99">
+  <meta name="twitter:creator" content="@notsupernoel99">
   <link rel="preload" href="/fonts/InterVariable-page.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <svg class="fx-defs" width="0" height="0" aria-hidden="true" focusable="false">
-    <filter id="coin-lens" x="-0.02" y="-0.02" width="1.04" height="1.04" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
-      <feImage data-href="/glass/e-ref.png" x="-0.02" y="-0.02" width="1.04" height="1.04" preserveAspectRatio="none" result="ref"/>
-      <feDisplacementMap in="SourceGraphic" in2="ref" scale="0.11" xChannelSelector="R" yChannelSelector="G" result="s1"/>
-      <feColorMatrix in="ref" type="matrix" values="1 0 0 0 -0.0947  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" result="mxp"/>
-      <feDisplacementMap in="SourceGraphic" in2="mxp" scale="0.11" xChannelSelector="R" yChannelSelector="G" result="rxp"/>
-      <feColorMatrix in="ref" type="matrix" values="1 0 0 0 0.0947  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" result="mxn"/>
-      <feDisplacementMap in="SourceGraphic" in2="mxn" scale="0.11" xChannelSelector="R" yChannelSelector="G" result="rxn"/>
-      <feColorMatrix in="ref" type="matrix" values="1 0 0 0 0  0 1 0 0 -0.0947  0 0 1 0 0  0 0 0 1 0" result="myp"/>
-      <feDisplacementMap in="SourceGraphic" in2="myp" scale="0.11" xChannelSelector="R" yChannelSelector="G" result="ryp"/>
-      <feColorMatrix in="ref" type="matrix" values="1 0 0 0 0  0 1 0 0 0.0947  0 0 1 0 0  0 0 0 1 0" result="myn"/>
-      <feDisplacementMap in="SourceGraphic" in2="myn" scale="0.11" xChannelSelector="R" yChannelSelector="G" result="ryn"/>
-      <feBlend in="s1" in2="rxp" mode="darken" result="d1"/>
-      <feBlend in="d1" in2="rxn" mode="darken" result="d2"/>
-      <feBlend in="d2" in2="ryp" mode="darken" result="d3"/>
-      <feBlend in="d3" in2="ryn" mode="darken" result="dk"/>
-      <feColorMatrix in="ref" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 -100 0 100" result="men"/>
-      <feComposite in="dk" in2="men" operator="in" result="dkm"/>
-      <feComposite in="dkm" in2="s1" operator="over" result="bent"/>
-      <feColorMatrix in="ref" type="matrix" values="0 0 1 0 0  0 0 1 0 0  0 0 1 0 0  0 0 0 1 0" result="keep"/>
-      <feComposite in="bent" in2="keep" operator="arithmetic" k1="1" k2="0" k3="0" k4="0"/>
-    </filter>
-    <filter id="coin-spec" x="-0.02" y="-0.02" width="1.04" height="1.04" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
-      <feImage data-href="/glass/e-nrm.png" x="-0.02" y="-0.02" width="1.04" height="1.04" preserveAspectRatio="none" result="nrm"/>
-      <feImage data-href="/glass/e-env.png" x="-0.5345" y="-0.5345" width="1.6" height="1.6" preserveAspectRatio="none" result="env"/>
-      <feDisplacementMap in="env" in2="nrm" scale="0.109" xChannelSelector="R" yChannelSelector="G" result="refl"/>
-      <feColorMatrix in="nrm" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 1 0 0" result="fres"/>
-      <feComposite in="refl" in2="fres" operator="arithmetic" k1="4.4" k2="0" k3="0" k4="0"/>
-    </filter>
-    <filter id="coin-spec-a" x="-0.02" y="-0.02" width="1.04" height="1.04" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
-      <feImage data-href="/glass/e-nrm.png" x="-0.02" y="-0.02" width="1.04" height="1.04" preserveAspectRatio="none" result="nrm"/>
-      <feImage data-href="/glass/e-env.png" x="-0.5345" y="-0.5345" width="1.6" height="1.6" preserveAspectRatio="none" result="lamp"/>
-      <feImage data-href="/glass/e-bar.png" x="-1.4" y="-0.35" width="1.6" height="1.6" preserveAspectRatio="none" result="bar"/>
-      <feMerge result="env"><feMergeNode in="lamp"/><feMergeNode in="bar"/></feMerge>
-      <feDisplacementMap in="env" in2="nrm" scale="0.109" xChannelSelector="R" yChannelSelector="G" result="refl"/>
-      <feColorMatrix in="nrm" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 1 0 0" result="fres"/>
-      <feComposite in="refl" in2="fres" operator="arithmetic" k1="4.4" k2="0" k3="0" k4="0"/>
-    </filter>
-    <filter id="coin-spec-b" x="-0.02" y="-0.02" width="1.04" height="1.04" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
-      <feImage data-href="/glass/e-nrm.png" x="-0.02" y="-0.02" width="1.04" height="1.04" preserveAspectRatio="none" result="nrm"/>
-      <feImage data-href="/glass/e-env.png" x="-0.5345" y="-0.5345" width="1.6" height="1.6" preserveAspectRatio="none" result="lamp"/>
-      <feImage data-href="/glass/e-bar.png" x="-1.4" y="-0.35" width="1.6" height="1.6" preserveAspectRatio="none" result="bar"/>
-      <feMerge result="env"><feMergeNode in="lamp"/><feMergeNode in="bar"/></feMerge>
-      <feDisplacementMap in="env" in2="nrm" scale="0.109" xChannelSelector="R" yChannelSelector="G" result="refl"/>
-      <feColorMatrix in="nrm" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 1 0 0" result="fres"/>
-      <feComposite in="refl" in2="fres" operator="arithmetic" k1="4.4" k2="0" k3="0" k4="0"/>
-    </filter>
-    <filter id="coin-spec-p" x="-0.02" y="-0.02" width="1.04" height="1.04" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
-      <feImage data-href="/glass/e-nrm.png" x="-0.02" y="-0.02" width="1.04" height="1.04" preserveAspectRatio="none" result="nrm"/>
-      <feImage data-href="/glass/e-env.png" x="-0.5345" y="-0.5345" width="1.6" height="1.6" preserveAspectRatio="none" result="lamp"/>
-      <feImage data-href="/glass/e-bar.png" x="-1.4" y="-0.35" width="1.6" height="1.6" preserveAspectRatio="none" result="bar"/>
-      <feMerge result="env"><feMergeNode in="lamp"/><feMergeNode in="bar"/></feMerge>
-      <feDisplacementMap in="env" in2="nrm" scale="0.109" xChannelSelector="R" yChannelSelector="G" result="refl"/>
-      <feColorMatrix in="nrm" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 1 0 0" result="fres"/>
-      <feComposite in="refl" in2="fres" operator="arithmetic" k1="4.4" k2="0" k3="0" k4="0"/>
-    </filter>
-  </svg>
+  <!-- The page's one SVG of definitions: the wash under every card's week line (its two stops take their colour and
+       strength from the stylesheet's tokens), and glass.js adds its filters here. -->
+  <svg class="fx-defs" width="0" height="0" aria-hidden="true" focusable="false"><linearGradient id="week-wash" x1="0" y1="0" x2="0" y2="1"><stop class="ww-top" offset="0"/><stop class="ww-foot" offset="1"/></linearGradient></svg>
   <header class="top">
     <span class="logo-glass" aria-hidden="true"></span>
     <!-- Both lockups load on every visit (1.7 KB each, a year in cache): the stylesheet shows the theme's own, and the
          other is already decoded for the theme change (glass.js draws its drop in one frame) and for forced colours. -->
     <img class="lockup lockup-white" src="/lockup.svg" width="114" height="29" alt="Printerino">
     <img class="lockup lockup-ink" src="/lockup-ink.svg" width="114" height="29" alt="Printerino">
-    <div class="seg seg-glass glass float" role="group" aria-label="Glass"><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-g="frosted" aria-label="Frosted glass" title="Frosted glass"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><mask id="gm-frost"><rect width="16" height="16" fill="#fff" stroke="none"/><path stroke="#000" stroke-width="1.2" d="M5 8.6 8.6 5M6.2 10.8 10.8 6.2M8.4 11.6 11.6 8.4"/></mask><g class="ic-o"><circle cx="8" cy="8" r="5.5"/><path stroke-width="1.2" d="M5 8.6 8.6 5M6.2 10.8 10.8 6.2M8.4 11.6 11.6 8.4"/></g><g class="ic-f" mask="url(#gm-frost)"><circle cx="8" cy="8" r="6.25" fill="currentColor" stroke="none"/></g></svg></button><button type="button" aria-pressed="false" data-g="clear" aria-label="Clear glass" title="Clear glass"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><mask id="gm-clear"><rect width="16" height="16" fill="#fff" stroke="none"/><path stroke="#000" stroke-width="1.2" d="M5.7 7.4A2.5 2.5 0 0 1 7.4 5.7"/></mask><g class="ic-o"><circle cx="8" cy="8" r="5.5"/><path stroke-width="1.2" d="M5.7 7.4A2.5 2.5 0 0 1 7.4 5.7"/></g><g class="ic-f" mask="url(#gm-clear)"><circle cx="8" cy="8" r="6.25" fill="currentColor" stroke="none"/></g></svg></button></div>
+    <div class="seg seg-glass glass float" role="group" aria-label="Glass"><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-g="frosted" aria-label="Frosted glass" data-tip="Frosted glass"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><mask id="gm-frost"><rect width="16" height="16" fill="#fff" stroke="none"/><path stroke="#000" stroke-width="1.2" d="M5 8.6 8.6 5M6.2 10.8 10.8 6.2M8.4 11.6 11.6 8.4"/></mask><g class="ic-o"><circle cx="8" cy="8" r="5.5"/><path stroke-width="1.2" d="M5 8.6 8.6 5M6.2 10.8 10.8 6.2M8.4 11.6 11.6 8.4"/></g><g class="ic-f" mask="url(#gm-frost)"><circle cx="8" cy="8" r="6.25" fill="currentColor" stroke="none"/></g></svg></button><button type="button" aria-pressed="false" data-g="clear" aria-label="Clear glass" data-tip="Clear glass"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><mask id="gm-clear"><rect width="16" height="16" fill="#fff" stroke="none"/><path stroke="#000" stroke-width="1.2" d="M5.7 7.4A2.5 2.5 0 0 1 7.4 5.7"/></mask><g class="ic-o"><circle cx="8" cy="8" r="5.5"/><path stroke-width="1.2" d="M5.7 7.4A2.5 2.5 0 0 1 7.4 5.7"/></g><g class="ic-f" mask="url(#gm-clear)"><circle cx="8" cy="8" r="6.25" fill="currentColor" stroke="none"/></g></svg></button></div>
     <span class="top-blob" aria-hidden="true"><u><s></s></u><em></em><i></i><b></b></span>
-    <button class="theme-switch glass float" type="button" role="switch" aria-checked="true" aria-label="Dark mode"><span class="drop" aria-hidden="true"><i></i><b></b><u></u></span><svg class="theme-glyph theme-sun" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><circle class="sun-core" cx="8" cy="8" r="2.75"/><path class="sun-rays" d="M8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg><svg class="theme-glyph theme-moon" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true" focusable="false"><path class="moon-crescent" d="M8.2 2.3a4 4 0 0 0 5.5 5.5 5.75 5.75 0 1 1-5.5-5.5Z"/></svg></button>
-    <a class="xlink glass float" href="https://x.com/notsupernoel99" rel="me noopener" target="_blank" aria-label="notsupernoel on X">
+    <button class="theme-switch glass float" type="button" role="switch" aria-checked="true" aria-label="Dark mode" data-tip="Switch to light"><span class="drop" aria-hidden="true"><i></i><b></b><u></u></span><svg class="theme-glyph theme-sun" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><circle class="sun-core" cx="8" cy="8" r="2.75"/><path class="sun-rays" d="M8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg><svg class="theme-glyph theme-moon" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true" focusable="false"><path class="moon-crescent" d="M8.2 2.3a4 4 0 0 0 5.5 5.5 5.75 5.75 0 1 1-5.5-5.5Z"/></svg></button>
+    <!-- The list's board-or-tiles switch again (.listbar below): it stands here, between the theme switch and the X
+         link, while the list's own bar is above the window. Not drawn until the script brings it in. -->
+    <div class="seg seg-twin glass float" role="group" aria-label="Layout" hidden><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-v="board" aria-label="Board" data-tip="Board"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="4.3" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="10.1" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="15.9" width="16.4" height="3.8" rx="1.9"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.8" y="4.3" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="10.1" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="15.9" width="16.4" height="3.8" rx="1.9"/></g></svg></button><button type="button" aria-pressed="false" data-v="tiles" aria-label="Tiles" data-tip="Tiles"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="3.8" y="13.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="13.8" width="6.4" height="6.4" rx="1.9"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="3.8" y="13.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="13.8" width="6.4" height="6.4" rx="1.9"/></g></svg></button></div>
+    <a class="xlink glass float" href="https://x.com/notsupernoel99" rel="me noopener" target="_blank" aria-label="notsupernoel on X, opens in a new tab" data-tip="notsupernoel on X">
       <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" focusable="false"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
       <span>notsupernoel</span>
     </a>
@@ -103,8 +57,9 @@
         <h1 id="hero-title" class="headline"><span class="hw">I</span> <span class="hw">love</span> <span class="hw">beautiful</span> <span class="hw accent">things.</span></h1>
         <p class="lede">And yes, they actually work.</p>
         <nav class="hero-links" aria-label="Noel’s things">
-          <a class="hlink glass" href="https://dlmm.printerino.io/" rel="noopener" target="_blank">DLMM Frontier<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2.5h5.5V8M9.5 2.5 2.5 9.5"/></svg></a>
-          <a class="hlink glass" href="https://dammv2.printerino.io/" rel="noopener" target="_blank">DAMMv2 Suite<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2.5h5.5V8M9.5 2.5 2.5 9.5"/></svg></a>
+          <a class="hlink glass" href="https://dlmm.printerino.io/" rel="noopener" target="_blank" aria-label="DLMM Frontier, opens in a new tab">DLMM Frontier<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2.5h5.5V8M9.5 2.5 2.5 9.5"/></svg></a>
+          <a class="hlink glass" href="https://dammv2.printerino.io/" rel="noopener" target="_blank" aria-label="DAMMv2 Suite, opens in a new tab">DAMMv2 Suite<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2.5h5.5V8M9.5 2.5 2.5 9.5"/></svg></a>
+          <a class="hlink glass" href="https://pro.printerino.io/" rel="noopener" target="_blank" aria-label="DLMM Pro Max, opens in a new tab">DLMM Pro Max<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2.5h5.5V8M9.5 2.5 2.5 9.5"/></svg></a>
           <a class="hlink glass" href="#grid" data-scroll="watchlist">Price Watchlist<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 2v8M2.5 6.5 6 10l3.5-3.5"/></svg></a>
         </nav>
       </div>
@@ -112,11 +67,22 @@
     <div class="bar">
       <p class="status"><span class="dot" id="dot" aria-hidden="true"></span><span class="status-key">Live prices</span><span class="status-sep" aria-hidden="true">·</span><span class="status-val"><span class="wide">sorted by market cap</span><span class="upd" hidden><span class="wide status-dot" aria-hidden="true">·</span><span id="updated"></span></span></span></p>
     </div>
-    <!-- The grid ships empty, with nothing between its tags: the stylesheet shows the message under it only while the
-         grid is :empty, and a space between the tags would count as a child. -->
+    <!-- The stage: the three leaders, filled by the script. It ships empty and is not drawn while it is. -->
+    <ol id="stage" class="stage" role="list" aria-label="Leaders"></ol>
+    <!-- The list's bar: the first group's name and count, and the switch between the board and the tiles. Hidden until
+         the script has cards to list. -->
+    <div class="listbar" hidden>
+      <h2 class="group-h"><span class="group-name"></span> <span class="group-n"></span></h2>
+      <div class="seg seg-view glass" role="group" aria-label="Layout"><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-v="board" aria-label="Board" data-tip="Board"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="4.3" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="10.1" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="15.9" width="16.4" height="3.8" rx="1.9"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.8" y="4.3" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="10.1" width="16.4" height="3.8" rx="1.9"/><rect x="3.8" y="15.9" width="16.4" height="3.8" rx="1.9"/></g></svg></button><button type="button" aria-pressed="false" data-v="tiles" aria-label="Tiles" data-tip="Tiles"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="3.8" y="13.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="13.8" width="6.4" height="6.4" rx="1.9"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="3.8" y="13.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="13.8" width="6.4" height="6.4" rx="1.9"/></g></svg></button></div>
+    </div>
+    <!-- The list ships empty, with nothing between its tags: the stylesheet shows the message under it only while the
+         list is :empty, and a space between the tags would count as a child. The message's words are the
+         stylesheet's, so the page's own text never tells of a failure that has not happened. -->
     <ol id="grid" class="grid" role="list" aria-label="Noel's picks, ranked by market cap"></ol>
-    <div class="empty lost" hidden>Prices did not load. Reload the page.</div>
-    <noscript><div class="empty"><p class="empty-title">Prices need JavaScript</p><p class="empty-body">Turn it on to see Noel’s picks.</p></div></noscript>
+    <div class="empty lost" hidden><p class="empty-title"></p><p class="empty-body"><a class="link" href="/" aria-label="Reload the page"></a></p></div>
+    <!-- Without scripts: the picks as plain words, written in by the server with the last prices it read. A crawler, or
+         anything else that reads the page as text, finds them here too. -->
+    <noscript><div class="empty plain"><h2 class="empty-title">Noel’s picks, ranked by market cap</h2><p class="empty-body">Live prices and charts need JavaScript. These are the last prices read.</p><!--PICKS--></div></noscript>
   </main>
   <footer class="foot">
     <aside class="notice" aria-labelledby="nfa-head">
@@ -137,15 +103,15 @@
     <div class="foot-line">
       <img class="lockup lockup-white" src="/lockup.svg" width="114" height="29" alt="">
       <img class="lockup lockup-ink" src="/lockup-ink.svg" width="114" height="29" alt="">
-      <p class="copy">© 2026 Printerino · all rights reserved · <span class="nw">built by <a class="link" href="https://x.com/notsupernoel99" rel="me noopener" target="_blank">notsupernoel</a></span></p>
-      <p class="credit">Crypto prices powered by <a class="link" href="https://www.coingecko.com/" rel="noopener" target="_blank">CoinGecko</a></p>
+      <p class="copy">© 2026 Printerino · all rights reserved · <span class="nw">built by <a class="link" href="https://x.com/notsupernoel99" rel="me noopener" target="_blank" aria-label="notsupernoel, opens in a new tab">notsupernoel</a></span></p>
+      <p class="credit">Crypto prices powered by <a class="link" href="https://www.coingecko.com/" rel="noopener" target="_blank" aria-label="CoinGecko, opens in a new tab">CoinGecko</a></p>
     </div>
   </footer>
-  <!-- The dock: what the grid shows. It waits below the window until the script has cards to sort (.on), and with
-       JavaScript off it is not drawn (there are no cards then). -->
+  <!-- The dock: what the stage and the list show. It waits below the window until the script has cards to sort (.on),
+       and with JavaScript off it is not drawn (there are no cards then). -->
   <nav class="dock" aria-label="Show" inert>
-    <div class="seg seg-show glass float" role="group" aria-label="Show"><i class="dock-frost" aria-hidden="true"></i><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-k="all"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="3.8" y="13.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="13.8" width="6.4" height="6.4" rx="1.9"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="3.8" width="6.4" height="6.4" rx="1.9"/><rect x="3.8" y="13.8" width="6.4" height="6.4" rx="1.9"/><rect x="13.8" y="13.8" width="6.4" height="6.4" rx="1.9"/></g></svg><span>All</span></button><button type="button" aria-pressed="false" data-k="coin"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="15" r="6"/><path d="M14.66 7.01A6 6 0 1 0 7.01 14.66"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><circle cx="15" cy="15" r="6.8" stroke="none"/><path stroke="none" d="M15.5 7.02A6.8 6.8 0 1 0 7.02 15.5A8 8 0 0 1 15.5 7.02Z"/></g></svg><span>Coins</span></button><button type="button" aria-pressed="false" data-k="stock"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="13.2" width="3.4" height="7" rx="1.3"/><rect x="10.3" y="8.8" width="3.4" height="11.4" rx="1.3"/><rect x="16.8" y="3.8" width="3.4" height="16.4" rx="1.3"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.8" y="13.2" width="3.4" height="7" rx="1.3"/><rect x="10.3" y="8.8" width="3.4" height="11.4" rx="1.3"/><rect x="16.8" y="3.8" width="3.4" height="16.4" rx="1.3"/></g></svg><span>Stocks</span></button><button type="button" aria-pressed="false" data-k="commod"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 5.5L14.7 5.5L16.4 10.5L7.6 10.5Z"/><path d="M4.1 13.5L9.5 13.5L11.2 18.5L2.4 18.5Z"/><path d="M14.5 13.5L19.9 13.5L21.6 18.5L12.8 18.5Z"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M9.3 5.5L14.7 5.5L16.4 10.5L7.6 10.5Z"/><path d="M4.1 13.5L9.5 13.5L11.2 18.5L2.4 18.5Z"/><path d="M14.5 13.5L19.9 13.5L21.6 18.5L12.8 18.5Z"/></g></svg><span>Commods</span></button></div>
-    <button class="cd-x totop glass float" type="button" aria-label="Back to the top"><svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 13V3.25M4 7.25l4-4 4 4"/></svg></button>
+    <div class="seg seg-show glass float" role="group" aria-label="Show"><i class="dock-frost" aria-hidden="true"></i><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-k="all"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><mask id="gm-globe" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><g fill="none" stroke="#000" stroke-width="1.5"><ellipse class="mer" cx="12" cy="12" rx="3.7" ry="9"/><path d="M2.5 12H21.5"/></g></mask><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"/><ellipse class="mer" cx="12" cy="12" rx="3.5" ry="8.2"/><path d="M3.8 12H20.2"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none" mask="url(#gm-globe)"/></g></svg><span>All</span></button><button type="button" aria-pressed="false" data-k="coin"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="15" r="6"/><path d="M14.66 7.01A6 6 0 1 0 7.01 14.66"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><circle cx="15" cy="15" r="6.8" stroke="none"/><path stroke="none" d="M15.5 7.02A6.8 6.8 0 1 0 7.02 15.5A8 8 0 0 1 15.5 7.02Z"/></g></svg><span>Coins</span></button><button type="button" aria-pressed="false" data-k="stock"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="13.2" width="3.4" height="7" rx="1.3"/><rect x="10.3" y="8.8" width="3.4" height="11.4" rx="1.3"/><rect x="16.8" y="3.8" width="3.4" height="16.4" rx="1.3"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.8" y="13.2" width="3.4" height="7" rx="1.3"/><rect x="10.3" y="8.8" width="3.4" height="11.4" rx="1.3"/><rect x="16.8" y="3.8" width="3.4" height="16.4" rx="1.3"/></g></svg><span>Stocks</span></button><button type="button" aria-pressed="false" data-k="commod"><svg class="dock-ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g class="ic-o" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 5.5L14.7 5.5L16.4 10.5L7.6 10.5Z"/><path d="M4.1 13.5L9.5 13.5L11.2 18.5L2.4 18.5Z"/><path d="M14.5 13.5L19.9 13.5L21.6 18.5L12.8 18.5Z"/></g><g class="ic-f" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M9.3 5.5L14.7 5.5L16.4 10.5L7.6 10.5Z"/><path d="M4.1 13.5L9.5 13.5L11.2 18.5L2.4 18.5Z"/><path d="M14.5 13.5L19.9 13.5L21.6 18.5L12.8 18.5Z"/></g></svg><span>Commods</span></button></div>
+    <button class="cd-x totop glass float" type="button" aria-label="Back to the top" data-tip="Back to the top"><svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 13V3.25M4 7.25l4-4 4 4"/></svg></button>
   </nav>
   <dialog id="cd" class="cd" tabindex="-1" aria-labelledby="cd-sym cd-name" aria-describedby="cd-sum">
     <div class="cd-veil"></div>
@@ -153,7 +119,7 @@
       <div class="cd-bg"><div class="cd-lift"></div><div class="cd-shade"><span class="cd-shade-rest"></span><span class="cd-shade-lift"></span></div><div class="cd-edge"></div></div>
       <div class="cd-grab" aria-hidden="true"></div>
       <div class="cd-body">
-        <div class="cd-coin"><div class="cd-tilt"><span class="coin-shade" aria-hidden="true"></span><span class="coin-lens"><img class="cd-icon" alt="" width="96" height="96" decoding="async"><span class="cd-glint" aria-hidden="true"><span class="glint-band"></span></span></span><span class="coin-spec" aria-hidden="true"></span><span class="cd-star cd-star-a" aria-hidden="true"></span><span class="cd-star cd-star-b" aria-hidden="true"></span></div></div>
+        <div class="cd-coin"><div class="cd-tilt"><img class="cd-icon" alt="" width="96" height="96" decoding="async"><span class="cd-glint" aria-hidden="true"><span class="glint-band"></span></span><span class="cd-star cd-star-a" aria-hidden="true"></span><span class="cd-star cd-star-b" aria-hidden="true"></span></div></div>
         <div class="cd-main">
           <div class="id"><h2 class="sym" id="cd-sym"></h2><span class="name" id="cd-name"></span></div>
           <div class="price cd-price"></div>
@@ -161,12 +127,12 @@
         </div>
         <div class="cd-tr">
           <button class="cd-x cd-copy glass" type="button" hidden>Copy image</button>
-          <button class="cd-x cd-share glass" type="button" aria-label="Share image"><svg class="share-g" viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 10V1.75M5.25 4.5 8 1.75l2.75 2.75M5.75 6.5H4.6667a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h6.6667a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-1.0833"/></svg></button>
-          <button class="cd-x glass" type="button" aria-label="Close"><svg class="cross" viewBox="0 0 12 12" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2.75 2.75l6.5 6.5M9.25 2.75l-6.5 6.5"/></svg></button>
+          <button class="cd-x cd-share glass" type="button" aria-label="Share image" data-tip="Share image"><svg class="share-g" viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 10V1.75M5.25 4.5 8 1.75l2.75 2.75M5.75 6.5H4.6667a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h6.6667a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-1.0833"/></svg></button>
+          <button class="cd-x glass" type="button" aria-label="Close" data-tip="Close"><svg class="cross" viewBox="0 0 12 12" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2.75 2.75l6.5 6.5M9.25 2.75l-6.5 6.5"/></svg></button>
         </div>
         <div class="cd-ctrl">
           <div class="seg seg-size" role="group" aria-label="Candle size"><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-i="1H" aria-label="1H, 1 hour">1H</button><button type="button" aria-pressed="false" data-i="4H" aria-label="4H, 4 hours">4H</button><button type="button" aria-pressed="false" data-i="1D" aria-label="1D, 1 day">1D</button><button type="button" aria-pressed="false" data-i="1W" aria-label="1W, 1 week">1W</button></div>
-          <div class="seg seg-type" role="group" aria-label="Chart type"><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-t="line" title="Line"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M1.75 12.25 5.75 7.75 9 10.5l5.25-7"/></svg></button><button type="button" aria-pressed="false" data-t="candles" title="Candles"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M4.5 1.5V4m0 7.5V14m7-12.5v12" stroke-linecap="round"/><rect x="2.5" y="4.5" width="4" height="6.5" rx="1"/><rect x="9" y="5" width="5" height="6" rx="1.25" fill="currentColor" stroke="none"/></svg></button></div>
+          <div class="seg seg-type" role="group" aria-label="Chart type"><span class="seg-ind" aria-hidden="true"><i></i><b></b><u></u></span><button type="button" aria-pressed="true" data-t="line" aria-label="Line" data-tip="Line"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M1.75 12.25 5.75 7.75 9 10.5l5.25-7"/></svg></button><button type="button" aria-pressed="false" data-t="candles" aria-label="Candles" data-tip="Candles"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M4.5 1.5V4m0 7.5V14m7-12.5v12" stroke-linecap="round"/><rect x="2.5" y="4.5" width="4" height="6.5" rx="1"/><rect x="9" y="5" width="5" height="6" rx="1.25" fill="currentColor" stroke="none"/></svg></button></div>
         </div>
         <div class="cd-chart" tabindex="0" role="slider" aria-label="Price chart" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="Loading"></div>
         <dl class="stats cd-stats">
@@ -181,6 +147,10 @@
       </div>
     </section>
   </dialog>
+  <!-- The tip: the name of a control that is only a glyph, beside it while the pointer rests on it or the keyboard is
+       on it. One for the page, in the top layer so it also shows over the chart's dialog. The controls carry their own
+       names for assistive tech, so this is not read. -->
+  <div class="tip glass float" id="tip" popover="manual" aria-hidden="true" hidden></div>
   <script type="application/json" id="initial"><!--DATA--></script>
   <script type="application/json" id="assets"><!--ASSETS--></script>
   <script src="/app.js"></script>

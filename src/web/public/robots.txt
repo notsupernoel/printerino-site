@@ -1,0 +1,17 @@
+User-Agent: GPTBot
+User-Agent: ClaudeBot
+User-Agent: Applebot-Extended
+User-Agent: meta-externalagent
+User-Agent: Amazonbot
+User-Agent: CCBot
+User-Agent: Coherebot
+Disallow: /
+
+User-Agent: *
+User-Agent: OAI-SearchBot
+User-Agent: Claude-SearchBot
+User-Agent: Applebot
+User-Agent: meta-webindexer
+User-Agent: PerplexityBot
+User-Agent: Amzn-SearchBot
+Allow: /

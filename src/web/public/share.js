@@ -5,11 +5,11 @@
 //
 // The picture is the panel, card alone, edge to edge: 960 x 540 CSS pixels (16:9) drawn at 2x, 1920 x 1080, with square
 // corners and no ground round it (apps round a picture's corners themselves, and a transparent corner turns black in a
-// JPEG). It keeps the panel's own layout, type and colours: the coin top left (its art pixel for pixel, two device
-// pixels a cell, with the glass's resting reflection worked out from the same maps), the symbol and name, the price, the
-// chip row; top right the time of its prices on the symbol's baseline; under it, on the chip row's baseline and in the
-// "24h" key's type, the candle size and the view ("4H · Candles"), where the panel has its controls; the chart as it is
-// drawn; and the lockup, small, bottom left. Nothing you press is in it (you cannot press a picture).
+// JPEG). It keeps the panel's own layout, type and colours: the coin top left (its art scaled and cut round as the page
+// does both), the symbol and name, the price, the chip row; top right the time of
+// its prices on the symbol's baseline; under it, on the chip row's baseline and in the "24h" key's type, the candle
+// size and the view ("4H · Candles"), where the panel has its controls; the chart as it is drawn; and the lockup,
+// small, bottom left. Nothing you press is in it (you cannot press a picture).
 //
 // Type: the canvas sets Inter as the page does through the font's private code points for the page's character
 // variants and tabular figures (tools/share/font.mjs); the font's optical size is pinned at the text cut the page uses.
@@ -57,24 +57,34 @@ export function install(api) {
   const K = 2;
   const PAD = 28;
   const RIGHT = W - PAD;
-  // The panel's header, as it lays it out at 960px: the coin, the column of words beside it (22px on), each line's top
-  // and height, the chip row's top and height (its parts centred in it, 8px apart).
-  const COIN = { x: PAD, y: PAD, size: 96 };
-  const COL = PAD + 96 + 22;
-  const SYM = { top: PAD + 2, lh: 25.5 };
-  const NAME = { top: SYM.top + 25.5, lh: 16.5 };
-  const PRICE = { top: NAME.top + 16.5 + 14, lh: 44 };
-  const MOVE = { top: PRICE.top + 44 + 12, h: 23, gap: 8 };
-  // The lockup, 18px tall, on the bottom margin; the chart's box 24px under the chip row (as in the panel) and 16px over
-  // the lockup, the full width between the margins.
+  // The panel's header, as it lays it out at 960px: the coin with its two names beside it (16px on, centred on the
+  // coin), the price under them from the left margin, then the chip row (its parts centred in it, 8px apart).
+  const COIN = { x: PAD, y: PAD, size: 64 };
+  // A coin's art is a grid of this many cells a side.
+  const CELLS = 96;
+  const COL = PAD + 64 + 16;
+  const SYM = { top: PAD + 9, lh: 28 };
+  const NAME = { top: SYM.top + 28, lh: 18 };
+  const PRICE = { top: PAD + 64 + 22, lh: 56 };
+  const MOVE = { top: PRICE.top + 56 + 14, h: 23, gap: 8 };
+  // The day's four figures on the header's right, two by two, ending on the chip row's bottom: each a label over its
+  // figure, 14px between the rows and 36px between the columns, every word ending on its column's right edge.
+  const FIG = { lab: 18, val: 20, row: 14, col: 36 };
+  FIG.top = MOVE.top + MOVE.h - 2 * (FIG.lab + FIG.val) - FIG.row;
+  // The lockup, 18px tall, on the bottom margin; the chart's box 24px under the chip row and 16px over the lockup, the
+  // full width between the margins. (The panel's chart runs to its edges; a card is a picture on its own, and a line
+  // that reached its edge would read as cut off, so here the line starts on the left margin, under the price.)
   const LOCKUP = 18;
+  const LINE_LEAD = 10;
   const CHART = { x: PAD, y: MOVE.top + MOVE.h + 24, w: W - 2 * PAD };
   CHART.h = H - PAD - LOCKUP - 16 - CHART.y;
   // Each word's type, as the stylesheet sets it: weight, size, letter-spacing (em) and whether its figures line up.
   const TYPE = {
-    sym: { w: 600, size: 17, ls: -0.02 },
-    name: { w: 400, size: 11, ls: 0 },
-    price: { w: 800, size: 44, ls: -0.035, tab: true },
+    sym: { w: 600, size: 22, ls: -0.025 },
+    name: { w: 400, size: 13, ls: 0 },
+    price: { w: 800, size: 56, ls: -0.04, tab: true },
+    figKey: { w: 400, size: 12, ls: -0.005 },
+    figVal: { w: 500, size: 15, ls: -0.01, tab: true },
     chip: { w: 700, size: 12, ls: 0.02, tab: true },
     key: { w: 400, size: 12, ls: -0.005 },
     abs: { w: 600, size: 13, ls: -0.01, tab: true },
@@ -103,10 +113,10 @@ export function install(api) {
     img.onerror = () => no(new Error('picture'));
     img.src = src;
   });
-  // The page's own files only (the lockups in the page, the coin maps index.html names).
+  // The page's own files only (the lockups in the page, the coins' art: a light card is handed each coin's twin for
+  // paper, under /icons/light/).
   const LOCKUP_URL = /^\/lockup(-ink)?\.svg(\?v=[0-9a-f]+)?$/;
-  const MAP_URL = /^\/glass\/e-(nrm|env)\.(png|webp)(\?v=[0-9a-f]+)?$/;
-  const ICON = /^\/icons\/[a-z0-9]+\.(png|webp)(\?v=[0-9a-f]+)?$/;
+  const ICON = /^\/icons\/(light\/)?[a-z0-9]+\.(png|webp)(\?v=[0-9a-f]+)?$/;
   const lockups = new Map();
   // A coin's art, decoded once per visit (its outline colour is read from it once too).
   const arts = new Map();
@@ -129,73 +139,6 @@ export function install(api) {
     } catch {
       return false;
     }
-  }
-  // The glass's resting reflection (index.html's #coin-spec, every coin's at rest), worked out once from the same two
-  // maps, as the filter does it: the environment's light, displaced by the dome's normals (0.109 of the box) and
-  // strengthened by its Fresnel term (4.4 times the normals' blue), over the filter's region (the box and 2% round it),
-  // at the card's 2x. It is added to the coin as light is (plus-lighter). null if a map cannot be had: the plain art
-  // (and the next card asks for the maps again, as it does for a coin's art and the lockups).
-  let sheenMade = null;
-  function sheen() {
-    if (sheenMade) return sheenMade;
-    const src = (r) => document.querySelector(`#coin-spec feImage[result="${r}"]`)?.getAttribute('data-href') ?? '';
-    const nrmSrc = src('nrm');
-    const envSrc = src('env');
-    if (!MAP_URL.test(nrmSrc) || !MAP_URL.test(envSrc)) return Promise.resolve(null);
-    sheenMade = Promise.all([picture(nrmSrc), picture(envSrc)]).then(([nrm, env]) => {
-      const pixels = (img) => {
-        const c = document.createElement('canvas');
-        c.width = img.naturalWidth;
-        c.height = img.naturalHeight;
-        const x = c.getContext('2d');
-        x.drawImage(img, 0, 0);
-        return { w: c.width, h: c.height, d: x.getImageData(0, 0, c.width, c.height).data };
-      };
-      const N = pixels(nrm);
-      const E = pixels(env);
-      // Bilinear, between texel centres; nothing outside the picture.
-      const sample = (m, fx, fy, ch) => {
-        const x = fx - 0.5;
-        const y = fy - 0.5;
-        const x0 = Math.floor(x);
-        const y0 = Math.floor(y);
-        const tx = x - x0;
-        const ty = y - y0;
-        const at = (i, j) => (i < 0 || j < 0 || i >= m.w || j >= m.h ? 0 : m.d[(j * m.w + i) * 4 + ch] / 255);
-        return (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty;
-      };
-      const size = Math.round(COIN.size * 1.04 * K);
-      const out = document.createElement('canvas');
-      out.width = size;
-      out.height = size;
-      const ox = out.getContext('2d');
-      const img = ox.createImageData(size, size);
-      for (let j = 0; j < size; j++) {
-        for (let i = 0; i < size; i++) {
-          const u = -0.02 + ((i + 0.5) / size) * 1.04;
-          const v = -0.02 + ((j + 0.5) / size) * 1.04;
-          const nx = ((u + 0.02) / 1.04) * N.w;
-          const ny = ((v + 0.02) / 1.04) * N.h;
-          const fres = sample(N, nx, ny, 2);
-          if (fres <= 0) continue;
-          const du = u + 0.109 * (sample(N, nx, ny, 0) - 0.5);
-          const dv = v + 0.109 * (sample(N, nx, ny, 1) - 0.5);
-          const ex = ((du + 0.5345) / 1.6) * E.w;
-          const ey = ((dv + 0.5345) / 1.6) * E.h;
-          const a = sample(E, ex, ey, 3);
-          if (a <= 0) continue;
-          const lit = sample(E, ex, ey, 0) * a;
-          const oa = Math.min(1, 4.4 * a * fres);
-          const oc = Math.min(oa, 4.4 * lit * fres);
-          const k = (j * size + i) * 4;
-          img.data[k] = img.data[k + 1] = img.data[k + 2] = Math.round((oc / oa) * 255);
-          img.data[k + 3] = Math.round(oa * 255);
-        }
-      }
-      ox.putImageData(img, 0, 0);
-      return out;
-    }, () => { sheenMade = null; return null; });
-    return sheenMade;
   }
 
   // A coin's outline colour: its art's outermost pixels, read round the circle (the median, so a sparkle or a gap on the
@@ -255,14 +198,14 @@ export function install(api) {
     };
     return {
       card: legacy(tok('--surface-1')), tag: legacy(tok('--surface-2')),
-      text: rgb('--text-rgb'), muted: legacy(tok('--muted-c')), faint: legacy(tok('--faint-c')),
+      text: rgb('--text-rgb'), dim: legacy(tok('--dim-c')), muted: legacy(tok('--muted-c')), faint: legacy(tok('--faint-c')),
       gain: rgb('--gain-rgb'), loss: rgb('--loss-rgb'), gainChip: legacy(tok('--gain-chip')), lossChip: legacy(tok('--loss-chip')),
       gainLine: legacy(tok('--gain-line')), lossLine: legacy(tok('--loss-line')),
       wash: { up: [triplet(tok('--gain-fill-rgb')), Number(tok('--wash-up'))], down: [triplet(tok('--loss-fill-rgb')), Number(tok('--wash-down'))], flat: [triplet(tok('--muted-c')), Number(tok('--wash-flat'))] },
       wm: legacy(tok('--wm-ink')), shade: tok('--shade-rgb').split(/\s+/).join(', '),
     };
   }
-  function card(s, chart, art, glass, lockup, inter) {
+  function card(s, chart, art, lockup, inter) {
     const cv = document.createElement('canvas');
     cv.width = W * K;
     cv.height = H * K;
@@ -335,12 +278,16 @@ export function install(api) {
     ctx.fillStyle = c.card;
     ctx.fillRect(0, 0, W, H);
 
-    // The coin, as its glass draws it at rest: under the art a disc of the coin's own outline colour (on paper it casts
-    // the panel coin's contact shadow, two soft shadows; in the dark none), the art pixel for pixel, the outline's outer
-    // edge as one smooth circle (the lens's meniscus squeezes the pixel outline into it), then the resting light.
+    // The coin, as the page draws it: the art cut round by the page's own circle (48.1% of its box, just inside the
+    // art's pixel staircase), and scaled by the stylesheet's rule for the panel's coin: pixel for pixel only where
+    // every cell of the art gets a whole number of the picture's pixels, smoothly at any other size (64px at 2x is
+    // 128 pixels for 96 cells: unsmoothed, some cells would be drawn one pixel wide and others two). Under it a disc
+    // of the coin's own outline colour, a quarter pixel smaller: on paper it casts the panel coin's contact shadow
+    // (two soft shadows; in the dark none), and the cut's soft edge blends into the outline's colour, never into the
+    // card's.
     const cx = COIN.x + COIN.size / 2;
     const cy = COIN.y + COIN.size / 2;
-    const R = COIN.size / 2;
+    const R = COIN.size * 0.481;
     if (art) {
       const rim = rimOf(art);
       ctx.save();
@@ -356,34 +303,25 @@ export function install(api) {
         ctx.fill();
       }
       ctx.restore();
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(art, COIN.x, COIN.y, COIN.size, COIN.size);
-      ctx.imageSmoothingEnabled = true;
+      ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.arc(cx, cy, R - 1.5, 0, Math.PI * 2, true);
-      ctx.fillStyle = rim;
-      ctx.fill();
-      if (glass) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, COIN.size / 2 + 2, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.drawImage(glass, COIN.x - COIN.size * 0.02, COIN.y - COIN.size * 0.02, COIN.size * 1.04, COIN.size * 1.04);
-        ctx.restore();
-      }
+      ctx.clip();
+      ctx.imageSmoothingEnabled = (COIN.size * K) % CELLS !== 0;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(art, COIN.x, COIN.y, COIN.size, COIN.size);
+      ctx.restore();
     }
 
     // The header's words.
     const symBase = baseline(TYPE.sym, SYM.top, SYM.lh);
     word(TYPE.sym, s.sym, COL, symBase, c.text);
     word(TYPE.name, s.exchange ? `${s.name} · ${s.exchange}` : s.name, COL, baseline(TYPE.name, NAME.top, NAME.lh), c.muted);
-    word(TYPE.price, s.price, COL, baseline(TYPE.price, PRICE.top, PRICE.lh), s.known ? c.text : c.muted);
+    word(TYPE.price, s.price, PAD, baseline(TYPE.price, PRICE.top, PRICE.lh), s.known ? c.text : c.muted);
     // The chip row: the chip (its figure 12px on a tag 4px and 9px larger all round), the key, the dollar move, the
     // session note, each centred on the row.
     const mid = MOVE.top + MOVE.h / 2;
-    let x = COL;
+    let x = PAD;
     const chipH = TYPE.chip.size * 1.2 + 8;
     const chipW = widthOf(TYPE.chip, glyphs(s.chg, true)) + 18;
     ctx.fillStyle = s.tone === 'gain' ? c.gainChip : s.tone === 'loss' ? c.lossChip : c.tag;
@@ -395,10 +333,24 @@ export function install(api) {
     x += word(TYPE.key, s.key, x, keyBase, c.muted) + MOVE.gap;
     if (s.abs) x += word(TYPE.abs, s.abs, x, baseline(TYPE.abs, mid - 9.75, 19.5), s.tone === 'gain' ? c.gain : s.tone === 'loss' ? c.loss : c.muted) + MOVE.gap;
     if (s.sess) word(TYPE.sess, s.sess, x, baseline(TYPE.sess, mid - 9, 18), c.faint);
-    // Top right, on the symbol's baseline: when the prices are from. Under it, on the chip row's baseline and in the key's
-    // type, the candle size and the view.
-    word(TYPE.stamp, stampOf(s.at).text, RIGHT, symBase, c.faint, 'right');
-    word(TYPE.key, `${s.size} · ${s.type === 'candles' ? 'Candles' : 'Line'}`, RIGHT, keyBase, c.muted, 'right');
+    // Top right: when the prices are from. Its capitals' tops are level with the coin's top, so the card's two top
+    // corners are set in by the same amount down as across (on the symbol's baseline it sat 22px lower than it is in
+    // from the right).
+    ctx.font = fontOf(TYPE.stamp);
+    const stampCap = ctx.measureText('N').actualBoundingBoxAscent || TYPE.stamp.size * 0.727;
+    word(TYPE.stamp, stampOf(s.at).text, RIGHT, cy - R + stampCap, c.faint, 'right');
+    // The day's four figures: the second column ends on the right margin, the first 36px left of the second's widest
+    // word. A figure still on its way is an empty word, as in the panel: its label stands alone.
+    const figs = s.figures ?? [];
+    const wide = (i) => Math.max(widthOf(TYPE.figKey, glyphs(figs[i][0], false)), widthOf(TYPE.figVal, glyphs(figs[i][1], true)));
+    if (figs.length === 4) {
+      const ends = [RIGHT - Math.max(wide(1), wide(3)) - FIG.col, RIGHT];
+      figs.forEach(([key, value], i) => {
+        const top = FIG.top + (i >> 1) * (FIG.lab + FIG.val + FIG.row);
+        word(TYPE.figKey, key, ends[i & 1], baseline(TYPE.figKey, top, FIG.lab), c.muted, 'right');
+        word(TYPE.figVal, value, ends[i & 1], baseline(TYPE.figVal, top + FIG.lab, FIG.val), value === 'n/a' ? c.muted : c.dim, 'right');
+      });
+    }
 
     // The chart, in its box (the geometry make() took with the scene).
     const ch = chart;
@@ -433,17 +385,20 @@ export function install(api) {
         const grad = ctx.createLinearGradient(0, top, 0, floor);
         grad.addColorStop(0, `rgba(${wash}, ${Number.isFinite(washA) ? washA : 0.24})`);
         grad.addColorStop(1, `rgba(${wash}, 0)`);
+        // As in the panel, a line whose first point is the plot's first slot starts on the plot's left edge itself (here
+        // the card's left margin), level with the first close.
+        const start = g.xs[0] > 0 && g.xs[0] <= LINE_LEAD ? 0 : g.xs[0];
         ctx.beginPath();
-        ctx.moveTo(g.xs[0], g.ys[0]);
-        for (let i = 1; i < g.n; i++) ctx.lineTo(g.xs[i], g.ys[i]);
+        ctx.moveTo(start, g.ys[0]);
+        for (let i = 0; i < g.n; i++) ctx.lineTo(g.xs[i], g.ys[i]);
         ctx.lineTo(g.xs[g.n - 1], floor);
-        ctx.lineTo(g.xs[0], floor);
+        ctx.lineTo(start, floor);
         ctx.closePath();
         ctx.fillStyle = grad;
         ctx.fill();
         ctx.beginPath();
-        ctx.moveTo(g.xs[0], g.ys[0]);
-        for (let i = 1; i < g.n; i++) ctx.lineTo(g.xs[i], g.ys[i]);
+        ctx.moveTo(start, g.ys[0]);
+        for (let i = 0; i < g.n; i++) ctx.lineTo(g.xs[i], g.ys[i]);
         ctx.lineWidth = 2;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
@@ -496,8 +451,9 @@ export function install(api) {
       ctx.restore();
     }
 
-    // The lockup, small, bottom left.
+    // The lockup, small, bottom left; on its line at the right margin, in the key's type, the candle size and the view.
     if (lockup?.naturalWidth) ctx.drawImage(lockup, PAD, H - PAD - LOCKUP, (LOCKUP * lockup.naturalWidth) / lockup.naturalHeight, LOCKUP);
+    word(TYPE.key, `${s.size} · ${s.type === 'candles' ? 'Candles' : 'Line'}`, RIGHT, baseline(TYPE.key, H - PAD - LOCKUP, LOCKUP), c.muted, 'right');
     return cv;
   }
   // When the prices are from, in the viewer's own zone: "Oct 9, 2026 · 08:30 GMT-4", and the day for the file's name.
@@ -517,16 +473,20 @@ export function install(api) {
   }
 
   // ---- one card at a time: the last one made, kept while it still shows what the panel shows ----
-  const keyOf = (s) => JSON.stringify([s.sym, s.name, s.exchange, s.price, s.chg, s.tone, s.key, s.abs, s.sess, s.size, s.type, s.theme, stampOf(s.at).text, s.candles]);
+  const keyOf = (s) => JSON.stringify([s.sym, s.name, s.exchange, s.price, s.chg, s.tone, s.key, s.abs, s.sess, s.size, s.type, s.theme, stampOf(s.at).text, s.candles, s.figures]);
   // What a phone's card drawn ahead is for: the same without the time's minute (its day stays: the file's name carries
   // it). A poll that moved no price moves the time alone, once a minute, and a card a minute behind still shows the
   // panel: a press shares it, with the time of its own prices on it, rather than a phone redrawing it every minute.
-  const needOf = (s) => JSON.stringify([s.sym, s.name, s.exchange, s.price, s.chg, s.tone, s.key, s.abs, s.sess, s.size, s.type, s.theme, stampOf(s.at).day, s.candles]);
+  const needOf = (s) => JSON.stringify([s.sym, s.name, s.exchange, s.price, s.chg, s.tone, s.key, s.abs, s.sess, s.size, s.type, s.theme, stampOf(s.at).day, s.candles, s.figures]);
   // How far behind the panel's time such a card may fall before it is drawn again, so a flat price never shares a very
   // old time.
   const BEHIND = 10 * 60_000;
   // The view a copy offer belongs to: the same chart in the same theme (a new price keeps it: it copies what was saved).
   const viewOf = (s) => `${s.sym}|${s.size}|${s.type}|${s.theme}`;
+  // The day's high and low as the scene words them (hilo; empty while the hourly candles they are read from are on
+  // their way). They come in after the panel has opened, not with a price: a card that lacks the panel's is not a
+  // price update behind it, and is never shared in its place (tap).
+  const hiloOf = (s) => s.hilo ?? '';
 
   // The panel's run, a machine in one of two states:
   //   shut: no panel this module has heard from (at install, and after every close()).
@@ -566,17 +526,16 @@ export function install(api) {
     // The chart's geometry and words are taken now, in the run that made the key, so the picture never puts a chart the
     // panel swapped in during the waits below under this scene's header.
     const chart = s.chart(CHART.w, CHART.h);
-    const [art, glass, lockup, inter] = await Promise.all([
+    const [art, lockup, inter] = await Promise.all([
       ICON.test(s.icon) ? artFor(s.icon) : null,
-      sheen(),
       lockupFor(s.theme),
       interIn(),
     ]);
-    const cv = card(s, chart, art, glass, lockup, inter);
+    const cv = card(s, chart, art, lockup, inter);
     const blob = await new Promise((ok, no) => cv.toBlob((b) => (b ? ok(b) : no(new Error('toBlob'))), 'image/png'));
     const name = `printerino-${s.sym}-${s.size}-${stampOf(s.at).day}.png`;
     const file = typeof File === 'function' ? new File([blob], name, { type: 'image/png', lastModified: s.at }) : null;
-    return { key, need: needOf(s), at: s.at, view: viewOf(s), sym: s.sym, blob, name, file };
+    return { key, need: needOf(s), at: s.at, view: viewOf(s), hilo: hiloOf(s), sym: s.sym, blob, name, file };
   }
   function ready() {
     const s = scene();
@@ -761,7 +720,7 @@ export function install(api) {
       const mine = sheet.epoch;
       // The share sheet. Closed without sharing: nothing more. Refused (the tap's moment had passed, or the browser
       // would not share the file): saved instead. A sheet already up (another page's) refuses too: nothing more.
-      navigator.share({ files: [m.file], title: `${m.sym} on Printerino`, text: `${m.sym} on Printerino · https://printerino.com/` }).catch((e) => {
+      navigator.share({ files: [m.file], title: `${m.sym} on Printerino`, text: `${m.sym} on Printerino · https://printerino.com/#${m.sym.toLowerCase()}` }).catch((e) => {
         if (e?.name !== 'AbortError' && e?.name !== 'InvalidStateError' && still(run)) save(m);
       }).finally(() => { if (sheet.epoch === mine) sheet.go('down'); });
       return;
@@ -779,7 +738,8 @@ export function install(api) {
       if (made?.key === key) { send(made, run); return; }
       // A share sheet must open inside the tap: a card of this same chart made moments ago (a price update behind, with
       // the time of its own prices on it) goes now, rather than a fresh one too late; the fresh one is made for next time.
-      if (sheetLikely() && made?.view === viewOf(s)) { send(made, run); ahead(1500); return; }
+      // Not a card whose day's high and low are not the panel's (drawn before they came in): that one is made first.
+      if (sheetLikely() && made?.view === viewOf(s) && made.hilo === hiloOf(s)) { send(made, run); ahead(1500); return; }
       // Made first: the press carries the picture it asked for and the panel run it was made in, and the picture goes
       // only while that run is the panel open (a close and another coin's panel meanwhile: nothing is shared or saved).
       ready().then((m) => { if (m?.key === key && still(run)) send(m, run); }, () => { if (still(run)) say('The image could not be made'); });

@@ -18,7 +18,7 @@
   --accent-rgb: 133 187 101;   /* #85BB65 fill, badge, mark, edge. Never a figure; the same in both themes */
   --gain-rgb: 0 194 120;       /* #00C278 a number going up (a figure's ink) */
   --loss-rgb: 253 75 78;       /* #FD4B4E a number going down, a failure (a figure's ink) */
-  --warn-rgb: 239 164 17;      /* #EFA411 a warning: the notice's edge, the late dot; the same in both themes */
+  --warn-rgb: 239 164 17;      /* #EFA411 a warning: the late dot; the same in both themes */
   --text-rgb: 244 244 246;     /* #F4F4F6 white, never pure */
   --dim-c: #c7c7ca;
   --muted-c: #969faf;
@@ -44,7 +44,6 @@
   /* Amber as a word (late, stale), as the notice's mark, and the notice's tint. */
   --warn-word: rgb(239 164 17);
   --warn-mark: rgb(239 164 17);
-  --notice-bg: rgb(239 164 17 / 0.1);
   /* The hero's ghost tape, and the lip of light that presses it into paper (none on the dark card). */
   --tape-ink: rgb(244 244 246 / 0.07);
   --tape-lip: none;
@@ -58,6 +57,13 @@
   /* At rest a dark card is lit from above: 1px of white at 8% along its top, inside it, on whatever stands on the bare
      ground (cards, the hero, the notice, the panel). Light keeps its shadow. */
   --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  /* A board's slab: a step quieter than a card (between the ground and a card), its top line of light fainter too. */
+  --slab: #14151a;
+  --slab-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  /* The weights of a card's symbol, of a small price and of a large one: tokens, so each ground can set its own. */
+  --w-sym: 600;
+  --w-price: 600;
+  --w-big: 700;
   --card-lift: 0 14px 32px -14px rgb(0 0 0 / 0.75), 0 4px 12px -6px rgb(0 0 0 / 0.5);
   --panel-lift: 0 40px 90px -30px rgb(0 0 0 / 0.7), 0 14px 34px -14px rgb(0 0 0 / 0.5);
   --sheet-lift: 0 -10px 40px -10px rgb(0 0 0 / 0.5);
@@ -67,6 +73,12 @@
   --wash-flat: 0.24;
   --halo-o: 0.16;
   --wait-c: rgb(var(--text-rgb) / 0.06);
+  /* A card's week: its line (neutral, never a gain's or a loss's colour: a week's direction beside today's chip would
+     contradict it), the line's width, and the wash under it (this colour, from --week-wash-o at the top to nothing). */
+  --week-line: rgb(244 244 246 / 0.5);
+  --week-w: 1.5px;
+  --week-wash: #f4f4f6;
+  --week-wash-o: 0.1;
   /* The chart's watermark: the lockup as a ghost, white at 5%. */
   --wm-ink: rgb(244 244 246 / 0.05);
   /* The phone sheet's grabber: a little capsule you pull. */
@@ -78,6 +90,8 @@
      What you press is a capsule, each one concentric with what sits in it (track 15 = segment 13 + 2px of track). */
   --sq: 1;
   --r-card: 20px;
+  --r-lead: 24px;
+  --r-slab: 18px;
   --r-panel: 32px;
   --r-sheet: 36px;
   --r-chip: 999px;             /* the 24h chip: a capsule */
@@ -87,17 +101,14 @@
   --r-track: 15px;
   --r-seg: 13px;
   --r-sw: 12px;
-  /* The glass of the controls, on the dark ground: raised glass (the X link; the notice's toggle on paper), a tint laid
-     on a card (the cross; the notice's toggle in the dark), a track pressed in (the segmented controls, the switch),
-     the droplet riding a track, and the light. No ring round any of them: the rim's light lands on the top edge and is
-     gone before the sides. Every shadow is in --shade-rgb. */
-  --g-fill: linear-gradient(180deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.06));
+  /* The glass of the controls, on the dark ground: the shadow floating glass rests on, a track pressed in (the
+     segmented controls, the switch), the droplet riding a track, and the light. No ring round any of them: the rim's
+     light lands on the top edge and is gone before the sides. Every shadow is in --shade-rgb. */
   --g-contact: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 10px -4px rgb(0 0 0 / 0.4);
-  /* The lift shadow's strength at rest (0 5px 14px -5px) and lifted (0 10px 22px -8px). */
+  /* The lift shadow's strength at rest (0 5px 14px -5px) and lifted (0 10px 22px -8px; --g-tint-a1 is the dock's
+     round button's). */
   --g-a0: 0.6;
   --g-a1: 0.75;
-  --g-tint: linear-gradient(180deg, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.09));
-  --g-tint-contact: 0 2px 6px -2px rgb(0 0 0 / 0.45);
   --g-tint-a1: 0.5;
   /* The glass (see ".glass" below, the one class every pressable carries). Floating over the page its tone is --g-dock,
      over a blur. On a card or a sheet it has no blur and needs these: its even tone there, the shadow it rests on, and
@@ -126,7 +137,6 @@
      moon), and the plain tone the floating glass turns to when transparency is reduced. */
   --float-ink: rgb(255 255 255);
   --float-ink-soft: rgb(255 255 255 / 0.92);
-  --float-ink-dim: rgb(255 255 255 / 0.55);
   --float-solid: rgb(64 66 73);
   /* The panel's pickers: their track's tone (the pill is --g-drop-rest). */
   --picker-track: var(--g-track);
@@ -136,9 +146,6 @@
   --g-rim-b: rgb(255 255 255 / 0.025);
   --g-rim-c: rgb(255 255 255 / 0);
   --g-rim-d: rgb(255 255 255 / 0);
-  /* No light gathered inside the edge on the dark ground: a blurred inset light runs round every edge and reads as an
-     outline. */
-  --g-vol: 0 0 transparent;
   --g-glow: 255 255 255;
   --g-glow-hover: 0.07;
   --g-glow-press: 0.16;
@@ -163,7 +170,6 @@
      resting pill: a fainter, clearer patch of the glass with light on its top edge. */
   --dock-word: rgb(255 255 255 / 0.96);
   --dock-pill: rgb(0 0 0 / 0.34);
-  --g-float: rgb(38 40 49 / 0.55);
   --g-glyph: var(--muted-c);
   --g-glyph-on: rgb(var(--text-rgb));
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
@@ -210,8 +216,7 @@
   --accent-display: #67a34a;   /* Green Display: 3.04:1 on the hero card, 80px weight 800 */
   --focus: rgb(14 15 20 / 0.9); /* Text at 90%: white would vanish on the paper */
   --warn-word: #9d6102;        /* Amber Ink: 4.53:1 on the paper, 5.07:1 on white */
-  --warn-mark: #c07d02;        /* Amber Mark: 3.03:1 on the notice */
-  --notice-bg: #fdf0de;        /* Muted on it 4.64:1 */
+  --warn-mark: #c07d02;        /* Amber Mark: 3.40:1 on a card */
   /* Ink at 8.5%, the ratio dark's white at 7% makes, with a lip of light under each stroke: pressed in, not printed. */
   --tape-ink: rgb(14 15 20 / 0.085);
   --tape-lip: 0 1px 0 rgb(255 255 255 / 0.9);
@@ -223,6 +228,12 @@
   --hover-tint: transparent;
   --hover-light: transparent;
   --card-shadow: 0 1px 2px rgb(18 22 38 / 0.04), 0 10px 24px -14px rgb(18 22 38 / 0.14);
+  /* A slab on paper is white like a card, on a lighter shadow. Dark type on paper reads thinner: a step heavier. */
+  --slab: #ffffff;
+  --slab-shadow: 0 1px 1px rgb(18 22 38 / 0.03), 0 6px 16px -12px rgb(18 22 38 / 0.12);
+  --w-sym: 620;
+  --w-price: 620;
+  --w-big: 720;
   --card-lift: 0 20px 40px -18px rgb(18 22 38 / 0.28), 0 6px 14px -8px rgb(18 22 38 / 0.12);
   --panel-lift: 0 2px 6px rgb(18 22 38 / 0.05), 0 30px 70px -20px rgb(18 22 38 / 0.3);
   --sheet-lift: 0 -10px 40px -10px rgb(18 22 38 / 0.2);
@@ -231,20 +242,20 @@
   --wash-down: 0.258;
   --wash-flat: 0.209;
   --halo-o: 0.14;
+  /* A card's week on paper: ink a little stronger and a hair wider than dark's white, over a wash of the ink's blue. */
+  --week-line: rgb(14 15 20 / 0.55);
+  --week-w: 1.6px;
+  --week-wash: #1a2140;
   --grab: rgb(18 22 38 / 0.2);
-  /* The glass on paper: white glass with its light inside the top edge and a breath of shade in the bottom one. White
-     light on white hardly shows, so a hover is carried by the lift (16% to 28%). No ring round anything, and no shadow
-     tight enough to draw one: the contact shadow and the track's pressed-in shade are spread wide, so on a 1x screen
-     neither reads as a line under or along the capsule. */
-  --g-fill: linear-gradient(180deg, rgb(255 255 255 / 0.74), rgb(255 255 255 / 0.5));
+  /* The glass on paper. White light on white hardly shows, so a hover is carried by the lift (16% to 28%). No ring
+     round anything, and no shadow tight enough to draw one: the contact shadow and the track's pressed-in shade are
+     spread wide, so on a 1x screen neither reads as a line under or along the capsule. */
   /* --g-line: the half-pixel edge every body of glass carries on paper. One value: the class's bodies take it through
      --g-contact, the logo's island likewise, and the merged top-bar body (a free shape, no box shadow) draws it itself. */
   --g-line: rgb(18 22 38 / 0.2);
   --g-contact: 0 0 0 0.5px var(--g-line), 0 1px 3px rgb(18 22 38 / 0.06);
   --g-a0: 0.1;
   --g-a1: 0.28;
-  --g-tint: linear-gradient(180deg, rgb(18 22 38 / 0.045), rgb(18 22 38 / 0.065));
-  --g-tint-contact: 0 0 transparent;
   --g-tint-a1: 0.18;
   /* On paper the glass on a card is light with dark ink, as Apple draws its own light screens (the Health and Calendar
      pictures on Apple's guideline pages: white buttons with dark glyphs, a pale track with a white pill). The dock's
@@ -262,7 +273,6 @@
   --g-rim-b: rgb(255 255 255 / 0.3);
   --g-rim-c: rgb(255 255 255 / 0);
   --g-rim-d: rgb(255 255 255 / 0);
-  --g-vol: inset 0 5px 8px -6px rgb(255 255 255 / 1), inset 0 -5px 8px -6px rgb(18 22 38 / 0.07);
   --g-glow-hover: 0.55;
   --g-glow-press: 0.9;
   --g-drop-rest: #ffffff;
@@ -289,15 +299,21 @@
   --dock-pill: rgb(18 22 38 / 0.11);
   --float-ink: rgb(var(--text-rgb));
   --float-ink-soft: var(--dim-c);
-  --float-ink-dim: var(--muted-c);
   --float-solid: var(--surface-1);
-  --g-float: rgb(255 255 255 / 0.66);
 }
 /* Light structure, not colour: thin dark type on paper is drawn without the subpixel boldening, and the pixel coins sit
-   on the paper like tokens, each with a contact shadow. */
+   on the paper like tokens, each with a contact shadow. The image cannot cast it: a clip path cuts the image round, and
+   would cut a shadow of its own away with it. A filter on the coin's box cannot either: Chromium draws a tilting box
+   that has a filter at a lower resolution. So a twin casts it: the same picture (--art, set by the script beside the
+   glint's mask) as the background of a disc under the art, a hair smaller than the cut, so it never shows itself. No
+   picture yet, no twin, no shadow. */
 :root:not([data-theme="dark"]) body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-:root:not([data-theme="dark"]) .icon { filter: drop-shadow(0 1px 1px rgb(var(--shade-rgb) / 0.16)) drop-shadow(0 3px 6px rgb(var(--shade-rgb) / 0.1)); }
-:root:not([data-theme="dark"]) .cd-icon { filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
+:root:not([data-theme="dark"]) :is(.coin, .cd-tilt)::before {
+  content: ''; position: absolute; inset: 2.4%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: var(--art, none) 50% 50% / 105.04% 105.04% no-repeat;
+  filter: drop-shadow(0 1px 1px rgb(var(--shade-rgb) / 0.16)) drop-shadow(0 3px 6px rgb(var(--shade-rgb) / 0.1));
+}
+:root:not([data-theme="dark"]) .cd-tilt::before { filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
 /* A theme change lands in one frame: the transitions it sets off (colours, the switch) finish at once, so nothing is
    seen half way between the two grounds. Motion already running keeps its own timing. The script sets .swap for two
    frames. */
@@ -308,6 +324,10 @@ html.swap *, html.swap *::before, html.swap *::after { transition-duration: 0s !
    (Windows, Linux, a Mac with a mouse) goes, and app.js pads the page by its width instead, so nothing moves and the
    blur covers the whole window, its right edge too. */
 html { line-height: 1.5; -webkit-text-size-adjust: 100%; background: var(--surface-0); scrollbar-gutter: stable; scroll-padding-top: 64px; }
+/* Not for the bar's own controls: each stands inside that 64px, so a key's focus on one would count as out of view and
+   scroll the page half a window up, every time (and the list's switch, which stands in the bar only while the page is
+   scrolled past the list, could never be reached by key). */
+html:has(.top:focus-within) { scroll-padding-top: 0; }
 html.cd-lock { overflow: hidden; scrollbar-gutter: auto; }
 body {
   margin: 0;
@@ -327,7 +347,7 @@ a { color: inherit; text-decoration: none; }
 :where(a, button):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
 /* A link: the accent word, underlined only on hover. */
 .link { color: var(--accent-word); text-underline-offset: 4px; }
-.link:hover { text-decoration-line: underline; }
+@media (hover: hover) { .link:hover { text-decoration-line: underline; } }
 
 /* ---- liquid glass, on the things you press ----
    The X link, the theme switch, the panel's cross and segmented controls and the notice's toggle are glass capsules;
@@ -340,17 +360,18 @@ a { color: inherit; text-decoration: none; }
    in the top bar float over the page, so those two are frosted (see the top bar). The motion only ever writes those custom
    properties (and --g-bt, --g-h, the transform) and clears them at rest; without it a hover lights the glass and a
    press gives a little, from here. */
-:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg) {
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip) {
   position: relative; isolation: isolate; background: none; -webkit-tap-highlight-color: transparent;
-  /* Raised glass on the ground, unless a rule below makes it a tint or a track. */
-  --g-face: var(--g-fill); --g-touch: var(--g-contact); --g-volume: var(--g-vol); --g-lift0: var(--g-a0); --g-lift1: var(--g-a1);
+  /* Lifted on a shadow, unless a rule below says otherwise. Its face (--g-face) and the light inside its edge
+     (--g-volume) are set below for each kind: a track, or .glass. */
+  --g-touch: var(--g-contact); --g-lift0: var(--g-a0); --g-lift1: var(--g-a1);
 }
-:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::before,
-:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::after {
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip)::before,
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip)::after {
   content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
   transform: var(--g-bt, none);
 }
-:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::before {
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip)::before {
   background:
     radial-gradient(circle closest-corner at var(--g-mx, 50%) var(--g-my, 30%), rgb(var(--g-glow) / var(--g-l, 0)), rgb(var(--g-glow) / calc(0.35 * var(--g-l, 0))) 45%, rgb(var(--g-glow) / 0)),
     var(--g-face);
@@ -358,21 +379,21 @@ a { color: inherit; text-decoration: none; }
     0 5px 14px -5px rgb(var(--shade-rgb) / calc(var(--g-lift0) * (1 - var(--g-h, 0)))),
     0 10px 22px -8px rgb(var(--shade-rgb) / calc(var(--g-lift1) * var(--g-h, 0)));
 }
-:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::after {
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip)::after {
   padding: 1px;
   background: linear-gradient(var(--g-la, 150deg), var(--g-rim-a), var(--g-rim-b) 30%, var(--g-rim-c) 55%, var(--g-rim-d));
 }
 /* The rim's shape, the controls' and the droplets': a 1px ring (the box less its content box) kept along the top only,
    whole on the top edge and gone 3.5px down, before 45 degrees round a corner. However the pointer turns the light, it
    never runs down an end (a crescent round a capsule's end reads as an outline, as an even ring does). */
-:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .seg-ind, .theme-switch .drop)::after {
+:is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip, .seg-ind, .theme-switch .drop)::after {
   -webkit-mask: linear-gradient(180deg, #000 1px, transparent 3.5px), linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: source-in, xor, source-over;
   mask: linear-gradient(180deg, #000 1px, transparent 3.5px) intersect, linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
-/* A tint laid on what it sits on, lifted on a shadow: only the dock's round button still starts from this (its own rule
-   makes it the dock's glass). */
-.cd-x { --g-face: var(--g-tint); --g-touch: var(--g-tint-contact); --g-lift0: 0; --g-lift1: var(--g-tint-a1); }
+/* The round buttons' lift: only the dock's still takes its lifted shadow from here (.glass.float makes the rest of it
+   the dock's glass; the panel's lie on a sheet with no lift). */
+.cd-x { --g-lift0: 0; --g-lift1: var(--g-tint-a1); }
 /* A track, pressed into what it sits on: no light inside, no lift, no rim. */
 .seg, .theme-switch { --g-face: var(--g-track); --g-touch: var(--g-track-shadow); --g-volume: 0 0 transparent; --g-lift0: 0; --g-lift1: 0; }
 .seg::after, .theme-switch::after { display: none; }
@@ -408,7 +429,21 @@ a { color: inherit; text-decoration: none; }
    this glass. */
 .glass::before, .cd-ctrl .seg::before, .logo-glass, .top-blob > i { -webkit-backdrop-filter: var(--glass-bd); backdrop-filter: var(--glass-bd); }
 /* The top bar's capsules, the body they merge into and the logo's island are small glass: the lighter frost. */
-.top .glass, .logo-glass, .top-blob > i { --glass-bd: var(--glass-bd-s); }
+.top .glass, .tip, .logo-glass, .top-blob > i { --glass-bd: var(--glass-bd-s); }
+/* The tip: a small capsule of the same glass that names a control drawn as a glyph alone. The script puts it 8px under
+   a control of the top bar or a picker of the chart and 8px over any other, centred on it and kept inside the window
+   (its place is a transform), and shows it in the top layer where the browser has one, so it stands over the chart's dialog too. It
+   comes in from 3px nearer its control. Never in the way of the pointer. Its first lines undo a popover's own box. */
+.tip {
+  position: fixed; inset: 0 auto auto 0; z-index: 60; margin: 0; border: 0; overflow: visible;
+  display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 13px;
+  color: var(--float-ink); font-size: 12px; font-weight: 500; letter-spacing: -0.005em; line-height: 1; white-space: nowrap;
+  pointer-events: none; opacity: 0; translate: 0 -3px; transition: opacity 140ms var(--ease), translate 180ms var(--ease);
+}
+.tip[hidden] { display: none; }
+.tip[data-side="over"] { translate: 0 3px; }
+.tip.on { opacity: 1; translate: 0 0; }
+@media (prefers-reduced-motion: reduce) { .tip, .tip[data-side="over"] { translate: none; transition: none; } }
 /* The dock's bar: the light frost on its body, the heavier one on a layer of its own (index.html's .dock-frost),
    whole along the bar's middle and half at its top and bottom edge. It swells and is cut with the body. */
 .seg-show::before { -webkit-backdrop-filter: var(--glass-bd-edge); backdrop-filter: var(--glass-bd-edge); }
@@ -465,9 +500,9 @@ html:not(.glass-clear)[data-theme="dark"] { --g-dock: rgb(150 152 164 / 0.36); -
    pan still scrolls the page; the labels never select, a long press never opens the callout). */
 /* (Not the dock's round button: its coming and going is the stylesheet's own transition. Reaching it, this rule would
    outrank its resting rule, so it would grow in on a spring but vanish at once.) */
-html.glass-on :is(.cd-x:not(.totop), .notice-more) { transition: none; }
+html.glass-on :is(.hlink, .cd-x:not(.totop), .notice-more) { transition: none; }
 html.glass-on .xlink { transition: translate 240ms var(--ease); }
-html.glass-on :is(.xlink, .cd-x, .notice-more):active { transform: none; }
+html.glass-on :is(.xlink, .hlink, .cd-x, .notice-more):active { transform: none; }
 html.glass-on :is(.seg, .theme-switch) { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* The glyph a change chooses answers (glass.js): the sun's rays turn about its middle, the core and the moon about
    their own. */
@@ -515,7 +550,7 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 .top .theme-switch .drop > b { background: var(--dock-pill); box-shadow: none; }
 /* What stands on that glass: the X link's mark and word, the sun and the moon (white in the dark, ink on paper). */
 .top > .xlink { color: var(--float-ink-soft); --g-glyph-on: var(--float-ink); }
-.top > .xlink:hover { color: var(--float-ink); }
+@media (hover: hover) { .top > .xlink:hover { color: var(--float-ink); } }
 .top > .theme-switch { --g-glyph: var(--dock-word); --g-glyph-on: var(--float-ink); }
 .top .lockup { transform-origin: left center; }
 @keyframes bar-strip { to { opacity: 1; } }
@@ -531,10 +566,10 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
     animation-range: 0 24px, 0 48px;
   }
   .top .lockup { animation: bar-logo linear both; animation-timeline: scroll(root); animation-range: 0 48px; }
-  .top > :is(.seg-glass, .theme-switch, .xlink) { animation: bar-lift linear both; animation-timeline: scroll(root); animation-range: 0 48px; }
+  .top > :is(.seg-glass, .theme-switch, .seg-twin, .xlink) { animation: bar-lift linear both; animation-timeline: scroll(root); animation-range: 0 48px; }
   @media (prefers-reduced-motion: reduce) {
     .top::before { animation: bar-strip linear both; animation-timeline: scroll(root); animation-range: 0 24px; }
-    .top .lockup, .top > :is(.seg-glass, .theme-switch, .xlink) { animation: none; }
+    .top .lockup, .top > :is(.seg-glass, .theme-switch, .seg-twin, .xlink) { animation: none; }
   }
 }
 /* Without scroll timelines the script sets html.scrolled once the page is 4px down, and these transitions do the rest.
@@ -544,14 +579,14 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
   @media (scripting: none) { .top { position: relative; } }
   .top::before { transition: opacity 240ms var(--ease), translate 240ms var(--ease), --bar-a1 260ms var(--ease), --bar-a2 260ms var(--ease), --bar-a3 260ms var(--ease); }
   .top .lockup { transition: scale 240ms var(--ease), translate 240ms var(--ease); }
-  .top > :is(.seg-glass, .theme-switch) { transition: translate 240ms var(--ease); }
+  .top > :is(.seg-glass, .theme-switch, .seg-twin) { transition: translate 240ms var(--ease); }
   html.scrolled .top::before { opacity: 1; translate: 0 -8px; }
   html.scrolled .top .lockup { scale: 0.9; translate: 0 -4px; }
-  html.scrolled .top > :is(.seg-glass, .theme-switch, .xlink) { translate: 0 -4px; }
+  html.scrolled .top > :is(.seg-glass, .theme-switch, .seg-twin, .xlink) { translate: 0 -4px; }
   @media (prefers-reduced-motion: reduce) {
     html.scrolled .top::before { translate: none; }
     html.scrolled .top .lockup { scale: none; translate: none; }
-    html.scrolled .top > :is(.seg-glass, .theme-switch, .xlink) { translate: none; }
+    html.scrolled .top > :is(.seg-glass, .theme-switch, .seg-twin, .xlink) { translate: none; }
   }
 }
 /* ---- the merge: the glass switch, the theme switch and the X link flow into one body as the page scrolls ----
@@ -564,7 +599,9 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
    spring follows the scroll, so the body lags and settles like liquid, and in Chromium on a desktop its rim truly bends
    what passes under it (m-lens.png).
    Only where the browser has scroll timelines, the window holds the X link's word, and motion is welcome; everywhere
-   else the two controls stay as they are. The X link is 116px wide there, the width the frames were drawn for. */
+   else the three controls stay as they are. The X link is 116px wide there, the width the frames were drawn for.
+   Further down the page the whole body takes a fourth control, the list's board-or-tiles switch (see "the list's
+   switch in the bar" below). */
 .top-blob { display: none; }
 @keyframes blob-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes blob-out { to { opacity: 0; } }
@@ -602,7 +639,7 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
       background: url(/glass/m-rim.png) 0 0 / 100% 2400% no-repeat; opacity: 0;
       animation: blob-rim-in linear both, blob-rim steps(23) both; animation-timeline: scroll(root), scroll(root); animation-range: 0 20px, 12px 120px;
     }
-    .top > :is(.xlink, .theme-switch, .seg-glass)::before, .top > :is(.xlink, .theme-switch, .seg-glass)::after { animation: blob-out linear both; animation-timeline: scroll(root); animation-range: 0 20px; }
+    .top > :is(.xlink, .theme-switch, .seg-glass, .seg-twin)::before, .top > :is(.xlink, .theme-switch, .seg-glass, .seg-twin)::after { animation: blob-out linear both; animation-timeline: scroll(root); animation-range: 0 20px; }
     /* glass.js drives it from here on: the frame (--blob-f, 0 to 23) and how far the body has come in (--blob-o). */
     /* From here glass.js cuts the body's shape itself (a clip path it works out per frame), not the mask: WebKit does
        not cut a backdrop blur to a mask, so on iOS the blur shows as a rectangle behind the body. A clip path cuts the
@@ -610,9 +647,9 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
     html.blob-js .top-blob > i, html.blob-js .top-blob > u > s { animation: none; opacity: var(--blob-o, 0); -webkit-mask: none; mask: none; }
     /* Until glass.js arrives WebKit has no way to cut the blur, so there the two controls simply stay as they are. */
     html.wk:not(.blob-js) .top-blob { display: none; }
-    html.wk:not(.blob-js) .top > :is(.xlink, .theme-switch, .seg-glass)::before, html.wk:not(.blob-js) .top > :is(.xlink, .theme-switch, .seg-glass)::after { animation: none; }
+    html.wk:not(.blob-js) .top > :is(.xlink, .theme-switch, .seg-glass, .seg-twin)::before, html.wk:not(.blob-js) .top > :is(.xlink, .theme-switch, .seg-glass, .seg-twin)::after { animation: none; }
     html.blob-js .top-blob > b { animation: none; opacity: calc(var(--blob-o, 0) * var(--blob-rim, 0.5)); background-position: 0 calc(var(--blob-f, 0) * 100% / 23); }
-    html.blob-js .top > :is(.xlink, .theme-switch, .seg-glass)::before, html.blob-js .top > :is(.xlink, .theme-switch, .seg-glass)::after { animation: none; opacity: calc(1 - var(--blob-o, 0)); }
+    html.blob-js .top > :is(.xlink, .theme-switch, .seg-glass, .seg-twin)::before, html.blob-js .top > :is(.xlink, .theme-switch, .seg-glass, .seg-twin)::after { animation: none; opacity: calc(1 - var(--blob-o, 0)); }
   }
 }
 @keyframes blob-rim-in { from { opacity: 0; } to { opacity: var(--blob-rim, 0.5); } }
@@ -634,6 +671,8 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
     }
     .logo-glass::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
     .top .lockup { animation-name: bar-logo-in; }
+    /* Forced colours draw no island (see the end of this file): there the logo only slims and rises with the bar. */
+    @media (forced-colors: active) { .top .lockup { animation-name: bar-logo; } }
     /* With the logo in its island and both controls in glass, nothing in the bar stands bare over the page, so the blur
        strip under the bar has no job here and is not drawn (it would smear the headline in a wide band): the page
        passes under clear glass, as it does under the Photos bar. Where the islands are not drawn (no scroll timelines,
@@ -657,12 +696,13 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
    switch and the X link (the merge above).
    Without JavaScript there is nothing to switch, so it is not drawn. */
 /* (.seg.seg-glass, doubled: the segmented controls' own rules come later in this file.) */
-.seg.seg-glass { flex: none; grid-auto-columns: 28px; padding: 2px; margin: 0 -6px 0 auto; border-radius: var(--r-cap); }
-.seg.seg-glass button { height: 24px; border-radius: var(--r-sw); color: var(--dock-word); }
-.seg.seg-glass button:hover, .seg.seg-glass button[aria-pressed="true"] { color: var(--float-ink); }
-.seg.seg-glass svg { display: block; margin: auto; }
-.seg.seg-glass .seg-ind { width: 28px; height: 24px; border-radius: var(--r-sw); }
-.seg.seg-glass .seg-ind > b { background: var(--dock-pill); box-shadow: none; }
+/* (The list's switch, when it stands in the bar, is the same control in the same sizes: .seg-twin, below.) */
+.seg:is(.seg-glass, .seg-twin) { flex: none; grid-auto-columns: 28px; padding: 2px; margin: 0 -6px 0 auto; border-radius: var(--r-cap); }
+.seg:is(.seg-glass, .seg-twin) button { height: 24px; border-radius: var(--r-sw); color: var(--dock-word); }
+.seg:is(.seg-glass, .seg-twin) button:hover, .seg:is(.seg-glass, .seg-twin) button[aria-pressed="true"] { color: var(--float-ink); }
+.seg:is(.seg-glass, .seg-twin) svg { display: block; margin: auto; }
+.seg:is(.seg-glass, .seg-twin) .seg-ind { width: 28px; height: 24px; border-radius: var(--r-sw); }
+.seg:is(.seg-glass, .seg-twin) .seg-ind > b { background: var(--dock-pill); box-shadow: none; }
 /* The theme switch, 10px left of the X link: a glass track with the sun and the moon in it, and the droplet over the
    chosen one. aria-checked says dark; until the script has wired it up (.ready) the theme the boot script set decides,
    so the first frame is already right. Without JavaScript there is nothing to switch, so it is not drawn. */
@@ -687,7 +727,12 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 :root[data-theme="dark"] .theme-switch:not(.ready) .theme-sun { color: var(--g-glyph); }
 :root[data-theme="dark"] .theme-switch:not(.ready) .theme-moon { color: var(--g-glyph-on); }
 @media (hover: hover) { .theme-switch:hover .theme-glyph { color: var(--g-glyph-on); } }
-@media (scripting: none) { .theme-switch, .seg-glass { display: none; } }
+/* (.seg.seg-glass, doubled as above. The body the bar's controls merge into goes with the two switches: its frames are
+   drawn for three controls, so the X link, alone in the bar, keeps its own capsule down the page.) */
+@media (scripting: none) {
+  .theme-switch, .seg.seg-glass, .listbar, .top-blob { display: none; }
+  .top > .xlink::before, .top > .xlink::after { animation: none; }
+}
 /* The X link: a raised glass capsule, the mark in Text and the name a Dim readout. A press leans after the finger
    (glass.js), so the link is never torn out from under it by a native drag; it still opens, copies and shares. */
 .xlink {
@@ -711,9 +756,89 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
   .logo-glass { width: 40px; }
   @keyframes bar-logo-in { to { scale: 0.9; translate: 6px -4px; } }
 }
-@media (max-width: 359px) {
+/* (359.98px: a window can be a fraction of a pixel wide, on a zoomed page or a 2.625x phone, and between 359px and
+   360px neither (max-width: 359px) nor (min-width: 360px) holds; with the list's switch in the bar the X link would
+   keep its word there and the bar overflow. So wherever this file tests both sides of a width, one side is written
+   0.02px from the other and nothing is left between them; whole pixels fall as before. The side the scripts test too
+   stays whole: (min-width: 360px), and the phone's (max-width: 639px) and (max-height: 500px).) */
+@media (max-width: 359.98px) {
   .top .xlink { width: 28px; padding: 0; gap: 0; justify-content: center; }
   .top .xlink > span { display: none; }
+}
+/* ---- the list's switch in the bar ----
+   Once the list's own bar has gone above the window, its board-or-tiles switch stands here too, between the theme
+   switch and the X link, 10px from each: the same control as the glass switch, the same size, the same two glyphs as
+   the list's. The X link gives it the room: while the switch is in the bar the link keeps its mark alone, a 28px
+   circle, as it does under 360px (its aria-label still names it), and has its word back when the switch leaves. So
+   the switch stands close under where the list's own went out of sight, at every width.
+   app.js says when (its viewJoin machine: .view-in on the bar while the switch is laid out in it, .view-moving while
+   it comes or goes); glass.js moves it, and writes every variable below only while it does. At rest none is set and
+   every rule gives the plain resting layout.
+   The motion is one: the link's word narrows to nothing as it clears, the glass switch and the theme switch make
+   room (--vj, the gap, 0 to 1; --vjx, the same kept within 0 and 1), and once the gap is seven tenths open the switch
+   rises 14px into it as it grows from 0.8 and clears (--tw-y, --tw-s, --vo). --vx-word is the word's own width. */
+.seg.seg-twin[hidden] { display: none; }
+.top.view-moving > .seg-twin { transform: translate(var(--tw-x, 0px), var(--tw-y, 0px)) scale(var(--tw-s, 1)); pointer-events: none; }
+/* It clears part by part (its body, its pill, its glyphs), not as one group: a body faded inside a faded group has
+   nothing behind it to blur, and its frost would come in with a jump at the end. (Inside the merged body the twin's own
+   body is not drawn at all: the merge's rule for that outranks this one.) */
+.top.view-moving > .seg-twin::before, .top.view-moving > .seg-twin::after, .top.view-moving > .seg-twin > :is(.seg-ind, button) { opacity: var(--vo, 1); }
+/* Where the bar's controls are separate capsules the motion is laid out: the switch's box stands in its place from
+   the start, drawn back over the theme switch by a negative margin, the margin opening slides the two switches, and
+   the link's own capsule narrows round its mark with its word (:not(.view-fused): not inside the one body, below).
+   (The switch is only ever drawn under .view-in, so this is also what takes the glass switch's auto margin off it.) */
+.top.view-in > .seg-twin { margin-left: calc((var(--vj, 1) - 1) * 70px); }
+@media (min-width: 360px) {
+  .top.view-in .xlink { width: 28px; padding: 0; gap: 0; justify-content: center; }
+  .top.view-in .xlink > span { display: none; }
+  .top.view-moving:not(.view-fused) .xlink { width: auto; padding: 0 calc(12px - 4px * var(--vjx, 1)) 0 calc(11px - 3px * var(--vjx, 1)); gap: calc(6px - 6px * var(--vjx, 1)); }
+  .top.view-moving .xlink > span {
+    display: block; overflow: hidden; max-width: calc(var(--vx-word, 80px) * (1 - var(--vjx, 1))); opacity: calc(1.5 - 1.8 * var(--vjx, 1));
+    /* Its cut end is soft (not at all at the start, where the whole word shows). */
+    --cut: linear-gradient(90deg, #000 calc(100% - 28px * var(--vjx, 1)), transparent);
+    -webkit-mask-image: var(--cut); mask-image: var(--cut);
+  }
+}
+/* Where the bar's controls are one body (the merge above), that body holds the switch too: the one whole capsule it is
+   by then, 250px wide with the four controls in it where the three took 268. The same motion is drawn there without
+   laying the bar out again: the box is the resting one from the first frame, and the body's left end, the two
+   switches (--tw-left, 18px to none) and the switch (from 88px left of its place, beside the link's mark) are
+   carried back by transforms; the mark and the word are placed from where they stood (--vx-from). glass.js cuts the
+   body's outline at the width it has on each frame, for which the cut layers reach 24px past its left end while it
+   moves.
+   The rim's light is one set's two ends meeting in its even middle: the left 140px of the map carried with the body's
+   left end, the rest from its right, cut where the two meet (tools/glass/m: m4-rim.png, one frame, fetched only once
+   a switch first comes in). Both ends are the three-part body's own, so the frame the maps change shows nothing. The
+   lens likewise (glass.js, #m4-lens-f); until that one is in, clear glass keeps its plain blur here, as the
+   three-part lens is cut for 268px. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 360px) {
+    .top.view-in .top-blob { width: 250px; }
+    .top.view-in .top-blob > u { scale: calc(240 / 250) 0.75; }
+    .top.view-in .top-blob > b { background: none; }
+    .top.view-in .top-blob > b::before, .top.view-in .top-blob > b::after { content: ''; position: absolute; top: 0; bottom: 0; background: url(/glass/m4-rim.png) 0 0 / 250px 100% no-repeat; }
+    .top.view-in .top-blob > b::before { left: 0; width: 140px; transform: translateX(var(--tw-left, 0px)); }
+    .top.view-in .top-blob > b::after { left: 120px; right: 0; background-position: 100% 0; clip-path: inset(0 0 0 calc(var(--tw-left, 0px) + 20px)); }
+    html.glass-clear.blob-lens .top.view-in .top-blob > i { -webkit-backdrop-filter: var(--glass-bd); backdrop-filter: var(--glass-bd); }
+    html.glass-clear.blob-lens4 .top.view-in .top-blob > i { -webkit-backdrop-filter: url(#m4-lens-f); backdrop-filter: url(#m4-lens-f); }
+    .top.view-moving .top-blob > i, .top.view-moving .top-blob > u > s { inset: 0 0 0 -24px; }
+    .top.view-moving .top-blob > em { inset: -1px -1px -1px -25px; }
+    /* (.view-fused: glass.js sets it on the bar while the body holds the switch. Where there is no body, with forced
+       colours say, the controls are separate capsules here too, and the rules above this block move them; with a
+       body the link stays the 28px circle it is at rest.) */
+    .top.view-fused.view-moving > :is(.seg-glass, .theme-switch) { transform: translateX(var(--tw-left, 0px)); }
+    .top.view-fused > .seg-twin { --tw-x: calc(88px * (var(--vjx, 1) - 1)); }
+    /* The link's mark and word are placed, not transformed (two boxes out of the flow, so nothing else is laid out):
+       text under a transform is drawn a fraction of a pixel off where the layout draws it, and the word would be
+       seen to tick as it came to rest. The word goes with the mark, shown as far as the body's end allows (--room)
+       and cut softly there. */
+    .top.view-fused.view-moving .xlink > :is(svg, span) { position: absolute; top: 50%; translate: 0 -50%; left: calc(8px + var(--vx-from, 85px) * (var(--vjx, 1) - 1)); }
+    .top.view-fused.view-moving .xlink > span {
+      margin-left: 18px; max-width: none; overflow: visible;
+      --room: calc(min(var(--vx-word, 80px) + 2px, var(--vx-from, 85px)) * (1 - var(--vjx, 1)));
+      --cut: linear-gradient(90deg, #000 calc(var(--room) - 14px * min(1, 7 * var(--vjx, 1))), transparent var(--room));
+    }
+  }
 }
 
 /* ---- page column ---- */
@@ -728,13 +853,14 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 @supports (corner-shape: squircle) {
   :root { --sq: 1.6; }
   .card, .hero, .empty, .notice, .cd-bg, .cd-shade { corner-shape: squircle; }
-  .js-cards .card::before, .js-cards .card::after, .cd-bg::before, .cd-lift, .cd-shade > span, .cd-edge, .notice::before,
+  .js-cards .card::before, .js-cards .card::after, .tick, .cd-bg::before, .cd-lift, .cd-shade > span, .cd-edge,
   :is(.seg-ind, .theme-switch .drop) > :is(i, b, u) { corner-shape: inherit; }
 }
 
 /* ---- hero ---- */
 .hero { position: relative; overflow: hidden; container-type: inline-size; border-radius: calc(var(--r-card) * var(--sq)); background: var(--surface-1); box-shadow: var(--card-shadow); }
-.hero-in { position: relative; padding: 67px 44px 72px; }
+/* A short card, so the three leaders under it start high in the first screen. */
+.hero-in { position: relative; padding: 52px 44px; }
 /* The vw size comes first: a browser without container units drops the cqw line and keeps it. */
 /* Whole pixels down the page: a browser draws text on whole pixels but a box wherever it falls, so a capsule that
    starts at a fraction of a pixel has its digits half a pixel off its middle, in some rows and not in others. The
@@ -772,17 +898,25 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
   .tape > .stk:nth-child(4n+3) { margin-left: 0.96em; }
 }
 
-/* The hero's ratio: the headline and its line are one block (about 95px), the capsules sit that block's height below it
-   (96px) and low in the card, 80px under its top edge and 72px over its bottom. On phones the gap is about 52px. The
+/* The hero's ratio: the headline and its line are one block (about 95px), the capsules sit 44px below it, and the card
+   keeps 52px above the block and under the capsules. On phones the gap is 36px. The
    links to the other tools: true glass capsules (corners at half the height), 44px tall as Apple's touch targets are, a
    tint laid on the hero card like the panel's cross. */
-.hero-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 90px; margin-left: calc(0.05 * clamp(40px, 5.6vw, 80px)); margin-left: calc(0.05 * clamp(40px, 6cqw, 80px)); }
+.hero-links { display: grid; grid-template-columns: repeat(4, 1fr); width: max-content; gap: 10px; margin-top: 44px; margin-left: calc(0.05 * clamp(40px, 5.6vw, 80px)); margin-left: calc(0.05 * clamp(40px, 6cqw, 80px)); }
 .hlink {
-  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px 0 22px; border-radius: 22px;
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 20px 0 22px; border-radius: 22px;
   color: var(--glass-ink); font-size: 15px; font-weight: 600; letter-spacing: -0.012em; line-height: 1; white-space: nowrap; text-decoration: none;
   -webkit-user-drag: none; transition: transform 90ms var(--ease);
 }
 .hlink svg { width: 11px; height: 11px; color: var(--glass-ink-2); }
+/* The one link of the page for a wrong address: as wide as its words, its arrow before them. */
+.hero-links.solo { display: block; width: auto; }
+.hero-links.solo .hlink { padding: 0 22px 0 18px; gap: 8px; font-size: 15px; }
+/* Four links, all as wide as the widest: each title starts at the same inset and each arrow ends at the same inset, so
+   a short title does not make a short capsule. One row is 705px wide and fits inside the hero's padding from 828px, or
+   843px beside a classic 15px scrollbar; under 848px (5px to spare) a row would hold three and strand the fourth, so
+   they stand two by two. */
+@media (max-width: 847.98px) { .hero-links { grid-template-columns: repeat(2, 1fr); } }
 .hlink:active { transform: scale(0.97); }
 .hlink:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
@@ -814,17 +948,202 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 #updated.down { color: rgb(var(--loss-rgb)); }
 .credit { font-size: 11px; color: var(--muted-c); }
 
-/* ---- coin grid ---- */
-.grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; }
-.card { display: flex; flex-direction: column; min-width: 0; padding: 20px; border-radius: calc(var(--r-card) * var(--sq)); background: var(--surface-1); box-shadow: var(--card-shadow); }
-.head { display: flex; align-items: center; gap: 12px; }
-.icon { width: 48px; height: 48px; flex: none; image-rendering: auto; }
+/* ---- the watchlist: a stage of three leaders, a bar, then the list as a board or as tiles ----
+   One card per asset (li.card), the same node in every form: a leader while it sits on the stage (.lead, set by the
+   script with the card's seat), a board row or a tile while it sits in the list, as the list's data-view says. Each
+   form is a grid of named areas on the card itself (rank, who, place, spark, price, move, mcap, vol), so the card's
+   children are placed by name and their order in the document never matters; the stats list is display: contents, so
+   its two boxes are the card's own cells. The sizes of a form's type are whole pixels down the page (see the hero). */
+.stage { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+.stage:empty { display: none; }
+/* The list's bar: the first group's name and count on the left, the board-or-tiles switch on the right. It stands 34px
+   under the stage and 12px over the list (the page's own 16px gap, and more or less). */
+.listbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 28px; margin-bottom: -4px; padding-left: 4px; }
+.listbar[hidden] { display: none; }
+.group-h { display: flex; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; line-height: 20px; color: var(--dim-c); }
+.group-n { font-weight: 500; color: var(--faint-c); font-variant-numeric: tabular-nums; }
+/* The board-or-tiles switch: a two-cell picker of the house kind, the top bar's glass switch standing on the ground
+   (the glass on a card, the dock's darker patch for the chosen cell, a droplet that moves as the glass switch's does):
+   two 34 by 24 cells in 2px of track. Board is three bars, tiles a two by two grid, outlines at rest and filled once
+   chosen. Without JavaScript there is no list to lay out, so it is not drawn. */
+/* (.seg.seg-view, doubled: the segmented controls' own rules come later in this file.) */
+.seg.seg-view { flex: none; grid-auto-columns: 34px; padding: 2px; border-radius: var(--r-cap); }
+.seg.seg-view button { height: 24px; border-radius: var(--r-sw); color: var(--dock-word); }
+.seg.seg-view button:hover, .seg.seg-view button[aria-pressed="true"] { color: var(--float-ink); }
+.seg.seg-view svg { display: block; margin: auto; }
+.seg.seg-view .seg-ind { width: 34px; height: 24px; border-radius: var(--r-sw); }
+.seg.seg-view .seg-ind > b { background: var(--dock-pill); box-shadow: none; }
+/* On paper the switch lies on the page's ground, not on a white card: its track is the top bar's white glass, so the
+   2px of track round the chosen pill read as a gap (a card button's faint tint is the ground's own grey there, and the
+   pill would seem to run to the rim). */
+:root:not([data-theme="dark"]) .seg.seg-view { --g-face: linear-gradient(var(--g-dock), var(--g-dock)); }
+/* The list: one column of slabs 6px apart (the board), or tiles at least 290px wide, 16px apart. */
+.grid { list-style: none; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+[data-view="board"] { gap: 6px; }
+[data-view="tiles"] { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+/* A later group's header, a line of its own across the list: 34px under the group before it and 12px over its own
+   cards (the list's gap taken off both). */
+.grid > .group { grid-column: 1 / -1; display: flex; align-items: center; min-height: 28px; padding-left: 4px; }
+[data-view="board"] > .group { margin: 28px 0 6px; }
+[data-view="tiles"] > .group { margin: 18px 0 -4px; }
+/* The board's column header: small capitals over the first slab, on the slabs' own columns. Drawn on the board only,
+   and only where the board has its columns (from 900px). */
+.grid > .cols { display: none; }
+[data-view="board"] > .cols { height: 28px; margin-bottom: -6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; line-height: 1; text-transform: uppercase; color: var(--faint-c); }
+[data-view="board"] > .cols > :nth-child(n+4) { text-align: right; }
+/* The card: its material is the same in every form (the top line of light, or on paper its shadow). */
+.card { display: grid; min-width: 0; border-radius: calc(var(--r-card) * var(--sq)); background: var(--surface-1); box-shadow: var(--card-shadow); }
+.card > .rank { grid-area: rank; display: none; }
+.card > .head { grid-area: who; display: flex; align-items: center; min-width: 0; }
+.card > .place { grid-area: place; display: none; }
+.card > .spark { grid-area: spark; display: block; min-width: 0; }
+.card > .price { grid-area: price; margin: 0; }
+.card > .move { grid-area: move; margin: 0; }
+.card .stats { display: contents; }
+.card .st-mcap { grid-area: mcap; }
+.card .st-vol { grid-area: vol; }
+/* The change's key ("24h", "1d") is a leader's alone; a row or a tile says it only to say "stale". */
+.grid > .card:not(.stale) .chg-key { display: none; }
+/* The art's outer edge is a pixel staircase: a circle just inside it cuts every coin round (the panel's coin too). A
+   block, so the coin's box is the image's own square with no line box round it: 64px on a leader, 48px on a tile, 40px
+   on a slab. */
+.icon { display: block; width: 100%; height: 100%; image-rendering: auto; }
+.icon, .cd-icon, .glint, .cd-glint { clip-path: circle(48.1% at 50% 50%); }
+/* The week: the closes of the last seven days as a line over a wash, drawn by the script into the card's .spark box in
+   a square of 100 by 100 that stretches to the box (the line keeps its width: non-scaling-stroke). The line and its
+   wash stop --spark-end short of the box's right edge (a tile's and a leader's box runs to the card's edge: they stop
+   on the card's padding line), and a dot stands on the line's last point: an element of its own, as a circle in the
+   stretched square would be drawn as an ellipse. The dot takes today's tone (the script sets .gain or .loss on the box
+   with the chip's), grey for a flat or a stale day. A line the script holds back (.held) is not drawn. */
+.spark { position: relative; --spark-end: 0px; }
+.spark > svg { position: absolute; left: 0; top: 0; display: block; width: calc(100% - var(--spark-end)); height: 100%; overflow: visible; }
+.spark .ln { fill: none; stroke: var(--week-line); stroke-width: var(--week-w); stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.spark .ar { stroke: none; fill: url(#week-wash); }
+#week-wash stop { stop-color: var(--week-wash); stop-opacity: 0; }
+#week-wash .ww-top { stop-opacity: var(--week-wash-o); }
+.spark > .end { position: absolute; right: calc(var(--spark-end) - 3px); width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--muted-c); }
+.spark.gain > .end { background: var(--gain-line); }
+.spark.loss > .end { background: var(--loss-line); }
+.spark.held > * { visibility: hidden; }
+/* Under a fine pointer the dot of the card it is over gives off one soft ring, again and again while it stays. */
+.spark > .end::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: inherit; opacity: 0; pointer-events: none; }
+@keyframes week-ring { from { opacity: 0.5; transform: scale(0.6); } to { opacity: 0; transform: scale(2.2); } }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .card:hover .spark > .end::after { animation: week-ring 1.1s ease-out infinite; }
+}
+/* A price that just moved: one soft band of the move's colour crosses the card from left to right and is gone (the
+   script adds the box for the length of the band and moves its light). The box is the card's own shape, corner for
+   corner, and cuts the light to it; the light is three cards wide, a soft stripe at its middle. */
+.tick { display: none; }
+.js-cards .tick { display: block; position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.tick > i { position: absolute; left: 0; top: 0; width: 300%; height: 100%; opacity: 0; background: linear-gradient(100deg, transparent 30%, var(--tick-c, transparent) 50%, transparent 70%); }
+.tick.gain { --tick-c: rgb(var(--gain-fill-rgb) / 0.1); }
+.tick.loss { --tick-c: rgb(var(--loss-fill-rgb) / 0.1); }
+
+/* A leader: its coin and names with its place in the corner, the price large, the change, the week across the card
+   from edge to edge (96px tall), and the two stats at the bottom corners. */
+.card.lead {
+  grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who place" "price price" "move move" "spark spark" "mcap vol";
+  column-gap: 16px; padding: 24px 24px 20px; border-radius: calc(var(--r-lead) * var(--sq));
+}
+.lead > .head { gap: 16px; }
+.lead .coin { width: 64px; height: 64px; }
+.lead .sym { font-size: 22px; font-weight: var(--w-sym); letter-spacing: -0.025em; line-height: 28px; }
+.lead .name { font-size: 13px; line-height: 18px; }
+.lead > .place { display: block; align-self: start; justify-self: end; font-size: 12px; font-weight: 500; line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--faint-c); }
+/* The price follows the window (34px to 46px), on whole pixels where the browser can round. */
+.lead > .price { margin-top: 26px; font-size: clamp(34px, 3.4vw, 46px); font-size: round(clamp(34px, 3.4vw, 46px), 1px); font-weight: var(--w-big); letter-spacing: -0.04em; }
+.lead > .move { margin-top: 12px; }
+.lead > .spark { height: 96px; margin: 18px -24px 0; --spark-end: 24px; }
+.lead .stats > div { margin-top: 14px; }
+.lead .st-vol { justify-self: end; text-align: right; }
+/* Where a leader is too narrow for its coin, its names, 16px and its place on one row, the place takes a row of its
+   own above them, still in the corner (8px over the coin), and the names have the card's whole width. Decided by the
+   layout's width, never by a card's own words, so the three leaders are always one shape. The longest row a leader can
+   need is a stock's ("Microsoft · Nasdaq" beside "No. 1 in Stocks", 299px inside the card). The row to swipe gives it
+   once its card is the full 340px (from 447px, or 462px beside a classic 15px scrollbar) and three in a row from
+   1104px (1119px beside that scrollbar): so the place has its own row under 462px and from 900px to 1119px. */
+@media (max-width: 461.98px), (min-width: 900px) and (max-width: 1119.98px) {
+  .card.lead { grid-template-areas: "place place" "who who" "price price" "move move" "spark spark" "mcap vol"; }
+  .lead > .place { margin-bottom: 8px; }
+}
+
+/* A board row: one slab per asset, a step quieter than a card. Its columns: the rank, the coin and its names, the
+   week (30px tall, up to 240px wide), then the price, the change, the market cap and the volume, each against its
+   column's right edge. A stat is its figure alone here (the column header names it; its own label stays for screen
+   readers). */
+[data-view="board"] > :is(.cols, .card) {
+  display: grid; align-items: center; column-gap: 20px; padding: 0 24px 0 20px;
+  grid-template-columns: 28px minmax(170px, 2fr) minmax(110px, 1.25fr) minmax(96px, 1fr) 92px minmax(84px, 1fr) minmax(84px, 1fr);
+}
+[data-view="board"] > .card {
+  grid-template-areas: "rank who spark price move mcap vol"; height: 68px;
+  border-radius: calc(var(--r-slab) * var(--sq)); background: var(--slab); box-shadow: var(--slab-shadow);
+}
+[data-view="board"] > .card > .rank { display: block; font-size: 12px; font-weight: 500; line-height: 16px; font-variant-numeric: tabular-nums; color: var(--faint-c); }
+[data-view="board"] > .card > .head { gap: 14px; }
+[data-view="board"] .coin { width: 40px; height: 40px; }
+[data-view="board"] .sym { font-size: 15px; font-weight: var(--w-sym); line-height: 20px; }
+[data-view="board"] .name { font-size: 12px; }
+[data-view="board"] > .card > .spark { width: 100%; max-width: 240px; height: 30px; }
+[data-view="board"] > .card > .price { font-size: 15px; font-weight: var(--w-price); letter-spacing: -0.015em; line-height: 20px; }
+[data-view="board"] > .card > :is(.price, .move), [data-view="board"] .stats > div { justify-self: end; text-align: right; }
+/* A stale row's word stands clear of the chip, past its right end, so the chips stay in one column down the board. */
+[data-view="board"] > .card > .move { position: relative; }
+[data-view="board"] .chg-key { position: absolute; left: calc(100% + 8px); top: 0; line-height: 23px; }
+[data-view="board"] .stats dt { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[data-view="board"] .stats dd { margin: 0; }
+
+/* A tile: who it is on the left, what it costs and its change on the right, the week across the tile from edge to edge
+   (56px tall), and the two stats under it, each a label and its figure on one line. */
+[data-view="tiles"] > .card {
+  grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "who who price" "who who move" "spark spark spark" "mcap vol vol";
+  column-gap: 12px; padding: 20px 20px 16px;
+}
+[data-view="tiles"] > .card > .head { align-self: start; align-items: flex-start; gap: 12px; }
+[data-view="tiles"] .coin { width: 48px; height: 48px; }
+[data-view="tiles"] .id { padding-top: 3px; }
+[data-view="tiles"] .sym { font-weight: var(--w-sym); line-height: 24px; }
+[data-view="tiles"] .name { font-size: 12px; }
+[data-view="tiles"] > .card > .price { justify-self: end; margin-top: 2px; font-size: 22px; font-weight: var(--w-big); letter-spacing: -0.03em; line-height: 26px; }
+/* (Reversed: a stale tile's word stands before the chip, which keeps the tile's right edge.) */
+[data-view="tiles"] > .card > .move { justify-self: end; flex-direction: row-reverse; margin-top: 7px; }
+[data-view="tiles"] > .card > .spark { height: 56px; margin: 16px -20px 0; --spark-end: 20px; }
+[data-view="tiles"] .stats > div { display: flex; align-items: baseline; gap: 6px; margin-top: 12px; line-height: 18px; }
+[data-view="tiles"] .stats dd { margin: 0; line-height: 18px; }
+[data-view="tiles"] .st-vol { justify-self: end; }
+
+/* Under 900px the stage is one row to swipe, a card and the edge of the next (each card snaps to the page's left
+   gutter), and a board row keeps who it is, its week (72 by 28px) and its price over its change. The row reaches the
+   window's edges, and has room above and below for its cards' lift and shadows, which a scrolling box would cut. */
+@media (max-width: 899.98px) {
+  .stage {
+    display: flex; gap: 10px; margin: -8px -16px -28px; padding: 8px 16px 40px; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scroll-padding-left: 16px; scrollbar-width: none;
+  }
+  .stage::-webkit-scrollbar { display: none; }
+  /* A whole number of pixels wide where the browser can round, so the next card starts on a whole pixel. */
+  .card.lead { flex: 0 0 min(82%, 340px); flex-basis: round(min(82%, 340px), 1px); scroll-snap-align: start; padding: 20px 20px 16px; }
+  .lead > .price { margin-top: 20px; font-size: 36px; }
+  .lead > .spark { height: 76px; margin-inline: -20px; --spark-end: 20px; }
+  [data-view="board"] > .cols { display: none; }
+  [data-view="board"] > .card {
+    grid-template-columns: minmax(0, 1fr) 72px minmax(76px, auto); grid-template-areas: "who spark price" "who spark move";
+    align-content: center; column-gap: 14px; row-gap: 4px; padding: 0 16px 0 14px;
+  }
+  [data-view="board"] > .card > .rank, [data-view="board"] .stats > div { display: none; }
+  [data-view="board"] > .card > .head { gap: 12px; }
+  [data-view="board"] > .card > .spark { max-width: none; height: 28px; }
+  /* Here the chip is at the row's right edge: a stale row's word stands before it. */
+  [data-view="board"] > .card > .move { flex-direction: row-reverse; }
+  [data-view="board"] .chg-key { position: static; line-height: inherit; }
+}
 
 /* ---- a card opens its chart (the script adds .js-cards; without JavaScript there are no cards to click) ----
    The lift moves the individual translate property and the press the scale property, so neither ever fights the
    re-rank's transform. The hover tint and the shadow are drawn once on two layers and only their opacity moves. */
-/* No grey tap flash: iOS draws it on the element that listens for the click, which is the grid (and, open, the glass).
-   A card answers a tap at once, never held back for a double-tap zoom. */
+/* No grey tap flash: iOS draws it on the element that listens for the click, which is the stage or the list (and,
+   open, the glass). A card answers a tap at once, never held back for a double-tap zoom. */
 .js-cards { -webkit-tap-highlight-color: transparent; }
 .js-cards .card {
   position: relative; isolation: isolate; cursor: pointer; touch-action: manipulation;
@@ -849,19 +1168,19 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 .js-cards .card.pressed { scale: 0.98; transition: translate var(--sp-snappy-ms) var(--sp-snappy), scale 120ms var(--ease); }
 /* While the panel is open no card lifts, so the close lands on a card at rest. The card it came from is hidden, but
    still takes a click while the panel flies back into it (a reopen). */
-.grid.cd-open .card { translate: none; scale: none; }
-.grid .card.is-source { opacity: 0; }
+.js-cards.cd-open .card { translate: none; scale: none; }
+.card.is-source { opacity: 0; }
 /* While the flying panel is on its card (the first moments of an open, the last of a close), the card shows only its
    shadows, under its neighbours as at rest; its face and words are the panel's (app.js fades it in and out). */
-.grid .card.is-source.handing { background: transparent; }
-.grid .card.is-source.handing > *, .js-cards .card.is-source.handing::before { visibility: hidden; }
+.card.is-source.handing { background: transparent; }
+.card.is-source.handing > *, .js-cards .card.is-source.handing::before { visibility: hidden; }
 /* As the panel flies home into its card (.landing), that card, still hidden, takes its lift if the pointer is over it,
    and the flying card takes the same lift on the same spring, from the same frame, with the hover surface and the
    card's own hover shadow (.cd-shade-lift): it lands exactly where and as the card rests, lifted or not, so nothing
    moves or changes once it is down. Without :has() the flight lands on the card at rest and the lift follows. */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   @supports selector(:has(*)) {
-    .grid.cd-open .card.landing:hover { translate: 0 var(--lift); }
+    .js-cards.cd-open .card.landing:hover { translate: 0 var(--lift); }
     .cd-panel { transition: translate var(--sp-smooth-ms) var(--sp-smooth); }
     :root:has(.card.landing:hover) .cd-panel.morphing { translate: 0 var(--lift); transition: translate var(--sp-snappy-ms) var(--sp-snappy); }
     :root:has(.card.landing:hover) .cd-panel.morphing .cd-bg::before { opacity: 1; transition-duration: 160ms; }
@@ -878,7 +1197,7 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 @supports not selector(:has(*)) { .card-open:focus-visible { outline: 2px solid var(--focus); } }
 /* The coin: the script tilts it toward the pointer, and a glint crosses it once per hover, cut to the icon's own pixels
    (the icon is the glint's mask, set from the script). */
-.coin { position: relative; display: block; flex: none; }
+.coin { position: relative; display: block; flex: none; isolation: isolate; }
 .glint, .cd-glint {
   position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
@@ -888,71 +1207,26 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
   position: absolute; inset: 0 -20%; transform: translateX(-130%); mix-blend-mode: plus-lighter;
   background: linear-gradient(118deg, rgb(255 255 255 / 0) 36%, rgb(255 255 255 / 0.42) 37.5%, rgb(255 255 255 / 0.42) 46%, rgb(255 255 255 / 0) 47.5%, rgb(255 255 255 / 0) 52%, rgb(255 255 255 / 0.3) 53.5%, rgb(255 255 255 / 0.3) 56%, rgb(255 255 255 / 0) 57.5%);
 }
-/* ---- the coins sealed in glass ----
-   Every coin sits under a small clear dome. .coin-lens carries the coin's art and its pixel glint through #coin-lens
-   (index.html's svg.fx-defs): a crystal over the face that bends nothing, so the art is drawn pixel for pixel, and a
-   meniscus at the edge that squeezes the coin's outline into a smooth glass circle in its own outline colour, a little
-   darker under the thick rim. .coin-spec is the dome's surface: an empty overlay whose filter draws one light reflected
-   in it, added to the colours under it as light is (plus-lighter). On paper .coin-shade, an ink disc the glass's size,
-   casts the coin's contact shadow (a drop-shadow after the lens would be cut square by WebKit). The script switches the
-   glass on (html.coin-glass) once the maps have decoded, after the first paint; until then, and in a browser the glass
-   was not made for, each coin is its plain art. At rest it is drawn once and kept: only a coin under the pointer or a
-   finger and the panel's coin get a light of their own (#coin-spec-a, -b, -p), and only while it moves. */
-.coin-lens { position: relative; display: block; width: 100%; height: 100%; }
-/* The dome (a card's coin): the lens and its reflection together, the parts of the glass that are the same in either
-   theme, so a theme change in WebKit can hold them as one still picture (glass.js). It is the coin's own box. */
-.coin-dome { position: relative; display: block; }
-.coin-spec, .coin-shade { display: none; position: absolute; inset: 0; pointer-events: none; }
-/* Where the lens is off the art's disc is 0.969 of the coin's box and its outline a staircase: the reflection sits
-   inside it. Where the lens runs, the glass edge is the box (the pixelated blocks below and in the panel's rules). */
-.coin-spec { inset: 2%; }
-.coin-shade { border-radius: 50%; background: rgb(var(--shade-rgb)); }
-html.coin-glass .coin-spec { display: block; filter: url(#coin-spec); mix-blend-mode: plus-lighter; }
-html.coin-glass .coin-lens { filter: var(--coin-lens-card, none); }
-html.coin-glass .cd-coin .coin-lens { filter: var(--coin-lens-panel, none); }
-html.coin-glass .cd-coin .coin-spec { filter: url(#coin-spec-p); }
-/* Nothing of the glass may paint outside the round coin: some GPUs spread a filter's faint light (the reflection is
-   added with plus-lighter) over the element's whole square box, a lit square round the coin on a dark panel. A circle
-   clip runs after the filter and before the blend, in every engine; the reflection's box can be inset 2%, hence 2px. */
-html.coin-glass .coin-lens { clip-path: circle(calc(50% + 1px) at 50% 50%); }
-html.coin-glass .coin-spec { clip-path: circle(calc(50% + 2px) at 50% 50%); }
-/* WebKit: the lens and the reflection each get a layer of their own, drawn once (and app.js sets every coin on whole
-   CSS pixels: off them, WebKit draws a filter's maps off the element's own content). */
-html.wk.coin-glass :is(.coin-lens, .coin-spec) { will-change: transform; }
-/* Until a coin's art has arrived its glass casts no shadow and holds no light (app.js, artWait): on paper the shadow's
-   ink disc alone would read as a black coin. Above every theme and screen rule for the two. */
-html.coin-glass .wait-art :is(.coin-shade, .coin-spec) { display: none !important; }
-/* The panel's coin flying from or to a card whose coin has no lens (a smoothly scaled card coin: a 1x or 3x desktop
-   screen) is that card's coin while it shows its back in the flip (app.js sets .as-card from the moment it is edge on),
-   so it leaves the card and lands in it looking as the card's coin does, with no change at either hand-off. */
-html.coin-glass .cd-coin.as-card .coin-lens { filter: var(--coin-lens-card, none); }
-.cd-coin.as-card .coin-spec { inset: 2%; }
-/* Its art is scaled as the card's is: smoothly, but where the card's is pixelated (the block below). */
-.cd-coin.as-card .cd-icon { image-rendering: auto; }
-:root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .cd-icon { filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
-:root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .coin-shade { display: none; }
-/* The art is a 96-cell grid. Pixelated scaling only where every art cell gets a whole number of device pixels (the 48px
-   icon at 2x and 4x), and on a 3x phone, where a cell is one or two device pixels and the difference is too small to
-   see at that density; anywhere else the browser's smooth scaling keeps every cell the same size, where pixelated
-   would drop rows of the art (1x) or draw some cells visibly wider than others (1.5x). The
-   glass's lens runs on exactly these screens (there are no cells to bend in a smoothly scaled coin), with its
-   reflection on the glass edge and, on paper, its own contact shadow in place of the art's. Each dppx test has its
+/* The art is a 96-cell grid. Pixelated scaling only where every art cell gets a whole number of device pixels: a tile's
+   48px coin at 2x and 4x (and on a 3x phone, where a cell is one or two device pixels and the difference is too small
+   to see at that density), a leader's 64px coin at 3x. Anywhere else the browser's smooth scaling keeps every cell the
+   same size, where pixelated would drop rows of the art (1x) or draw some cells visibly wider than others (1.5x); a
+   slab's 40px coin is never a whole number of pixels a cell, so it is always scaled smoothly. Each dppx test has its
    -webkit-device-pixel-ratio twin beside it, the same exact test for Safari before 16 (iOS 15), which has no
    resolution feature; so do the panel's and the sheet's below. */
-@media (min-width: 640px) and (resolution: 2dppx), (min-width: 640px) and (-webkit-device-pixel-ratio: 2),
-  (min-width: 640px) and (resolution: 4dppx), (min-width: 640px) and (-webkit-device-pixel-ratio: 4),
+@media (min-width: 639.02px) and (resolution: 2dppx), (min-width: 639.02px) and (-webkit-device-pixel-ratio: 2),
+  (min-width: 639.02px) and (resolution: 4dppx), (min-width: 639.02px) and (-webkit-device-pixel-ratio: 4),
   (max-width: 639px) and (resolution: 2dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 2),
   (max-width: 639px) and (resolution: 3dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 3) {
-  .icon, .cd-coin.as-card .cd-icon { image-rendering: pixelated; }
-  :root { --coin-lens-card: url(#coin-lens); }
-  .grid .coin-spec, .cd-coin.as-card .coin-spec { inset: 0; }
-  :root.coin-glass:not([data-theme="dark"]) .grid .icon, :root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .cd-icon { filter: none; }
-  :root.coin-glass:not([data-theme="dark"]) .grid .coin-shade { display: block; filter: drop-shadow(0 1px 1px rgb(var(--shade-rgb) / 0.16)) drop-shadow(0 3px 6px rgb(var(--shade-rgb) / 0.1)); }
-  :root.coin-glass:not([data-theme="dark"]) .cd-coin.as-card .coin-shade { display: block; }
+  [data-view="tiles"] .icon { image-rendering: pixelated; }
 }
+@media (resolution: 3dppx), (-webkit-device-pixel-ratio: 3) {
+  .lead .icon { image-rendering: pixelated; }
+}
+/* The words a card shares with the panel (the panel's header is built from the same classes): these are the panel's
+   sizes, and each form of the card above sets its own. */
 .id { display: flex; flex-direction: column; min-width: 0; }
-/* A block, like its twin in the panel (an h2): both boxes are then the whole 25.5px line, so the close, which lines up
-   the boxes, lines up the words too (an inline span's box would be the glyphs' 20.6px, 2px lower than the h2's). */
+/* A block, like its twin in the panel (an h2), so its box is its whole line. */
 .sym { display: block; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; line-height: 26px; }
 .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 16px; color: var(--muted-c); }
 .price { margin-top: 20px; font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -973,8 +1247,8 @@ html.coin-glass .cd-coin.as-card .coin-lens { filter: var(--coin-lens-card, none
 .chg.gain { color: rgb(var(--gain-rgb)); background: var(--gain-chip); }
 .chg.loss { color: rgb(var(--loss-rgb)); background: var(--loss-chip); }
 .chg-key { font-size: 12px; letter-spacing: -0.005em; color: var(--muted-c); }
-/* Side by side with no rule between them: each figure hangs under its own word, and the air between the columns does
-   the separating. */
+/* The panel's stats (a card lays its two out itself): side by side with no rule between them, each figure under its
+   own word, and the air between the columns does the separating. */
 .stats { display: flex; column-gap: 24px; margin-top: 16px; }
 .stats > div { flex: 1 1 0; min-width: 0; }
 .stats dt { font-size: 12px; letter-spacing: -0.005em; color: var(--muted-c); }
@@ -984,10 +1258,23 @@ html.coin-glass .cd-coin.as-card .coin-lens { filter: var(--coin-lens-card, none
 .card.stale .chg { color: var(--muted-c); background: var(--surface-2); }
 .card.stale .chg-key { color: var(--warn-word); }
 
-/* ---- empty grid (no coins, or no JavaScript) ---- */
+/* ---- empty list (no coins, or no JavaScript) ---- */
 .empty { padding: 40px; border-radius: calc(var(--r-card) * var(--sq)); background: var(--surface-1); box-shadow: var(--card-shadow); text-align: center; color: var(--muted-c); }
-.empty-title { color: rgb(var(--text-rgb)); }
-.empty-body { margin-top: 4px; }
+.empty-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: rgb(var(--text-rgb)); }
+.empty-body { margin-top: 4px; font-size: 13px; }
+.lost .empty-title::before { content: 'Prices did not load'; }
+.lost .link::before { content: 'Reload the page'; }
+/* The picks as plain words (scripts off): a heading for each kind and one line for each pick, the symbol and name at
+   the left, the price and its change at the right. */
+.plain { text-align: left; }
+.plain > * { max-width: 560px; margin-inline: auto; }
+.plain h2 { margin-block: 0; }
+.plain h3 { margin-block: 20px 6px; font-size: 13px; font-weight: 600; color: rgb(var(--text-rgb)); }
+.plain ol { margin-block: 0; padding: 0; list-style: none; }
+.plain li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 12px; padding: 3px 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.plain li b { font-weight: 600; color: rgb(var(--text-rgb)); }
+/* A price that wraps under a long name stays at the right, as the ones beside their names are. */
+.plain li > span:last-child { flex: 1 0 auto; text-align: right; }
 
 /* ---- the chart panel: a native modal dialog over the Control Center blur ---- */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -1085,6 +1372,9 @@ html.cd-lock .dot.down { animation: none; }
 .cd-shade { position: absolute; left: 0; top: 0; transform-origin: 0 0; border-radius: calc(var(--r-card) * var(--sq)); pointer-events: none; }
 .cd-shade > span { position: absolute; inset: 0; border-radius: inherit; opacity: 0; }
 .cd-shade-rest { box-shadow: var(--card-shadow); background: var(--surface-1); }
+/* From a board's slab, and home into one (app.js sets .slab and the card's own corner), it is the slab's tone and
+   line. */
+.cd-shade.slab > .cd-shade-rest { box-shadow: var(--slab-shadow); background: var(--slab); }
 .cd-shade-lift { box-shadow: var(--card-lift); transition: opacity 240ms var(--ease); }
 /* An edge in the accent at 45%: drawn only when more contrast is asked for (Apple's Increase Contrast outlines its own
    surfaces the same way), the one place an edge is the viewer's choice, not the design's. */
@@ -1094,40 +1384,38 @@ html.cd-lock .dot.down { animation: none; }
 .cd-grab { display: none; }
 .cd-body {
   position: relative; max-height: calc(100vh - 64px); max-height: calc(100dvh - 64px); overflow: auto; overscroll-behavior: contain; padding: 28px;
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 22px;
-  grid-template-areas: "coin main tr" "coin main ctrl" "chart chart chart" "stats stats stats" "src src src";
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 16px;
+  grid-template-areas: "coin id tr" "price price stats" "move move stats" "ctrl ctrl ctrl" "chart chart chart" "src src src";
 }
+/* The panel is a leader card opened up: the coin beside its names, the price under them from the panel's left edge,
+   the day's four figures on the header's right, the controls on the chart's top edge and the chart under them.
+   The header's words are grid items of the panel itself, so the price can start under the coin. */
+.cd-main { display: contents; }
 /* While the card flies in, its parts start outside this box. */
 .cd-panel.morphing .cd-body { overflow: visible; }
-/* A narrow window: the controls get a row of their own over the chart, so the header keeps its width for the price and
-   the chip row (beside the controls they would have about 60px at 640px). The phone sheet below sets its own order.
-   (963px is set by the pickers' width.) */
-@media (max-width: 963px) {
-  .cd-body { grid-template-areas: "coin main tr" "ctrl ctrl ctrl" "chart chart chart" "stats stats stats" "src src src"; }
-  .cd-tr { align-self: start; }
-  .cd-ctrl { margin-top: 20px; }
+/* A narrow window: the four figures leave the header for a row of their own under the chart, so the price and the chip
+   row keep the header's width. The phone sheet below sets its own order. */
+@media (max-width: 760px) {
+  .cd-body { grid-template-areas: "coin id tr" "price price price" "move move move" "ctrl ctrl ctrl" "chart chart chart" "stats stats stats" "src src src"; }
 }
 /* The words that fly from the card scale (the price) from their top left corner. */
 .cd-main .sym, .cd-main .name, .cd-price, .cd-chg, .cd-key, .cd-stats > div { transform-origin: 0 0; }
 /* A close nudges each of them by under half a pixel (left, top), so its words land on the card's pixels. */
 .cd-panel.morphing :is(.cd-main .sym, .cd-main .name, .cd-price, .cd-chg, .cd-key, .cd-stats > div) { position: relative; }
+/* What a card shows and the panel does not (its rank, a leader's place, its week, a stat laid out another way) rides
+   the flying surface as a copy of the card with everything that flies taken out (app.js, ghostFor): the copy has no
+   surface of its own, and takes no pointer. */
+.cd-ghost { position: absolute; z-index: 1; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+.cd-ghost > .card { background: none; box-shadow: none; }
 /* A zero-size box on the first baseline, there for one measurement. */
 .cd-probe { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
-/* Its own group: the glass's reflection is a blend, and a blend loose in the dialog would make Chromium draw the whole
-   dialog as one isolated group, whose veil would then blur an empty layer instead of the page. */
-.cd-coin { grid-area: coin; position: relative; width: 96px; height: 96px; transform-origin: 50% 50%; isolation: isolate; }
-.cd-tilt { position: relative; width: 100%; height: 100%; }
-.cd-icon { width: 100%; height: 100%; image-rendering: auto; }
-/* The same rule for the 96px panel coin (and the coin that flies into it, the same image): one device pixel a cell at
-   1x, two at 2x, so pixelated at whole screen scales; at 1.25x or 1.5x it is scaled smoothly. The sheet sets its own.
-   The glass's lens runs where the art is pixelated, as on the cards. */
-@media (resolution: 1dppx), (-webkit-device-pixel-ratio: 1), (resolution: 2dppx), (-webkit-device-pixel-ratio: 2),
-  (resolution: 3dppx), (-webkit-device-pixel-ratio: 3), (resolution: 4dppx), (-webkit-device-pixel-ratio: 4) {
+.cd-coin { grid-area: coin; position: relative; width: 64px; height: 64px; transform-origin: 50% 50%; }
+.cd-tilt { position: relative; width: 100%; height: 100%; isolation: isolate; }
+.cd-icon { display: block; width: 100%; height: 100%; image-rendering: auto; }
+/* The panel's coin is a leader's, 64px (and the coin that flies into it, the same image): its 96 cells are two device
+   pixels each on a 3x screen, so pixelated there; at any other scale it is scaled smoothly. The sheet sets its own. */
+@media (resolution: 3dppx), (-webkit-device-pixel-ratio: 3) {
   .cd-icon { image-rendering: pixelated; }
-  :root { --coin-lens-panel: url(#coin-lens); }
-  .cd-coin .coin-spec { inset: 0; }
-  :root.coin-glass:not([data-theme="dark"]) .cd-coin .cd-icon { filter: none; }
-  :root.coin-glass:not([data-theme="dark"]) .cd-coin .coin-shade { display: block; filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
 }
 /* The two white sparkle stars every icon has baked in, measured from the 192px art: an 18px plus centred at (35, 37) and
    a 10px plus centred at (153, 149), arms 2px thick. These twins sit exactly on them and twinkle. */
@@ -1144,24 +1432,25 @@ html.cd-lock .dot.down { animation: none; }
 /* White light on white paper does not show: where a twinkle reaches past the coin onto the panel, a breath of ink round
    its arms lets it read (the glow is soft, so the ink casts next to nothing). */
 :root:not([data-theme="dark"]) .cd-star { filter: drop-shadow(0 0 0.5px rgb(var(--shade-rgb) / 0.5)); }
-.cd-main { grid-area: main; min-width: 0; align-self: start; }
-.cd-main .id { padding-top: 2px; }
-.cd-main .name { white-space: nowrap; }
+.cd-main .id { grid-area: id; align-self: center; }
+/* A leader's names. */
+.cd-main .sym { font-size: 22px; font-weight: var(--w-sym); letter-spacing: -0.025em; line-height: 28px; }
+.cd-main .name { font-size: 13px; line-height: 18px; white-space: nowrap; }
 /* Relative: the script keeps its left edge on a whole device pixel (a nudge under half a pixel). */
-.cd-price { position: relative; margin-top: 14px; font-size: 44px; }
+.cd-price { grid-area: price; position: relative; margin-top: 22px; font-size: clamp(44px, 5vw, 56px); font-size: round(clamp(44px, 5vw, 56px), 1px); letter-spacing: -0.04em; }
 /* One line at every width (the script lets the dollar move give way where it would not fit), so a scrub rewriting it
    never changes the header's height. */
 /* Its three pieces share one baseline, as a card's row does (centred as boxes, the 13px dollar change stands 0.75px
    under the 12px digits beside it, a clear pixel or two on a 2x screen). */
-.cd-move { flex-wrap: nowrap; min-height: 23px; }
+.cd-move { grid-area: move; flex-wrap: nowrap; min-height: 23px; margin-top: 14px; }
 .cd-abs { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted-c); }
 .cd-abs.gain { color: rgb(var(--gain-rgb)); }
 .cd-abs.loss { color: rgb(var(--loss-rgb)); }
 .cd-key { white-space: nowrap; }
 .cd-sess { font-size: 12px; color: var(--faint-c); white-space: nowrap; }
 .cd-sess:empty { display: none; }
-/* The circles keep the middle they had at 28px: 4px up, so in a narrow window and the sheet they sit on the symbol's line. */
-.cd-tr { grid-area: tr; position: relative; display: flex; align-items: center; gap: 14px; justify-self: end; margin-top: -4px; }
+/* The circles sit in the panel's top right corner, as far from its top as from its side. */
+.cd-tr { grid-area: tr; position: relative; display: flex; align-items: center; gap: 14px; justify-self: end; align-self: start; }
 /* The house cross: the glyph on a circle of tinted glass, visible at rest. 36px, as iOS sizes the round buttons on its
    sheets, its glyph a 1.5px stroke like the page's other glyphs. */
 .cd-x {
@@ -1185,7 +1474,8 @@ html.cd-lock .dot.down { animation: none; }
 }
 .cd-copy[hidden] { display: none; }
 .cd-copy[aria-disabled="true"] { cursor: default; }
-.cd-ctrl { grid-area: ctrl; align-self: end; justify-self: end; display: flex; gap: 8px; }
+/* The pickers sit on the chart's own top edge, one at each end. */
+.cd-ctrl { grid-area: ctrl; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 26px; }
 
 /* Segmented controls: a glass track, the chosen word in the accent, and the droplet that slides under it. Every segment
    of a row is the same width, so the droplet only ever translates. Track, segment and droplet are concentric capsules. */
@@ -1206,7 +1496,6 @@ html.cd-lock .dot.down { animation: none; }
   -webkit-appearance: none; appearance: none; font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
   color: var(--muted-c); cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
-.seg button:hover { color: var(--dim-c); }
 .seg button[aria-pressed="true"] { color: var(--g-on); }
 .seg button:focus-visible { outline-offset: -2px; }
 /* The panel's two pickers mark the chosen segment with the pill alone, as Apple's own picker does (the Health app's
@@ -1280,11 +1569,12 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 }
 .seg-show button[aria-pressed="true"] { font-weight: 600; }
 .seg-show .dock-ic { display: block; flex: none; }
-/* The same for the top bar's two switches, which move as the dock does: the glass switch's two rings and the theme
-   switch's sun and moon are outlines at rest and filled once chosen. */
-:is(.seg-show, .seg-glass) svg > g { transition: opacity 180ms var(--ease); }
-:is(.seg-show, .seg-glass) .ic-f, :is(.seg-show, .seg-glass) button[aria-pressed="true"] .ic-o { opacity: 0; }
-:is(.seg-show, .seg-glass) button[aria-pressed="true"] .ic-f { opacity: 1; }
+/* The same for the top bar's two switches and the list's board-or-tiles switch, which move as the dock does: the glass
+   switch's two rings, the layout switch's bars and grid and the theme switch's sun and moon are outlines at rest and
+   filled once chosen. */
+:is(.seg-show, .seg-glass, .seg-view, .seg-twin) svg > g { transition: opacity 180ms var(--ease); }
+:is(.seg-show, .seg-glass, .seg-view, .seg-twin) .ic-f, :is(.seg-show, .seg-glass, .seg-view, .seg-twin) button[aria-pressed="true"] .ic-o { opacity: 0; }
+:is(.seg-show, .seg-glass, .seg-view, .seg-twin) button[aria-pressed="true"] .ic-f { opacity: 1; }
 .theme-switch :is(.sun-core, .moon-crescent) { fill: currentColor; fill-opacity: 0; transition: fill-opacity 180ms var(--ease); }
 .theme-switch[aria-checked="false"] .sun-core, .theme-switch[aria-checked="true"] .moon-crescent { fill-opacity: 1; }
 :root[data-theme="dark"] .theme-switch:not(.ready) .sun-core { fill-opacity: 0; }
@@ -1341,7 +1631,7 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
    its top and bottom edges equally bright, brightest along the middle of each and fading toward the round ends, the
    left and right halves alike. The dock's key-and-fill light (from up left and down right) on a capsule this small
    leaves one corner bright and the opposite one dim, which reads as the lens tilted. The dock keeps it. */
-:is(.cd-ctrl .seg, .seg-glass, .theme-switch) > .drop-lens.on::after {
+:is(.cd-ctrl .seg, .seg-glass, .seg-view, .seg-twin, .theme-switch) > .drop-lens.on::after {
   background:
     linear-gradient(90deg, rgb(255 255 255 / 0) 4%, rgb(255 255 255 / 0.3) 30%, rgb(255 255 255 / 0.3) 70%, rgb(255 255 255 / 0) 96%) top / 100% 50% no-repeat,
     linear-gradient(90deg, rgb(255 255 255 / 0) 4%, rgb(255 255 255 / 0.3) 30%, rgb(255 255 255 / 0.3) 70%, rgb(255 255 255 / 0) 96%) bottom / 100% 50% no-repeat;
@@ -1363,18 +1653,21 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 .seg-show .seg-ind > u { box-shadow: none; }
 :is(.seg, .theme-switch) { --pill-line: rgb(0 0 0 / 0.7); }
 :root:not([data-theme="dark"]) :is(.seg, .theme-switch) { --pill-line: rgb(18 22 38 / 0.38); }
-/* A filled dock glyph's shapes each turn and grow in their own box (glass.js moves them one by one on a pick). */
-.seg-show .ic-f > * { transform-box: fill-box; }
+/* A filled glyph's shapes each turn and grow in their own box (glass.js moves them one by one on a pick): the dock's
+   and the board-or-tiles switch's. So do the globe's two meridians, the outline's and the one cut out of its filled
+   disc, each about its own middle. */
+:is(.seg-show, .seg-view, .seg-twin) .ic-f > *, .seg-show .mer { transform-box: fill-box; }
+.seg-show .mer { transform-origin: 50% 50%; }
 /* While a pill is dragged (glass.js: .tracking), the glyph under it is the filled one and every other is an outline,
    before the finger lets go (an iOS tab bar fills the glyph the pill is over). */
-:is(.seg-show, .seg-glass).tracking button .ic-f { opacity: 0; }
-:is(.seg-show, .seg-glass).tracking button .ic-o { opacity: 1; }
-:is(.seg-show, .seg-glass).tracking button.over .ic-f { opacity: 1; }
-:is(.seg-show, .seg-glass).tracking button.over .ic-o { opacity: 0; }
+:is(.seg-show, .seg-glass, .seg-view, .seg-twin).tracking button .ic-f { opacity: 0; }
+:is(.seg-show, .seg-glass, .seg-view, .seg-twin).tracking button .ic-o { opacity: 1; }
+:is(.seg-show, .seg-glass, .seg-view, .seg-twin).tracking button.over .ic-f { opacity: 1; }
+:is(.seg-show, .seg-glass, .seg-view, .seg-twin).tracking button.over .ic-o { opacity: 0; }
 .theme-switch.tracking :is(.sun-core, .moon-crescent) { fill-opacity: 0; }
 .theme-switch.tracking[data-over="light"] .sun-core, .theme-switch.tracking[data-over="dark"] .moon-crescent { fill-opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  :is(.seg-show, .seg-glass) svg > g, .theme-switch :is(.sun-core, .moon-crescent) { transition: none; }
+  :is(.seg-show, .seg-glass, .seg-view, .seg-twin) svg > g, .theme-switch :is(.sun-core, .moon-crescent) { transition: none; }
 }
 .seg-show button:hover { color: var(--float-ink); }
 .seg-show .seg-ind { top: 4px; left: 4px; width: var(--cell); height: 54px; border-radius: 27px; }
@@ -1399,30 +1692,31 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 
 /* The chart: one SVG in CSS pixels (no viewBox, so strokes never scale), the axis words as HTML on top. */
 /* No paint containment: a dot or the scrub's halo on the plot's first point may spill into the panel's padding whole. */
-/* Its height follows the window (220px at 600px tall, 400px from about 1150px). On a short window (a 1080p laptop at
-   150%, about 560px tall) it gives up height, down to 160px, before the panel would have to scroll: the rest of the
-   panel is 309px tall (359px where the controls take a row of their own), and the panel keeps 32px clear above and
-   below it. So the whole panel shows down to about 530px of window. */
+/* Its box runs from the panel's left edge to its right one, so a scrub can start anywhere; the plot inside keeps to the
+   panel's gutters (app.js reads the two margins as them). Its height follows the window (220px at 600px tall, 400px from about 1150px). On a short window
+   (a 1080p laptop at 150%, about 560px tall) it gives up height, down to 160px, before the panel would have to scroll:
+   the rest of the panel is 337px tall (381px where the figures take a row of their own), and the panel keeps
+   32px clear above and below it. */
 .cd-chart {
-  grid-area: chart; position: relative; margin-top: 24px;
-  height: clamp(160px, min(max(220px, 42vh - 80px), 100vh - 373px), 400px);
-  height: clamp(160px, min(max(220px, 42vh - 80px), 100dvh - 373px), 400px);
+  grid-area: chart; position: relative; margin: 14px -28px 0;
+  height: clamp(160px, min(max(220px, 42vh - 80px), 100vh - 401px), 400px);
+  height: clamp(160px, min(max(220px, 42vh - 80px), 100dvh - 401px), 400px);
   contain: size layout style; touch-action: none; outline: none; -webkit-user-select: none; user-select: none; cursor: crosshair;
 }
-/* (The same width as the controls' own row above: that row is what the 50px here make room for.) */
-@media (max-width: 963px) {
+@media (max-width: 760px) {
   .cd-chart {
-    height: clamp(160px, min(max(220px, 42vh - 80px), 100vh - 423px), 400px);
-    height: clamp(160px, min(max(220px, 42vh - 80px), 100dvh - 423px), 400px);
+    height: clamp(160px, min(max(220px, 42vh - 80px), 100vh - 445px), 400px);
+    height: clamp(160px, min(max(220px, 42vh - 80px), 100dvh - 445px), 400px);
   }
 }
 /* A window shorter still: the panel scrolls (wheel, keys, trackpad), with no scrollbar track inside its rounded
    corners. A phone's sheet keeps its own scroll indicator. */
-@media (min-width: 640px) and (pointer: fine), (min-width: 640px) and (min-height: 501px) {
+@media (min-width: 639.02px) and (pointer: fine), (min-width: 639.02px) and (min-height: 500.02px) {
   .cd-body { scrollbar-width: none; }
   .cd-body::-webkit-scrollbar { display: none; }
 }
-.cd-chart:focus-visible { box-shadow: 0 0 0 2px var(--focus); border-radius: var(--r-focus); }
+/* Inside its box: the chart reaches the panel's edges, where a ring outside it would be cut. */
+.cd-chart:focus-visible { box-shadow: inset 0 0 0 2px var(--focus); border-radius: var(--r-focus); }
 /* The watermark: the lockup as a ghost in one colour, centred on the plot (app.js gives it the plot's box), under the
    line, its wash and the candles. The ground's own lockup file is its mask, so the mark, the word and the full stop are
    one flat colour at one strength. It is still: nothing about it moves, fades or draws at rest. Its width is one rule
@@ -1505,10 +1799,21 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 .cd-err.on { opacity: 1; }
 /* On a small tag of the card's own colour, so it reads over an old line still on show. */
 .cd-err span { padding: 6px 10px; border-radius: var(--r-tag); background: var(--surface-1); }
-.cd-stats { grid-area: stats; margin-top: 20px; }
+/* The day's four figures stand on the header's right, two by two, on the chip row's line: every word ends on its
+   column's right edge, the second column's on the panel's. */
+.cd-stats { grid-area: stats; align-self: end; display: grid; grid-template-columns: auto auto; gap: 14px 36px; margin-top: 0; text-align: right; }
 .cd-stats > div { min-width: 0; }
+.cd-stats dt { line-height: 18px; }
+.cd-stats dd { margin-top: 0; font-size: 15px; font-weight: 500; }
+/* In a narrow window they are a row under the chart: four blocks, each as wide as its own words, with the same gap
+   between each pair, the first on the panel's left edge and the last ending on its right one. A phone's sheet lays
+   each one out as a label and its figure at the two ends of a line, below. */
+@media (max-width: 760px) {
+  .cd-stats { align-self: auto; display: flex; justify-content: space-between; gap: 0 24px; margin-top: 18px; text-align: left; }
+  .cd-stats > div { flex: 0 1 auto; }
+}
 /* Its line is kept while the chart is still on the way, so the panel never grows under a card flying in (or a sheet). */
-.cd-src { grid-area: src; min-height: 16px; margin-top: 16px; font-size: 11px; line-height: 16px; color: var(--faint-c); }
+.cd-src { grid-area: src; min-height: 16px; margin-top: 14px; font-size: 11px; line-height: 16px; color: var(--faint-c); }
 
 /* ---- notice and foot ---- */
 /* Its last line clears the dock (60px on 16px, and room above it). */
@@ -1516,49 +1821,44 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 /* viewport-fit=cover hands the page the whole screen: a landscape iPhone keeps its notch clear of every column (the
    top bar's own padding does the same). */
 .page, .foot { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
-/* The amber notice as a strip: the head in White, the warning under it, then the data and legal lines as four small
-   labelled blocks, set off by space alone (no hairline). Everything below the head is Muted. The glyph's space is a
-   margin, not flex gap, so it never touches the head in Safari before 14.1. */
+/* The notice is a quiet card like the others: the page's own surface, and only its warning mark in amber. Its head is
+   one line: the mark, the title, and the toggle at the card's right edge; the warning runs under it, then the data and
+   legal lines as small labelled blocks, set off by space alone (no hairline). Everything below the head is Muted. The
+   words' wrapper lays out nothing itself, so the title and the toggle can share the head's line while the toggle stays
+   just before the blocks it opens in the document. */
 .notice {
-  position: relative; display: flex; align-items: flex-start;
-  padding: 12px 12px 14px 16px; border-radius: calc(var(--r-card) * var(--sq));
-  background: var(--notice-bg); box-shadow: var(--card-shadow);
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+  grid-template-areas: "glyph head more" "lede lede lede" "fine fine fine";
+  padding: 22px 24px; border-radius: calc(var(--r-card) * var(--sq));
+  background: var(--surface-1); box-shadow: var(--card-shadow);
+  /* A word longer than the column (a link, a translated compound, a phone zoomed far in) breaks instead of pushing the
+     page sideways; break-word is the fallback where anywhere is unknown. */
+  word-wrap: break-word; overflow-wrap: anywhere;
 }
-/* The amber edge, 3px down the left side and round into the corners, where it fades out while still 2px thick. Drawn
-   to the box's outline it would thin into a long sliver along the top and bottom edges at these large corners, and a
-   sliver reads as a hairline. */
-.notice::before {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  box-shadow: inset 3px 0 0 rgb(var(--warn-rgb));
-  -webkit-mask-image: linear-gradient(90deg, #000 3px, transparent 8px); mask-image: linear-gradient(90deg, #000 3px, transparent 8px);
-}
-.notice-glyph { flex: none; margin-top: 3px; color: var(--warn-mark); }
-/* A word longer than the column (a link, a translated compound, a phone zoomed far in) breaks instead of pushing the
-   page sideways; break-word is the fallback where anywhere is unknown. */
-.notice-copy { flex: 1; min-width: 0; margin-left: 14px; word-wrap: break-word; overflow-wrap: anywhere; }
-.notice-head { font-size: 13px; font-weight: 500; letter-spacing: -0.01em; line-height: 24px; color: rgb(var(--text-rgb)); }
-/* Muted on the amber tint is 6.2:1 in dark and 4.64:1 on paper, AA for small text (Faint would be 3.8:1 in dark,
-   under it). The warning is two short paragraphs; from 900px they sit side by side on the same two columns as the
-   blocks below (from 1800px each spans two of the four), so every line stays a readable length and the strip has no
-   empty side. */
-.notice-lede { display: grid; gap: 4px; margin-top: 2px; font-size: 13px; line-height: 1.6; color: var(--muted-c); }
+.notice-copy { display: contents; }
+.notice-glyph { grid-area: glyph; margin-right: 10px; color: var(--warn-mark); }
+.notice-head { grid-area: head; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 32px; color: rgb(var(--text-rgb)); }
+/* Muted on the card is AA for small text in both themes. The warning is two short paragraphs; from 900px they sit side
+   by side on the same two columns as the blocks below (from 1800px each spans two of the four), so every line stays a
+   readable length and the card has no empty side. */
+.notice-lede { grid-area: lede; display: grid; gap: 4px; margin-top: 12px; font-size: 13px; line-height: 1.6; color: var(--muted-c); }
 .notice-lede p { text-wrap: pretty; }
 @media (min-width: 900px) {
-  .notice-lede { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+  .notice-lede { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
   .notice-lede p { text-wrap: balance; }
 }
-.notice-fine { display: grid; gap: 12px; margin-top: 20px; }
-.notice-fine dt { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; line-height: 1; text-transform: uppercase; color: var(--muted-c); }
-.notice-fine dd { margin-top: 6px; font-size: 12px; line-height: 1.6; letter-spacing: -0.005em; color: var(--muted-c); text-wrap: pretty; }
-/* The notice's toggle: a glass capsule like the X link (tinted glass on the dark note, raised white glass on paper). It
+.notice-fine { grid-area: fine; display: grid; gap: 14px; margin-top: 22px; }
+.notice-fine dt { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; line-height: 1; text-transform: uppercase; color: var(--dim-c); }
+.notice-fine dd { margin-top: 7px; font-size: 13px; line-height: 1.6; letter-spacing: -0.005em; color: var(--muted-c); text-wrap: pretty; }
+/* The notice's toggle: a glass capsule like the X link (tinted glass on the dark card, raised white glass on paper). It
    ships hidden, with the blocks open, and the script shows it, so without JavaScript nothing ever folds. It is drawn on
    every screen, and the blocks fold only while it is drawn and says aria-expanded="false" (which it says from the
    moment they start to close: they stay drawn until the fold is over, .folding): print always shows them all. One line
-   of label is 28px tall like the X link; a label that wraps (big minimum font, zoomed phone) keeps its leading. */
+   of label is 32px tall; a label that wraps (big minimum font, zoomed phone) keeps its leading. */
 .notice-more {
-  display: none; align-items: center; width: max-content; max-width: 100%; min-height: 28px; margin: 10px 0 0; padding: 6px 10px 6px 12px;
+  grid-area: more; display: none; align-items: center; width: max-content; max-width: 100%; min-height: 32px; margin: 0 0 0 16px; padding: 7px 12px 7px 14px;
   border: 0; border-radius: var(--r-cap); -webkit-appearance: none; appearance: none; cursor: pointer;
-  font: inherit; font-size: 12px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.3333; color: var(--glass-ink-2); text-align: left;
+  font: inherit; font-size: 13px; font-weight: 600; letter-spacing: -0.005em; line-height: 1.3846; color: var(--glass-ink-2); text-align: left;
   transition: transform 90ms var(--ease);
 }
 @media (hover: hover) { .notice-more:hover { color: var(--glass-ink); } }
@@ -1574,11 +1874,11 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 /* Two blocks a row, then all four in a row from 1800px, so the fine print never runs to a ribbon. A block that wraps
    splits evenly, never one word or two alone (browsers balance up to about six lines; a block made longer by a big
    minimum font size simply wraps). */
-@media (min-width: 640px) {
-  .notice-fine { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 32px; }
+@media (min-width: 639.02px) {
+  .notice-fine { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 48px; }
   .notice-fine dd { text-wrap: balance; }
 }
-@media (min-width: 640px) and (max-width: 899px) { .notice-lede p { text-wrap: balance; } }
+@media (min-width: 639.02px) and (max-width: 899.98px) { .notice-lede p { text-wrap: balance; } }
 @media (min-width: 1800px) { .notice-fine { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 /* The footer's mark starts on the same left edge as the header's mark, the hero and the cards. */
 .foot-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 4px 0 8px; }
@@ -1628,8 +1928,8 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 @keyframes rc-in { from { opacity: 0; translate: 0 var(--rc, 0.55em); filter: blur(2px); } }
 @keyframes rc-out { from { opacity: 1; } to { opacity: 0; translate: 0 calc(-1 * var(--rc, 0.55em)); filter: blur(2px); } }
 /* 4: a card below the fold waits unseen until it scrolls into view (app.js). Never on paper. */
-.grid > li.wait { opacity: 0; }
-@media print { .grid > li.wait { opacity: 1; } }
+:is(.grid, .stage) > li.wait { opacity: 0; }
+@media print { :is(.grid, .stage) > li.wait { opacity: 1; } }
 /* 7: the notice's blocks while they fold or unfold. */
 .notice-fine.folding { overflow: hidden; }
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
@@ -1657,6 +1957,7 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .hlink:hover svg { translate: 1.5px -1.5px; }
   .hlink[data-scroll]:hover svg { translate: 0 2px; }
+  .hlink[data-back]:hover svg { translate: -2px 0; }
 }
 @keyframes hw-in { from { opacity: 0; translate: 0 0.3em; filter: blur(8px); } }
 @keyframes accent-sweep { 0%, 50% { background-position: 100% 0; } 100% { background-position: 0% 0; } }
@@ -1701,22 +2002,16 @@ html.vt.vt-flat .top::before {
 /* The dock too: without its blur the cards under it would show crisp, so it stands on solid ground for the change and
    eases back after it. */
 html.vt.vt-flat .seg-show, html.vt.vt-flat .dock .totop { --g-solid: 100%; transition: none; }
-/* WebKit draws the new picture afresh on every frame, every coin's lens and every shadow with it (glass.js, BARE). A
-   coin below the bar is held: its dome is a still picture of its own, taken with the old picture, that the script
-   magnifies with the drop; the new picture keeps only its contact shadow. A card the drop has not reached yet (it
-   cannot be seen there) goes without its shadows, and its coin without its glass and shadow, until just before the
-   drop gets to it; a coin under the top bar's strip, to the end. A change to paper keeps every card so to the end, and
-   then the shadows and the reflections come in (.vt-back, glass.js BACK): drawn on every frame, the paper's shadows
-   and the glass under the strip cost the drop its frame rate. */
+/* WebKit draws the new picture afresh on every frame, every shadow with it (glass.js, BARE). A card the drop has not
+   reached yet (it cannot be seen there) goes without its shadows, and its coin without its contact shadow, until just
+   before the drop gets to it. A change to paper keeps every card so to the end, and then the shadows come in (.vt-back,
+   glass.js BACK): drawn on every frame, the paper's shadows cost the drop its frame rate. */
 html.vt::view-transition-group(*), html.vt::view-transition-image-pair(*), html.vt::view-transition-old(*) { animation: none; mix-blend-mode: normal; }
-html.vt .coin.vt-held :is(.coin-lens, .coin-spec) { visibility: hidden; filter: none; }
-html.vt .grid .card.vt-out, html.vt .grid .card.vt-out::after { box-shadow: none; }
-html.vt .grid .card.vt-out :is(.coin-lens, .icon) { filter: none; }
-html.vt .grid .card.vt-out :is(.coin-shade, .coin:not(.vt-held) .coin-spec) { visibility: hidden; opacity: 0; }
+html.vt .card.vt-out, html.vt .card.vt-out::after { box-shadow: none; }
+html.vt .card.vt-out .coin::before { filter: none; }
 .js-cards .card.vt-back { transition: translate var(--sp-smooth-ms) var(--sp-smooth), scale var(--sp-snappy-ms) var(--sp-snappy), box-shadow 320ms var(--ease); }
 .js-cards .card.vt-back::after { transition: opacity 240ms var(--ease), box-shadow 320ms var(--ease); }
-.grid .card.vt-back :is(.coin-shade, .coin-spec) { transition: opacity 320ms var(--ease); }
-.grid .card.vt-back .icon { transition: filter 320ms var(--ease); }
+.card.vt-back .coin::before { transition: filter 320ms var(--ease); }
 /* The rim rides above both pictures as a group of its own (Chromium), live and never faded. */
 html.vt::view-transition-group(vt-rim),
 html.vt::view-transition-image-pair(vt-rim),
@@ -1756,35 +2051,54 @@ html.vt::view-transition-old(vt-rim) { display: none; }
 
 /* ---- phone ---- */
 @media (max-width: 639px) {
-  .hero-in { padding: 34px 20px 44px; }
-  /* One link to a row on a phone: three even rows, not two and one. A touch less room inside each capsule, still 44px
-     tall. */
-  .hero-links { flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 48px; }
+  .hero-in { padding: 34px 20px 28px; }
+  /* Two by two on a phone, the pair sharing the card's width evenly, still 44px tall. The room inside each capsule
+     and the size of its title step down with the screen so the title and its arrow always fit. */
+  .hero-links { width: auto; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 36px; }
   .hlink { padding: 0 13px 0 15px; gap: 6px; font-size: 14px; }
+  @media (max-width: 374px) { .hlink { padding: 0 9px 0 11px; } }
+  @media (max-width: 359.98px) { .hlink { padding: 0 8px 0 10px; gap: 5px; font-size: 13px; } }
+  @media (max-width: 339px) { .hlink { padding: 0 6px 0 7px; gap: 4px; font-size: 12.5px; } }
   .wide { display: none; }
-  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .card { padding: 14px; }
-  /* The coin on the card's left edge, its names on the right edge: the coin keeps the desktop card's 48px. */
-  .head { gap: 10px; margin-bottom: 14px; justify-content: space-between; }
-  .id { align-items: flex-end; text-align: right; }
-  .name { white-space: normal; } /* long names (NEAR Protocol) wrap instead of being cut on small phones */
-  .exch { display: block; } /* on a phone card the exchange gets its own line, without the dot */
-  .sep { display: none; }
-  /* auto: the price and everything under it sit at the card's bottom, so a two-line name never knocks a row out of line */
-  .price { margin-top: auto; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
-  .move { margin-top: 10px; }
-  .stats { display: block; margin-top: 12px; }
-  .stats > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .stats > div + div { margin-top: 4px; }
-  .stats dd { margin: 0; flex: none; }
-  .notice { padding: 12px 12px 12px 14px; }
-  .notice-copy { margin-left: 12px; }
-  .notice-lede { font-size: 12px; }
+  /* Tiles on a phone, two to a row: the coin on the tile's left edge and its names on the right edge (the coin keeps
+     its 48px), then the price, the change, the week from edge to edge (44px tall) and the two stats as rows, the label
+     left and the figure right. The first row takes any height to spare, so the price and everything under it sit at
+     the tile's bottom and a two-line name never knocks a row out of line with its neighbour's. */
+  [data-view="tiles"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  [data-view="tiles"] > .group { margin: 26px 0 4px; }
+  [data-view="tiles"] > .card { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr; grid-template-areas: "who" "price" "move" "spark" "mcap" "vol"; padding: 14px 14px 12px; }
+  [data-view="tiles"] > .card > .head { align-items: center; justify-content: space-between; gap: 10px; }
+  [data-view="tiles"] .id { padding: 0; align-items: flex-end; text-align: right; }
+  /* Long names (NEAR Protocol) wrap instead of being cut, and the exchange gets its own line, without the dot. */
+  [data-view="tiles"] .name { white-space: normal; }
+  [data-view="tiles"] .exch { display: block; }
+  [data-view="tiles"] .sep { display: none; }
+  [data-view="tiles"] > .card > .price { justify-self: start; margin-top: 24px; }
+  [data-view="tiles"] > .card > .move { justify-self: start; flex-direction: row; margin-top: 10px; }
+  [data-view="tiles"] > .card > .spark { height: 44px; margin: 12px -14px 0; --spark-end: 14px; }
+  [data-view="tiles"] .stats > div { justify-content: space-between; gap: 8px; margin-top: 10px; }
+  [data-view="tiles"] .stats > .st-vol { justify-self: stretch; margin-top: 4px; }
+  [data-view="tiles"] .stats dd { flex: none; }
+  /* A board row on a phone names the asset alone: beside the week there is no room for a stock's exchange or a
+     commodity's unit after it (a tile, a leader and the chart say them). */
+  [data-view="board"] .exch { display: none; }
+  /* The sheet's price is a weight lighter on a phone, as a phone tile's is. Its names stay beside its coin, on the
+     left. */
+  .cd-price { font-weight: 700; letter-spacing: -0.03em; }
+  /* On a phone the toggle stands under the warning, right over the blocks it opens. */
+  .notice { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "glyph head" "lede lede" "more more" "fine fine"; padding: 16px 18px 18px; }
+  .notice-more { margin: 14px 0 0; }
+  .notice-fine { margin-top: 18px; }
   /* The readout may wrap under its key rather than be cut. */
   .status { flex-wrap: wrap; height: auto; row-gap: 2px; }
 }
 /* (The status line is the key, a dot and the age, which fits one line at every width.) */
-@media (max-width: 359px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+/* Under 360px a tile takes the whole row, and a board row gives up its week. */
+@media (max-width: 359.98px) {
+  [data-view="tiles"] { grid-template-columns: minmax(0, 1fr); }
+  [data-view="board"] > .card { grid-template-columns: minmax(0, 1fr) minmax(76px, auto); grid-template-areas: "who price" "who move"; }
+  [data-view="board"] > .card > .spark { display: none; }
+}
 
 /* ---- the chart panel on a phone (and a phone on its side): a bottom sheet ---- */
 @media (max-width: 639px), (pointer: coarse) and (max-height: 500px) {
@@ -1801,32 +2115,27 @@ html.vt::view-transition-old(vt-rim) { display: none; }
     max-height: calc(100dvh - max(24px, env(safe-area-inset-top) + 12px) - 8px - env(safe-area-inset-bottom, 0px));
     padding: 22px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
     column-gap: 14px;
-    grid-template-areas: "coin main tr" "chart chart chart" "ctrl ctrl ctrl" "stats stats stats" "src src src";
+    grid-template-areas: "coin id tr" "price price price" "move move move" "chart chart chart" "ctrl ctrl ctrl" "stats stats stats" "src src src";
   }
   /* A sheet whose content fits drags from anywhere; one that scrolls drags only from its top. */
-  .cd-body.fits, .cd-grab, .cd-coin, .cd-main, .cd-tr { touch-action: none; }
+  .cd-body.fits, .cd-grab, .cd-coin, .cd-main > *, .cd-tr { touch-action: none; }
   /* The coin's 96-cell art needs a whole number of device pixels per cell to stay crisp: 64px on a 3x screen (2 a cell),
      48px on a 2x one (1 a cell); anything else is scaled smoothly instead of unevenly. */
   .cd-coin { width: 64px; height: 64px; }
   .cd-icon { image-rendering: auto; }
-  /* Scaled smoothly here, so no lens (the two blocks below bring it back with the pixels). */
-  :root { --coin-lens-panel: none; }
-  .cd-coin .coin-spec { inset: 2%; }
-  :root.coin-glass:not([data-theme="dark"]) .cd-coin .cd-icon { filter: drop-shadow(0 2px 2px rgb(var(--shade-rgb) / 0.14)) drop-shadow(0 8px 16px rgb(var(--shade-rgb) / 0.12)); }
-  :root.coin-glass:not([data-theme="dark"]) .cd-coin .coin-shade { display: none; }
-  .cd-price { margin-top: 10px; font-size: 32px; }
+  .cd-price { margin-top: 20px; font-size: clamp(36px, 11.5vw, 44px); font-size: round(clamp(36px, 11.5vw, 44px), 1px); }
+  .cd-move { margin-top: 12px; }
   .cd-main .name { white-space: normal; }
-  .cd-tr { align-self: start; gap: 10px; }
+  .cd-tr { gap: 10px; }
   .cd-copy { right: calc(100% + 10px); }
-  .cd-chart { height: clamp(180px, 34svh, 280px); margin: 10px -16px 0; margin-left: calc(-1 * max(16px, env(safe-area-inset-left))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right))); }
-  .cd-ctrl { justify-self: stretch; margin-top: 14px; justify-content: space-between; }
+  .cd-chart { height: clamp(180px, 34svh, 280px); margin: 16px -16px 0; margin-left: calc(-1 * max(16px, env(safe-area-inset-left))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right))); }
+  .cd-ctrl { margin-top: 14px; }
   .seg-size { flex: 1 1 auto; grid-auto-columns: minmax(0, 1fr); max-width: 220px; }
   .seg-type { grid-auto-columns: 48px; }
   .seg-type .seg-ind { width: 48px; }
-  .cd-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin-top: 16px; }
+  .cd-stats { align-self: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; margin-top: 18px; text-align: left; }
   .cd-stats > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .cd-stats > div + div { margin: 0; }
-  .cd-stats dd { margin: 0; flex: none; }
+  .cd-stats dd { flex: none; font-size: 14px; }
 }
 @media (max-width: 639px) and (resolution: 3dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 3),
   (pointer: coarse) and (max-height: 500px) and (resolution: 3dppx),
@@ -1835,10 +2144,6 @@ html.vt::view-transition-old(vt-rim) { display: none; }
   (pointer: coarse) and (max-height: 500px) and (resolution: 2dppx),
   (pointer: coarse) and (max-height: 500px) and (-webkit-device-pixel-ratio: 2) {
   .cd-icon { image-rendering: pixelated; }
-  :root { --coin-lens-panel: url(#coin-lens); }
-  .cd-coin .coin-spec { inset: 0; }
-  :root.coin-glass:not([data-theme="dark"]) .cd-coin .cd-icon { filter: none; }
-  :root.coin-glass:not([data-theme="dark"]) .cd-coin .coin-shade { display: block; }
 }
 @media (max-width: 639px) and (resolution: 2dppx), (max-width: 639px) and (-webkit-device-pixel-ratio: 2),
   (pointer: coarse) and (max-height: 500px) and (resolution: 2dppx),
@@ -1850,7 +2155,7 @@ html.vt::view-transition-old(vt-rim) { display: none; }
 @media (max-width: 439px) {
   .cd-copy { display: none; }
 }
-@media (max-width: 359px) {
+@media (max-width: 359.98px) {
   .seg-type { grid-auto-columns: 44px; }
   .seg-type .seg-ind { width: 44px; }
   .cd-stats { grid-template-columns: minmax(0, 1fr); }
@@ -1859,13 +2164,17 @@ html.vt::view-transition-old(vt-rim) { display: none; }
    desktop's order) where the width allows, and the chart takes the height that is left, so the chart, its time axis
    and its controls are all on screen at once; the stats and the source follow below and scroll. */
 @media (pointer: coarse) and (max-height: 500px) {
-  .cd-body { padding-top: 14px; }
-  .cd-price { margin-top: 6px; }
-  .cd-chart { height: max(120px, calc(100vh - 176px)); height: max(120px, calc(100dvh - 176px)); }
+  .cd-body { padding-top: 14px; grid-template-areas: "coin id tr" "coin price ." "coin move ." "chart chart chart" "ctrl ctrl ctrl" "stats stats stats" "src src src"; }
+  .cd-coin, .cd-main .id { align-self: start; }
+  .cd-main .sym { font-size: 17px; line-height: 26px; }
+  .cd-main .name { font-size: 11px; line-height: 16px; }
+  .cd-price { margin-top: 6px; font-size: 32px; }
+  .cd-move { margin-top: 10px; }
+  .cd-chart { height: max(120px, calc(100vh - 176px)); height: max(120px, calc(100dvh - 176px)); margin-top: 10px; }
 }
 @media (pointer: coarse) and (max-height: 500px) and (min-width: 560px) {
-  .cd-body { grid-template-areas: "coin main tr" "coin main ctrl" "chart chart chart" "stats stats stats" "src src src"; }
-  .cd-ctrl { justify-self: end; align-self: end; margin-top: 0; }
+  .cd-body { grid-template-areas: "coin id tr" "coin price ctrl" "coin move ctrl" "chart chart chart" "stats stats stats" "src src src"; }
+  .cd-ctrl { justify-self: end; align-self: end; margin-top: 0; justify-content: flex-end; gap: 8px; }
   .seg-size { flex: none; width: 200px; }
 }
 /* A sheet taller than the screen scrolls from the chart too: a vertical swipe there is the sheet's scroll, a sideways
@@ -1875,8 +2184,8 @@ html.vt::view-transition-old(vt-rim) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .xlink, html.glass-on .xlink { transition: none; }
-  .xlink:active { transform: none; }
+  .xlink, .hlink, html.glass-on .xlink { transition: none; }
+  .xlink:active, .hlink:active { transform: none; }
   .dot.down { animation: none; }
   .notice-more, .notice-chev { transition: none; }
   .notice-more:active { transform: none; }
@@ -1892,15 +2201,11 @@ html.vt::view-transition-old(vt-rim) { display: none; }
 /* Glass that is asked to be plain (reduced transparency) or clearer (more contrast): the faces of the raised glass turn
    solid and the top bar's strip is the page's own ground, unblurred; the light and the shapes stay. */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  /* As pictures, not plain colours: in the top bar the face lies over other layers, where only a picture may. */
-  :root[data-theme="dark"] .xlink { --g-face: linear-gradient(#1c1d23, #1c1d23); }
-  :root:not([data-theme="dark"]) .xlink { --g-face: linear-gradient(#ffffff, #ffffff); }
   :is(.seg-ind, .theme-switch .drop) > u, :is(.seg-ind, .theme-switch .drop).lifted > u { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .top::before { background: var(--surface-0); -webkit-backdrop-filter: none; backdrop-filter: none; }
   /* The bar's controls lose their frost with it: the switch's track lies on the plain ground, the X link's face is solid. */
   .glass.float { --g-bar: var(--float-solid); }
   .top-blob, .logo-glass, .seg-show .seg-ind { --g-dock: var(--float-solid); }
-  :root:root .top > .xlink { --g-face: linear-gradient(transparent, transparent); }
   .top-blob > i, .logo-glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
 
   .glass.float::before { -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -1916,8 +2221,9 @@ html.vt::view-transition-old(vt-rim) { display: none; }
   .hero, .card, .notice { outline: 1px solid transparent; }
   /* The glass goes: each control keeps the system's edge, and the top bar's strip is plain Canvas over the bar's own
      height (the system drops the strip's paint, and a blur alone would let the page's words show under the controls). */
-  :is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::before, :is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg)::after { display: none; }
-  .xlink { outline: 1px solid transparent; }
+  :is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip)::before, :is(.xlink, .hlink, .theme-switch, .cd-x, .notice-more, .seg, .tip)::after { display: none; }
+  .xlink, .hlink { outline: 1px solid transparent; }
+  .tip { outline: 1px solid transparent; background: Canvas; color: CanvasText; }
   .top::before { display: block; inset: 0; background: Canvas; -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
   .top-blob, .logo-glass { display: none; }
   /* SVG keeps its own colours here, so the notice's glyph and chevron and the X link's mark take the text colour (amber
@@ -1945,6 +2251,10 @@ html.vt::view-transition-old(vt-rim) { display: none; }
   .seg-ind, .drop-lens { display: none; }
   .seg button[aria-pressed="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
   .cd-star, .cd-glint, .glint { display: none; }
+  /* A card's week keeps to the system's ink: the line and its dot in the text colour, no wash. */
+  .spark .ln { stroke: CanvasText; }
+  .spark .ar { display: none; }
+  .spark > .end, .spark.gain > .end, .spark.loss > .end { forced-color-adjust: none; background: CanvasText; }
   /* The theme switch: the system's edge, and the chosen glyph in Highlight, the other in GrayText (no droplet). */
   .theme-switch { outline: 1px solid transparent; }
   .theme-switch:focus-visible { outline: 2px solid var(--focus); }
@@ -1953,10 +2263,8 @@ html.vt::view-transition-old(vt-rim) { display: none; }
   .theme-switch .theme-glyph, .theme-switch:hover .theme-glyph { color: GrayText; }
   .theme-switch[aria-checked="false"] .theme-sun, .theme-switch[aria-checked="true"] .theme-moon,
   .theme-switch[aria-checked="false"]:hover .theme-sun, .theme-switch[aria-checked="true"]:hover .theme-moon { color: Highlight; }
-  /* The pixel coins' contact shadows go with every other shadow, and so does the glass's reflection; the lens stays (it
-     only draws the art). */
-  :root:not([data-theme="dark"]) :is(.icon, .cd-icon), :root.coin-glass:not([data-theme="dark"]) :is(.grid .icon, .cd-coin .cd-icon) { filter: none; }
-  html.coin-glass .coin-spec, :root.coin-glass:not([data-theme="dark"]) :is(.grid, .cd-coin) .coin-shade { display: none; }
+  /* The pixel coins' contact shadows go with every other shadow. */
+  :root:not([data-theme="dark"]) :is(.coin, .cd-tilt)::before { content: none; }
   /* The logo is a picture the system does not recolour, so it follows the system's ground, not the page's theme: the
      ink word on a light Canvas (below: the white word on a dark one). */
   :root .lockup.lockup-white { display: none; }
@@ -1966,12 +2274,15 @@ html.vt::view-transition-old(vt-rim) { display: none; }
   :root .lockup.lockup-white { display: block; }
   :root .lockup.lockup-ink { display: none; }
 }
-/* Print as on screen, on either ground, so every word and the logo's word stay visible; never split a card. The switch
-   has nothing to do on paper. color-adjust is the name Firefox read before version 97. */
+/* Print as on screen, on either ground, so every word and the logo's word stay visible; never split a card. The
+   switches and the dock have nothing to do on paper (the dock is a fixed box: it would print on every page).
+   color-adjust is the name Firefox read before version 97. */
 @media print {
   html, body { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .card, .notice, .hero { break-inside: avoid; }
-  .theme-switch { display: none; }
+  .theme-switch, .seg:is(.seg-glass, .seg-view, .seg-twin), .dock, .tip { display: none; }
+  /* A stage that scrolls sideways on screen wraps on paper, so every leader prints. */
+  .stage { flex-wrap: wrap; overflow: visible; }
   /* On paper the bar is just the page's first line. */
   .top { position: static; }
   .top::before { display: none; }
@@ -1981,5 +2292,5 @@ html.vt::view-transition-old(vt-rim) { display: none; }
      from, kept blank on screen under it, prints with its neighbours. */
   dialog.cd[open] { visibility: hidden; }
   html.cd-lock { overflow: visible; }
-  .grid .card.is-source { opacity: 1; }
+  .card.is-source { opacity: 1; }
 }

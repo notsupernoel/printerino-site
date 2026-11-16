@@ -3,8 +3,11 @@
 // candles alike. Coins come from the venues' public candle APIs, stocks from CNBC's chart bars with Robinhood's public
 // historicals as the backup; none needs a key. Every symbol has a chain of sources (the first sensible answer wins).
 // Results are normalised here and cached per symbol and candle size, so visitors never reach a venue and no amount of
-// traffic calls one more than once per symbol and size per TTL. Sources and their quirks were checked live on 2026-10-06
-// and 2026-10-08.
+// traffic calls one more than once per symbol and size per TTL. Every source and each quirk noted below was checked
+// against the live source.
+// Every symbol's 1H chart is also kept warm in the background, one pass over all of them every ten minutes
+// (warmHistory), and the short line of the last week or so on each card is read off those cached charts (weekLines,
+// GET /api/week), so the lines cost no source call of their own.
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { COINS } from './coins.js';
 import { STOCKS } from './stocks.js';
@@ -21,13 +24,15 @@ const REST_MS = 60_000; // a host that fails venue-wide is skipped this long, do
 const REST_MAX = 10 * 60_000; // ... up to 10 minutes (or as long as its Retry-After asks, up to a day)
 const DEADLINE_MS = 12_000; // a visitor waits this long for a chart nobody has asked for yet; the build carries on
 const STALE_WAIT_MS = 300; // a chart more than twice its TTL old waits this long for its refresh before going out stale
-const WARM_MS = 60_000; // the start-up warm-up of every 1H chart is spread over about this long
+const WARM_MS = 60_000; // each warm-up pass over every 1H chart is spread over about this long
 const MIN = 60_000;
 const H = 60 * MIN;
 const D = 24 * H;
 const W = 7 * D;
 const KEEP_STALE = 24 * H; // while refreshes fail, the last good chart is served this long
 const RETRY = MIN; // a failed refresh is retried after this long at the earliest (or the TTL, if shorter)
+// A warm-up pass starts this long after the one before it started.
+const REWARM_MS = 10 * MIN;
 const WRONG_MARKET = 0.05; // a source whose latest close is further than 5% from the card price is the wrong market
 
 // Candles per chart: the page shows the latest ones that fit its width at chunky slots (about 67 on a wide desktop
@@ -54,8 +59,8 @@ const NAMES = {
   okx: 'OKX', bybit: 'Bybit', mexc: 'MEXC', bigone: 'BigONE', robinhood: 'Robinhood', cnbc: 'CNBC', yahoo: 'Yahoo Finance',
 };
 
-// ---- where each coin's candles come from, in fallback order (spot first, perps last; verified 2026-10-06, the weekly
-// candles 2026-10-08) ----
+// ---- where each coin's candles come from, in fallback order (spot first, perps last; every size verified on the
+// venue, the weekly candles included) ----
 // only: the candle sizes a source may serve. from: candles before this UTC day are dropped (a perp's pre-market
 // trading). join: an older market renamed 1:1 into this one, put in front when the window reaches back before the
 // rename: Binance TONUSDT became GRAMUSDT (last TON candle 2026-06-30, first GRAM candle 2026-07-02); from about May 2029
@@ -106,9 +111,9 @@ const CANDLE_SOURCES = {
 for (const c of COINS) if (!CANDLE_SOURCES[c.symbol]) throw new Error(`history.js has no chart sources for ${c.symbol}`);
 const STOCK_SYMBOLS = new Set(STOCKS.map((s) => s.symbol));
 // Robinhood's 5-minute bars are sound, but about one in seven of its 30-minute bars is cut short (a stale close, a
-// clipped range), a daily open can be off the official one (checked 2026-10-06 against its own 5-minute bars and CNBC),
-// and its hourly bars run on the clock and leave out 09:30 to 10:00 (2026-10-08). CNBC's bars match the official
-// numbers, so every size comes from CNBC first and Robinhood is the backup.
+// clipped range), a daily open can be off the official one (checked against its own 5-minute bars and CNBC), and its
+// hourly bars run on the clock and leave out 09:30 to 10:00. CNBC's bars match the official numbers, so every size
+// comes from CNBC first and Robinhood is the backup.
 const STOCK_CANDLE_SOURCES = [src('cnbc'), src('robinhood')];
 // A commodity's candles are its front-month future's, from Yahoo Finance (hours and days; the same contracts as the
 // card's price), with Hyperliquid's perp on it as the backup where the card has one (commodities.js). future: the
@@ -117,10 +122,10 @@ const COMMODITY_SOURCES = Object.fromEntries(COMMODITIES.map((c) => [c.symbol, [
   src('yahoo', c.yahoo, { future: true }), ...(c.hl ? [src('hyperliquid', c.hl, { future: true })] : []),
 ]]));
 const SYMBOLS = new Set([...COINS.map((c) => c.symbol), ...STOCK_SYMBOLS, ...COMMODITIES.map((c) => c.symbol)]);
-// The listing days of the markets younger than the window of some size (checked 2026-10-06 and 2026-10-08). A chart
-// that starts late says "since listing" only when it starts then; a source whose history is shorter than the market's,
-// or any other late start, says "from" its first day.
-// SNDK, SPCX and SKHY: the listing days Robinhood's instruments give (read 2026-11-14).
+// The listing days of the markets younger than the window of some size. A chart that starts late says "since listing"
+// only when it starts then; a source whose history is shorter than the market's, or any other late start, says "from"
+// its first day.
+// SNDK, SPCX and SKHY: the listing days Robinhood's instruments give.
 const LISTED = Object.fromEntries(Object.entries({ MET: '2025-10-23', MON: '2025-11-24', LIT: '2026-01-15', BP: '2026-03-23', CRCL: '2025-06-05', STRK: '2024-02-20', SNDK: '2025-02-21', SPCX: '2026-06-12', SKHY: '2026-07-10', STRC: '2025-07-25' })
   .map(([sym, date]) => [sym, Date.parse(date)]));
 
@@ -145,7 +150,7 @@ function within(p, ms) {
   let timer;
   return Promise.race([p, new Promise((resolve) => { timer = setTimeout(resolve, ms); })]).finally(() => clearTimeout(timer));
 }
-// The start-up warm-up's calls run in this context ({ urgent }), so the limiter can put them after every visitor's.
+// The warm-up's calls run in this context ({ urgent }), so the limiter can put them after every visitor's.
 const background = new AsyncLocalStorage();
 
 // Each host's breaker is a machine of its own, in one of three states:
@@ -974,20 +979,102 @@ async function chart(sym, key, livePrice) {
   return ageOf(e, view.ttl, Date.now()) !== 'none' ? e : null;
 }
 
-/**
- * Warms every symbol's 1H chart (the panel's default candle size) once, after the server's first price fetch, so first
- * opens find it ready. One chart at a time, spread over about a minute, each call in a quiet moment of the limiter (see
- * quiet()), so the warm-up never bursts and never holds up a visitor's chart. Price fetches do not use this limiter.
- * @param {(symbol: string) => number | null} livePrice the card price, while it is fresh
- */
-export async function warmHistory(livePrice) {
+// ---- the warm-up: every symbol's 1H chart (the panel's default candle size, and what the week lines read) ----
+// One pass builds or refreshes each chart in turn, one at a time, spread over about a minute, each call in a quiet
+// moment of the limiter (see quiet()). A chart that already has a body is answered at once while its refresh runs, so
+// the pass waits for that build as well before it moves on: two warm-up builds are never out together.
+const WARM_VIEW = 'i 1H';
+async function warmPass(livePrice) {
   const list = [...SYMBOLS];
   const step = WARM_MS / list.length;
   for (const sym of list) {
     const t0 = Date.now();
-    await background.run({ urgent: false }, () => chart(sym, 'i 1H', livePrice)).catch(() => {});
+    await background.run({ urgent: false }, () => chart(sym, WARM_VIEW, livePrice)).catch(() => {});
+    await entryOf(`${sym} ${WARM_VIEW}`).pending;
     await sleep(Math.max(0, step - (Date.now() - t0)));
   }
+}
+// The warm-up is a machine of its own, in one of three states:
+//   cold:    never started.
+//   passing: a pass over every symbol is out.
+//   waiting: the pass has ended and a timer waits for the next one, which starts REWARM_MS after that pass started (at
+//            once when it took longer than that), so two passes never overlap.
+const WARM_MOVES = { cold: ['passing'], passing: ['waiting'], waiting: ['passing'] };
+const warm = { m: machine('cold', WARM_MOVES), livePrice: null, startedAt: 0, pass: null };
+warm.m.on((to) => {
+  if (to === 'passing') {
+    warm.startedAt = Date.now();
+    warm.pass = warmPass(warm.livePrice).finally(() => warm.m.go('waiting'));
+    return;
+  }
+  setTimeout(() => warm.m.go('passing'), Math.max(0, REWARM_MS - (Date.now() - warm.startedAt))).unref();
+});
+
+/**
+ * Warms every symbol's 1H chart (the panel's default candle size) after the server's first price fetch, so first opens
+ * find it ready, and keeps it warm from then on: a new pass over every symbol starts ten minutes after the one before
+ * it started. One chart at a time, each pass spread over about a minute, each call in a quiet moment of the limiter
+ * (see quiet()), so the warm-up never bursts and never holds up a visitor's chart. Price fetches do not use this
+ * limiter. Only the first call starts anything; a later one changes nothing.
+ * @param {(symbol: string) => number | null} livePrice the card price, while it is fresh
+ * @returns {Promise<void>} settles when the pass that is out (the first one, for the first call) has ended
+ */
+export function warmHistory(livePrice) {
+  if (warm.m.is('cold')) {
+    warm.livePrice = livePrice;
+    warm.m.go('passing');
+  }
+  return warm.pass;
+}
+
+// ---- the week lines: each card's last week or so as a short line, read off the cached 1H charts ----
+// How many of the latest hourly candles make a line: a coin trades every hour, so 150 are a little over six days; a
+// stock has seven session hours a day, so 35 are five sessions; a future about 23 hours on five days, so 115 are a
+// trading week. A longer line is thinned evenly to WEEK_POINTS closes, the first and the last always kept.
+const WEEK_POINTS = 48;
+const WEEK_TAIL = new Map([
+  ...COINS.map((c) => [c.symbol, 150]), ...STOCKS.map((s) => [s.symbol, 35]), ...COMMODITIES.map((c) => [c.symbol, 115]),
+]);
+// 5 significant figures: a line is drawn a few dozen pixels tall, and the shorter numbers keep the answer small.
+const r5 = (n) => Number(n.toPrecision(5));
+function weekLine(sym, body) {
+  const closes = JSON.parse(body).candles.slice(-WEEK_TAIL.get(sym)).map((c) => r5(c[4]));
+  if (closes.length <= WEEK_POINTS) return closes;
+  const last = closes.length - 1;
+  return Array.from({ length: WEEK_POINTS }, (_, k) => closes[Math.round((k * last) / (WEEK_POINTS - 1))]);
+}
+// A chart's body is parsed once per build: symbol -> { at, line }, the line read from the body fetched at `at`.
+const weekMemo = new Map();
+let weekOut = { at: 0, lines: {} };
+
+/**
+ * The week lines of every symbol whose 1H chart the cache holds right now: { at, lines }. lines maps a symbol to its
+ * closes, oldest first (at most 48 numbers); a symbol without a usable chart (never built, or its last good one older
+ * than a day) is absent. at is when the newest of the charts read was fetched (ms), 0 when there is none. Reads the
+ * cache only and never starts a build: the warm-up keeps the charts current. The same object is returned for as long
+ * as no line changed, so a caller can keep one serialised copy per object.
+ * @returns {{ at: number, lines: Record<string, number[]> }}
+ */
+export function weekLines() {
+  const now = Date.now();
+  const { ttl } = VIEWS.get(WARM_VIEW);
+  const lines = {};
+  let at = 0;
+  let same = true;
+  for (const sym of SYMBOLS) {
+    const e = cache.get(`${sym} ${WARM_VIEW}`);
+    if (!e || ageOf(e, ttl, now) === 'none') {
+      if (sym in weekOut.lines) same = false;
+      continue;
+    }
+    let m = weekMemo.get(sym);
+    if (m?.at !== e.fetchedAt) weekMemo.set(sym, (m = { at: e.fetchedAt, line: weekLine(sym, e.body) }));
+    if (weekOut.lines[sym] !== m.line) same = false;
+    lines[sym] = m.line;
+    at = Math.max(at, e.fetchedAt);
+  }
+  if (!same) weekOut = { at, lines };
+  return weekOut;
 }
 
 /**

@@ -36,7 +36,7 @@ const DEF = {
   dimPlace: null,                       // null: Dim's own place on dark's ladder, in OKLab lightness (computed below)
   chipK: 0.65,                          // chips: this share of dark's presence (CAM16-UCS step off the card), both chips
   areaK: 0.7,                           // the chart's wash: a big field on paper shouts sooner
-  noticeK: 0.6,                         // the notice's tint: the biggest solid field of colour on the page
+  amberK: 0.6,                          // the amber tint Amber Mark is floored on: a big solid field of colour
   redRate: 0.25, amberRate: 0.4,        // degrees (CAM16) toward orange per 0.01 of OKLab L darkened
   pairKeep: 0.9,                        // a related pair (Green Ink, Gain Ink) keeps at least this share of dark's distance
   lossShare: 1,                         // the most of the gamut's chroma Loss Ink may take (1: the twin, uncapped)
@@ -111,7 +111,7 @@ function twinLine(darkHex, rate = 0, { turn = 0, cap = 1 } = {}) {
   };
 }
 // Tint: a brand colour mixed into white in OKLab (it keeps its own hue). Its step off the surface it really sits on
-// (the card for a chip, the paper for the notice) = k x dark's step off the surface dark's tint sits on.
+// (the card for a chip, the paper for the amber tint) = k x dark's step off the surface dark's tint sits on.
 function mixOk(x, bg, f) {
   const a = C.lin2oklab(C.rgb2lin(C.hex2rgb(x))), b = C.lin2oklab(C.rgb2lin(C.hex2rgb(bg)));
   return C.oklab2lin(a.map((v, i) => b[i] + (v - b[i]) * f));
@@ -148,17 +148,19 @@ const RAISED = (() => {
   return C.dEok(hex, PAPER) < 0.01 ? PAPER : hex;   // within a hair of the paper: it is the paper
 })();
 
-// 2. Tints (chips, notice): before the words, because words are floored on them.
+// 2. Tints (the chips): before the words, because words are floored on them. The amber tint (brand amber at 10% on
+//    dark's ground, carried to the paper as the chips are to the card) is no surface of the page: it is only the floor
+//    Amber Mark is measured on (5), which holds the mark at 3:1 on a field of its own colour and above that on white.
 const dkChipGain = C.over(DARK.gain, 0.14, SOURCE.card), dkChipLoss = C.over(DARK.loss, 0.14, SOURCE.card);
-const dkNotice = C.over(DARK.amber, 0.1, SOURCE.ground);
+const dkAmberTint = C.over(DARK.amber, 0.1, SOURCE.ground);
 const chipGain = tint(DARK.gain, dkChipGain, SOURCE.card, P.chipK, W);
 const chipLoss = tint(DARK.loss, dkChipLoss, SOURCE.card, P.chipK, W);
-const notice = tint(DARK.amber, dkNotice, SOURCE.ground, P.noticeK, PAPER);
+const amberTint = tint(DARK.amber, dkAmberTint, SOURCE.ground, P.amberK, PAPER);
 
 // 3. Greys: dark's own hue and chroma. Muted and Faint as light as the class dark already meets allows, on the darkest
 //    surface each sits on; Dim keeps its place on dark's ladder between Text and Muted, in OKLab lightness (dark's
 //    greys step down in equal lightness steps, so Dim sits about halfway).
-const mutedOn = darkest([PAPER, TRACK, RAISED, notice.hex]);
+const mutedOn = darkest([PAPER, TRACK, RAISED]);
 const muted = lightest(greyLine(DARK.muted), P.aa + P.margin, mutedOn, 6);
 const faint = lightest(greyLine(SOURCE.faint), P.nonText + P.margin, W, 6);
 const Lok = (hex) => okl(hex)[0];
@@ -191,7 +193,7 @@ const amberInk = lightest(twinLine(DARK.amber, P.amberRate), P.aa + P.margin, am
 const accentDisplay = lightest(twinLine(DARK.green), P.nonText + P.margin, W);
 const lossLine = C.wcag(DARK.loss, W) >= P.nonText ? DARK.loss : lightest(twinLine(DARK.loss, P.redRate), P.nonText + P.margin, W);
 const gainLine = lightest(twinLine(DARK.gain, 0, { turn: gainTurn }), C.wcag(lossLine, W), W);   // weighs what the Loss line weighs
-const amberMark = lightest(twinLine(DARK.amber, P.amberRate), P.nonText + P.margin, notice.hex);
+const amberMark = lightest(twinLine(DARK.amber, P.amberRate), P.nonText + P.margin, amberTint.hex);
 
 // 6. Washes, selection, tape.
 const washGain = alphaStep(DARK.gain, C.over(DARK.gain, 0.24, SOURCE.card), P.areaK);
@@ -219,29 +221,28 @@ function role(key, name, dark, darkOn, light, lightOn, rule, extra = {}) {
 }
 role('text', 'Text (White to Ink)', DARK.white, DARK.card, INK, W, "Dark's ground becomes light's ink.");
 role('dim', 'Dim', DARK.dim, DARK.card, dim, W, `Keeps its place on dark's ladder in OKLab lightness: ${(place * 100).toFixed(0)}% of the way from Text down to Muted, as on dark. Dark's hue and chroma.`);
-role('muted', 'Muted', DARK.muted, DARK.card, muted, mutedOn, 'AA (4.5:1), as dark Muted is, on the darkest surface it sits on, and no darker. Dark\'s hue and chroma.', { also: { white: f2(C.wcag(muted, W)), paper: f2(C.wcag(muted, PAPER)), track: f2(C.wcag(muted, TRACK)), raised: f2(C.wcag(muted, RAISED)), notice: f2(C.wcag(muted, notice.hex)) } });
+role('muted', 'Muted', DARK.muted, DARK.card, muted, mutedOn, 'AA (4.5:1), as dark Muted is, on the darkest surface it sits on, and no darker. Dark\'s hue and chroma.', { also: { white: f2(C.wcag(muted, W)), paper: f2(C.wcag(muted, PAPER)), track: f2(C.wcag(muted, TRACK)), raised: f2(C.wcag(muted, RAISED)) } });
 role('faint', 'Faint', DARK.faint, DARK.card, faint, W, '3:1, the class dark Faint meets (4.2:1, under AA), on the panel where it is used. Dark\'s hue and chroma.', { also: { paper: f2(C.wcag(faint, PAPER)), track: f2(C.wcag(faint, TRACK)) } });
 role('ground', 'Ground', DARK.ground, null, PAPER, null, 'Kept: the cool paper.');
 role('card', 'Card', DARK.card, null, W, null, 'Kept: the white card.');
 role('raised', 'Raised', DARK.raised, DARK.card, RAISED, W, `One step down from the card by dark's step up (${f2(dkRaisedRatio)}:1 against ${f2(C.wcag(RAISED, W))}:1): the paper, Apple's inset box.`);
-role('accentInk', 'Green Ink (link, chosen segment)', DARK.green, SOURCE.ground, accentInk, accentInkOn, 'Twin: dark green\'s CAM16 hue and colourfulness, as light as AA on the paper allows.', { also: { white: f2(C.wcag(accentInk, W)), thumb: f2(C.wcag(accentInk, W)), notice: f2(C.wcag(accentInk, notice.hex)) } });
+role('accentInk', 'Green Ink (link, chosen segment)', DARK.green, SOURCE.ground, accentInk, accentInkOn, 'Twin: dark green\'s CAM16 hue and colourfulness, as light as AA on the paper allows.', { also: { white: f2(C.wcag(accentInk, W)), thumb: f2(C.wcag(accentInk, W)) } });
 role('accentDisplay', 'Green Display (the headline word)', DARK.green, SOURCE.card, accentDisplay, W, 'Twin, as light as 3:1 (large text) on the hero card allows.');
 role('gainInk', 'Gain Ink (a figure going up)', DARK.gain, dkChipGain, gainInk, chipGain.hex, `Twin (the screen's most colourful green there), AA on its chip, turned ${gainTurn} deg toward emerald so it stays as far from Green Ink as on dark.`, { also: { white: f2(C.wcag(gainInk, W)) } });
 role('lossInk', 'Loss Ink (a figure going down)', DARK.loss, dkChipLoss, lossInk, chipLoss.hex, `Twin, turned ${P.redRate} deg toward orange per 0.01 L so it stays red, not crimson, AA on its chip and on the paper.`, { also: { white: f2(C.wcag(lossInk, W)), paper: f2(C.wcag(lossInk, PAPER)), glass: f2(C.wcag(lossInk, GLASS)) } });
 role('amberInk', 'Amber Ink (a late or stale word)', DARK.amber, SOURCE.card, amberInk, amberInkOn, `Twin, turned ${P.amberRate} deg toward orange per 0.01 L so it stays amber, not mustard, AA on the paper.`, { also: { white: f2(C.wcag(amberInk, W)), glass: f2(C.wcag(amberInk, GLASS)) } });
 role('gainLine', 'Gain Line (line, candles, end dot)', DARK.gain, SOURCE.card, gainLine, W, `Twin on Gain Ink's hue (turned ${gainTurn} deg with it), weighing what the Loss line weighs (both lines at the brand red's ratio on white).`);
 role('lossLine', 'Loss Line (line, candles, end dot)', DARK.loss, SOURCE.card, lossLine, W, 'The brand red itself: it already clears 3:1 on white.');
-role('amberMark', 'Amber Mark (the notice\'s glyph)', DARK.amber, dkNotice, amberMark, notice.hex, 'Twin, turned like the ink, 3:1 on the notice.', { also: { white: f2(C.wcag(amberMark, W)) } });
+role('amberMark', 'Amber Mark (the notice\'s glyph)', DARK.amber, SOURCE.card, amberMark, W, `Twin, turned like the ink, 3:1 on the amber tint (brand amber mixed into white in OKLab, ${(amberTint.f * 100).toFixed(1)}%, ${P.amberK} of dark's step off the ground): stronger on the white card it sits on.`, { also: { tint: f2(C.wcag(amberMark, amberTint.hex)) } });
 role('gainChip', 'Gain chip', dkChipGain, SOURCE.card, chipGain.hex, W, `Brand Gain mixed into white in OKLab (${(chipGain.f * 100).toFixed(1)}%), ${P.chipK} of dark's step off the card.`);
 role('lossChip', 'Loss chip', dkChipLoss, SOURCE.card, chipLoss.hex, W, `Brand Loss mixed into white in OKLab (${(chipLoss.f * 100).toFixed(1)}%), ${P.chipK} of dark's step off the card.`);
-role('notice', 'Notice tint', dkNotice, SOURCE.ground, notice.hex, PAPER, `Brand Amber mixed into white in OKLab (${(notice.f * 100).toFixed(1)}%), ${P.noticeK} of dark's step off the ground, measured on the paper it sits on (the biggest solid field of colour).`);
 role('washGain', 'Gain wash (top of the fade)', C.over(DARK.gain, 0.24, SOURCE.card), SOURCE.card, C.over(DARK.gain, washGain, W), W, `Brand Gain at ${(washGain * 100).toFixed(1)}% fading to 0 (dark: 24%), ${P.areaK} of dark's step (a large field).`, { alpha: washGain });
 role('washLoss', 'Loss wash (top of the fade)', C.over(DARK.loss, 0.24, SOURCE.card), SOURCE.card, C.over(DARK.loss, washLoss, W), W, `Brand Loss at ${(washLoss * 100).toFixed(1)}% fading to 0 (dark: 24%), ${P.areaK} of dark's step (a large field).`, { alpha: washLoss });
 role('washFlat', 'Flat wash (top of the fade)', C.over(DARK.muted, 0.24, SOURCE.card), SOURCE.card, C.over(muted, washFlat, W), W, `Muted at ${(washFlat * 100).toFixed(1)}% fading to 0 (dark: 24%), ${P.areaK} of dark's step (a large field).`, { alpha: washFlat });
 role('selection', 'Text selection', C.over(DARK.green, 0.35, SOURCE.card), SOURCE.card, C.over(DARK.green, selection, W), W, 'Brand green at dark\'s own 35%.', { alpha: selection });
 role('wm', 'Chart watermark', dkWm, SOURCE.card, C.over(INK, wmA, W), W, `Ink at ${(wmA * 100).toFixed(1)}%, ${P.wmK} of the presence dark's white at 5% has.`, { alpha: wmA });
 role('tape', 'Hero ghost tape', dkTape, SOURCE.card, C.over(INK, tapeA, W), W, `Ink at ${(tapeA * 100).toFixed(1)}%, the ratio dark's white at 7% makes (${f2(tapeRatio)}:1).`, { alpha: tapeA });
-for (const [k, name, hex, why] of [['green', 'Green (mark, logo full stop, live dot)', DARK.green, 'Never changes: the brand fill in both modes.'], ['gainFill', 'Gain fill (chip and wash source)', DARK.gain, 'Never changes.'], ['lossFill', 'Loss fill (wash source, the down dot)', DARK.loss, 'Never changes.'], ['amberFill', 'Amber fill (notice edge, late dot, tint source)', DARK.amber, 'Never changes.']]) role(k, name, hex, SOURCE.card, hex, W, why);
+for (const [k, name, hex, why] of [['green', 'Green (mark, logo full stop, live dot)', DARK.green, 'Never changes: the brand fill in both modes.'], ['gainFill', 'Gain fill (chip and wash source)', DARK.gain, 'Never changes.'], ['lossFill', 'Loss fill (wash source, the down dot)', DARK.loss, 'Never changes.'], ['amberFill', 'Amber fill (late dot, tint source)', DARK.amber, 'Never changes.']]) role(k, name, hex, SOURCE.card, hex, W, why);
 
 // separations and balance
 const sep = {
@@ -252,7 +253,6 @@ const sep = {
   gain_loss_hk_lightness: { dark: [f1(C.hkLstar(DARK.gain)), f1(C.hkLstar(DARK.loss))], light_ink: [f1(C.hkLstar(gainInk)), f1(C.hkLstar(lossInk))], light_line: [f1(C.hkLstar(gainLine)), f1(C.hkLstar(lossLine))] },
   ladder_apca: { dark: [DARK.white, DARK.dim, DARK.muted, SOURCE.faint].map((x) => f1(-C.apca(x, SOURCE.card))), light: [INK, dim, muted, faint].map((x) => f1(apca(x))) },
   chip_step: { dark: [f1(stepD(dkChipGain, SOURCE.card)), f1(stepD(dkChipLoss, SOURCE.card))], light: [f1(stepL(chipGain.hex, W)), f1(stepL(chipLoss.hex, W))] },
-  notice_step: { dark: f1(stepD(dkNotice, SOURCE.ground)), light_on_paper: f1(stepL(notice.hex, PAPER)) },
   ladder_oklab_L: { dark: [DARK.white, DARK.dim, DARK.muted, SOURCE.faint].map((x) => f1(Lok(x) * 100)), light: [INK, dim, muted, faint].map((x) => f1(Lok(x) * 100)) },
   cam16: Object.fromEntries([['accentInk', DARK.green, accentInk], ['accentDisplay', DARK.green, accentDisplay], ['gainInk', DARK.gain, gainInk], ['gainLine', DARK.gain, gainLine], ['lossInk', DARK.loss, lossInk], ['amberInk', DARK.amber, amberInk], ['amberMark', DARK.amber, amberMark]].map(([k, d, l]) => { const a = camOf(d, vcD), b = camOf(l, vcL); return [k, { h: [f1(a.h), f1(b.h)], M: [f1(a.M), f1(b.M)] }]; })),
 };
@@ -284,7 +284,6 @@ const CSSVAR = {
   amberMark: ['--warn-mark', () => hexOf(T.amberMark.light)],
   gainChip: ['--gain-chip', () => hexOf(T.gainChip.light)],
   lossChip: ['--loss-chip', () => hexOf(T.lossChip.light)],
-  notice: ['--notice-bg', () => hexOf(T.notice.light)],
   washGain: ['--wash-up', () => String(T.washGain.alpha)],
   washLoss: ['--wash-down', () => String(T.washLoss.alpha)],
   washFlat: ['--wash-flat', () => String(T.washFlat.alpha)],

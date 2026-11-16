@@ -1,6 +1,7 @@
 // printerino.com: one coin price call per minute (feeds.js) plus one stock quote call (stocks.js), served to every
-// visitor from memory; price charts (history.js) are fetched when first asked for and cached. Holds no secrets. Runs on
-// Railway (`npm start`).
+// visitor from memory; price charts (history.js) are fetched when first asked for and cached. Every 1H chart is also
+// kept warm in the background, and GET /api/week serves the short line of the last week or so on each card, read off
+// those cached charts. Holds no secrets. Runs on Railway (`npm start`).
 import http from 'node:http';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
@@ -10,7 +11,7 @@ import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { COINS } from './coins.js';
 import { fetchPrices } from './feeds.js';
-import { historyCalls, historyResponse, warmHistory } from './history.js';
+import { historyCalls, historyResponse, warmHistory, weekLines } from './history.js';
 import { ok, warn } from './log.js';
 import { machine } from './machine.js';
 import { rerankPartial } from './ranking.js';
@@ -70,22 +71,25 @@ version('/lockup.svg', readFileSync(path.join(BRAND, 'logo/lockup.svg')), 'image
 version('/lockup-ink.svg', readFileSync(path.join(BRAND, 'logo/lockup-ink.svg')), 'image/svg+xml');
 // The liquid glass maps: exactly these files of public/glass/ are served, nothing else in that folder.
 const GLASS_FILES = [
-  // the coins sealed in glass: lens, normals, environment, reflection bar (every visitor)
-  'e-ref.png', 'e-nrm.png', 'e-env.png', 'e-bar.png',
   // the segmented controls' droplet lens and the theme change's drop lens (Chromium only)
   'k-lens.png', 't-lens.png',
   // the top bar's merge: the shape of the switch and the X link flowing into one body, and its rim's light (the
   // stylesheet names them; browsers with scroll timelines)
   'm-mask.png', 'm-rim.png',
-  // and how that body bends the page at its rim (Chromium only; glass.js asks for it)
+  // and how that body bends the page at its rim (Chromium under clear glass only; glass.js asks for it)
   'm-lens.png',
-  // the dock's rim lens, its round button's and its pill's (Chromium only; glass.js asks for them)
+  // the same body holding the list's board-or-tiles switch as a fourth control: its rim's light and its lens (asked
+  // for only once the page is scrolled past the list's bar, the lens under clear glass only)
+  'm4-rim.png', 'm4-lens.png',
+  // the dock's rim lens and its round button's (Chromium under clear glass only) and its pill's (Chromium only);
+  // glass.js asks for them
   'd-lens.png', 'd-round-lens.png', 'p-lens.png', 'p-apple-lens.png', 'p-apple-split.png',
 ];
 for (const f of GLASS_FILES) version(`/glass/${f}`, read(`glass/${f}`), 'image/png');
-// Lossless WebP copies (tools/png/webp.mjs writes them beside the PNGs, the very same pixels, about a fifth smaller):
-// where one sits beside a PNG it is served in the PNG's place, every reference to the PNG (in the stylesheet, the page's
-// filters and #assets) pointing to it instead. WEBP=0 in the environment serves the PNGs, for comparing the two.
+// Lossless WebP copies (tools/png/webp.mjs writes them beside the PNGs, the very same pixels, about a fifth smaller,
+// and only where the copy is the smaller file): where one sits beside a PNG it is served in the PNG's place, every
+// reference to the PNG (in the stylesheet and in #assets) pointing to it instead; a PNG with none is served as it is.
+// WEBP=0 in the environment serves the PNGs, for comparing the two.
 const WEBP = new Map(); // a PNG's path -> its WebP's
 if (process.env.WEBP !== '0') for (const f of GLASS_FILES) {
   const w = f.replace(/\.png$/, '.webp');
@@ -114,13 +118,15 @@ for (const [p, e] of VERSIONED) {
 }
 // The URLs the page's scripts load at runtime (glass.js and share.js, and the lens maps glass.js fetches on demand),
 // handed over in the page's #assets JSON.
-// The coin maps need no entry: the page names them.
+// The coins' pictures need no entry: each card's data names its own two (icon and iconLight).
 const ASSETS = {
   glass: vurl('/glass.js'),
   share: vurl('/share.js'),
   kLens: vurl('/glass/k-lens.png'),
   tLens: vurl('/glass/t-lens.png'),
   mLens: vurl('/glass/m-lens.png'),
+  m4Rim: vurl('/glass/m4-rim.png'),
+  m4Lens: vurl('/glass/m4-lens.png'),
   dLens: vurl('/glass/d-lens.png'),
   dRound: vurl('/glass/d-round-lens.png'),
   pLens: vurl('/glass/p-lens.png'),
@@ -130,18 +136,27 @@ const ASSETS = {
 // Each icon carries its own fingerprint in its address (iconUrl), as the scripts and the glass maps do, so a browser
 // keeps it for a year and asks again only when the icon itself changes (kept a day with no way to revalidate, every
 // visitor would fetch all of them again each day). The plain address still answers, kept a day.
+// Every icon has a twin for the light theme under /icons/light/ (the same art with its two dark outlines softened,
+// written by tools/png/light.mjs into the icons' light/ folder), loaded, fingerprinted and served by the same rules.
+// A twin that is missing stops the start: a card would otherwise name an address that answers 404.
 const ICON_FILES = new Map();
+const ICON_SETS = [['/icons', ICONS], ['/icons/light', path.join(ICONS, 'light')]];
 for (const c of [...COINS, ...STOCKS, ...COMMODITIES]) {
   const sym = c.symbol.toLowerCase();
-  const body = readFileSync(path.join(ICONS, `${sym}.png`));
-  ICON_FILES.set(`/icons/${sym}.png`, { body, v: hash(body), type: 'image/png' });
-  // Its lossless WebP copy, the address the page is given when there is one (the PNG's still answers).
-  const webp = path.join(ICONS, `${sym}.webp`);
-  if (process.env.WEBP !== '0' && existsSync(webp)) { const w = readFileSync(webp); ICON_FILES.set(`/icons/${sym}.webp`, { body: w, v: hash(w), type: 'image/webp' }); }
+  for (const [at, dir] of ICON_SETS) {
+    const png = path.join(dir, `${sym}.png`);
+    if (dir !== ICONS && !existsSync(png)) throw new Error(`${c.symbol} has no light icon (${png}): run node tools/png/light.mjs, then node tools/png/webp.mjs`);
+    const body = readFileSync(png);
+    ICON_FILES.set(`${at}/${sym}.png`, { body, v: hash(body), type: 'image/png' });
+    // Its lossless WebP copy, the address the page is given when there is one (the PNG's still answers).
+    const webp = path.join(dir, `${sym}.webp`);
+    if (process.env.WEBP !== '0' && existsSync(webp)) { const w = readFileSync(webp); ICON_FILES.set(`${at}/${sym}.webp`, { body: w, v: hash(w), type: 'image/webp' }); }
+  }
 }
-const iconUrl = (sym) => {
+// An icon's fingerprinted address in one set: '/icons' (the default) or '/icons/light'.
+const iconUrl = (sym, at = '/icons') => {
   const s = sym.toLowerCase();
-  const p = ICON_FILES.has(`/icons/${s}.webp`) ? `/icons/${s}.webp` : `/icons/${s}.png`;
+  const p = ICON_FILES.has(`${at}/${s}.webp`) ? `${at}/${s}.webp` : `${at}/${s}.png`;
   const f = ICON_FILES.get(p);
   return f ? `${p}?v=${f.v}` : p;
 };
@@ -149,6 +164,12 @@ const BRAND_FILES = new Map([
   ['/favicon.svg', { body: readFileSync(path.join(BRAND, 'web/favicon.svg')), type: 'image/svg+xml' }],
   ['/favicon.ico', { body: readFileSync(path.join(BRAND, 'web/favicon.ico')), type: 'image/x-icon' }],
   ['/apple-touch-icon.png', { body: readFileSync(path.join(BRAND, 'web/apple-touch-icon.png')), type: 'image/png' }],
+  // The home-screen name and icons (the page's long title would be cut under an icon), and the crawlers' rules.
+  ['/manifest.webmanifest', { body: read('manifest.webmanifest'), type: 'application/manifest+json' }],
+  ['/icon-192.png', { body: readFileSync(path.join(BRAND, 'web/icon-192.png')), type: 'image/png' }],
+  ['/icon-512.png', { body: readFileSync(path.join(BRAND, 'web/icon-512.png')), type: 'image/png' }],
+  ['/maskable-512.png', { body: readFileSync(path.join(BRAND, 'web/maskable-512.png')), type: 'image/png' }],
+  ['/robots.txt', { body: read('robots.txt'), type: 'text/plain; charset=utf-8' }],
 ]);
 
 const [HEAD, TAIL] = fingerprint(read('index.html').toString('utf8'), 'index.html')
@@ -160,6 +181,11 @@ const [HEAD, TAIL] = fingerprint(read('index.html').toString('utf8'), 'index.htm
   .replace(/id="ccount">\d+</, `id="ccount">${COMMODITIES.length}<`)
   .split('<!--DATA-->');
 if (TAIL === undefined) throw new Error('index.html is missing the <!--DATA--> marker');
+// The page for an address the site does not have (see the last answer of the request handler).
+const LOST_HTML = fingerprint(read('404.html').toString('utf8'), '404.html');
+// The page's no-script block takes the picks as plain words at each rebuild (see plainPicks).
+const [HEAD_A, HEAD_B] = HEAD.split('<!--PICKS-->');
+if (HEAD_B === undefined) throw new Error('index.html is missing the <!--PICKS--> marker');
 
 // ---- compression: text goes out as brotli or gzip when the browser takes it ----
 const TEXT = /^(text\/|application\/json|image\/svg\+xml)/;
@@ -171,6 +197,7 @@ const brotliLater = promisify(zlib.brotliCompress);
 const gzipLater = promisify(zlib.gzip);
 // A body rebuilt about twice a minute (the page, the prices): both copies at quick settings, under a millisecond each.
 const packNow = (body) => ({ body, br: brotli(body, 5), gz: gzip(body, 6) });
+const lostPage = packNow(Buffer.from(LOST_HTML));
 // The fixed text files at the best settings (brotli 11, gzip 9), on the thread pool once the port is open, so a deploy
 // never waits for them; until a file's copies are ready it goes out uncompressed.
 async function packStatic() {
@@ -183,7 +210,8 @@ async function packStatic() {
 // A chart's body is the same for every visitor until its cache entry refreshes (history.js), so its copies are made
 // once per body, not once per request: compressing on every request made a chart the cheapest way to load the server
 // (about five times the CPU of the same answer uncompressed). One entry per chart (history.js names it: a symbol and a
-// candle size), and only for those that answered 200, which history.js gives only for its own whitelist: at most 30 x 4.
+// candle size), and only for those that answered 200, which history.js gives only for its own whitelist: at most one
+// per listed symbol and candle size (57 symbols by 4 sizes), and the week lines' one (below).
 // A body built per request (a stale copy) differs from the one kept and is packed again.
 const chartPacks = new Map();
 function chartPack(key, body) {
@@ -191,6 +219,15 @@ function chartPack(key, body) {
   let c = chartPacks.get(key);
   if (c?.src !== body) chartPacks.set(key, (c = { src: body, packed: packNow(Buffer.from(body)) }));
   return c.packed;
+}
+// The week lines (history.js) are one body for every visitor, and history.js hands back the same object for as long as
+// no line changed: the body is serialised once per object here, and chartPack keeps its one compressed copy under a
+// key of its own (no chart's key is a single word).
+const week = { src: null, body: '' };
+function weekBody() {
+  const w = weekLines();
+  if (week.src !== w) Object.assign(week, { src: w, body: JSON.stringify(w) });
+  return week;
 }
 // The encoding a request takes: brotli, then gzip, when its accept-encoding lists it with a q above 0.
 function encodingOf(req) {
@@ -204,7 +241,7 @@ function encodingOf(req) {
 }
 
 const SECURITY_HEADERS = {
-  'content-security-policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  'content-security-policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
   'x-frame-options': 'DENY',
@@ -272,13 +309,41 @@ const livePrice = (sym) => {
   return q && Date.now() - q.at <= STALE_MS ? q.price : null;
 };
 
+// ---- the picks as plain words, for a reader that runs no script (scripts off, a crawler, anything that reads the page as text) ----
+// The page's own formats: whole dollars from $1,000, cents from $1, three significant figures under $1; a signed change
+// to two decimals.
+const WHOLE = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const CENTS = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const escHtml = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function plainPrice(n) {
+  if (n == null || !Number.isFinite(n) || n < 0) return 'n/a';
+  if (n === 0) return '$0';
+  if (Math.round(n * 100) / 100 >= 1000) return `$${WHOLE.format(n)}`;
+  if (n >= 1) return `$${CENTS.format(n)}`;
+  const fixed = n.toFixed(Math.min(100, Math.max(2, -Math.floor(Math.log10(n)) + 2)));
+  return Number(fixed) >= 1 ? `$${CENTS.format(n)}` : `$${fixed}`;
+}
+function plainChange(ch) {
+  if (ch == null || !Number.isFinite(ch)) return 'n/a';
+  if (Math.abs(ch) < 0.005) return '0.00%';
+  return `${ch > 0 ? '+' : '−'}${Math.abs(ch).toFixed(2)}%`;
+}
+// One heading and one list for each kind, in the page's order; a stale or missing price reads n/a.
+function plainPicks(groups) {
+  return groups.map(([label, key, cards]) => `<h3>${label}</h3><ol role="list">${cards.map((c) => {
+    const name = c.kind === 'commodity' ? `${c.name} · per ${c.unit}` : c.exchange ? `${c.name} · ${c.exchange}` : c.name;
+    const fresh = !c.stale;
+    return `<li><span><b>${escHtml(c.symbol)}</b> ${escHtml(name)}</span> <span>${plainPrice(fresh ? c.price : null)} · ${plainChange(fresh ? c.change24h : null)} ${key}</span></li>`;
+  }).join('')}</ol>`).join('');
+}
+
 function rebuild() {
   const now = Date.now();
   const card = (list, quotes, extra, tried = true) => (sym, i) => {
     const c = list.find((x) => x.symbol === sym);
     const q = quotes.get(sym);
     return {
-      rank: i + 1, symbol: sym, name: c.name, ...extra(c), icon: iconUrl(sym),
+      rank: i + 1, symbol: sym, name: c.name, ...extra(c), icon: iconUrl(sym), iconLight: iconUrl(sym, '/icons/light'),
       price: q?.price ?? null, change24h: q?.change24h ?? null, mcap: q?.mcap ?? null,
       // A carried volume goes out only while it is recent; older than VOL_MS it reads n/a on the card.
       vol24h: q && now - q.volAt <= VOL_MS ? q.vol24h : null,
@@ -292,7 +357,8 @@ function rebuild() {
   const json = JSON.stringify({ updatedAt: lastFetchAt, intervalSec: INTERVAL_MS / 1000, coins, stocks, commodities });
   snapshot = packNow(Buffer.from(json));
   // Concatenation, not String.replace: replace() would expand "$'"-style patterns inside the data.
-  page = packNow(Buffer.from(HEAD + json.replace(/</g, '\\u003c') + TAIL));
+  const picks = plainPicks([['Coins', '24h', coins], ['Stocks', '1d', stocks], ['Commodities', '1d', commodities]]);
+  page = packNow(Buffer.from(HEAD_A + picks + HEAD_B + json.replace(/</g, '\\u003c') + TAIL));
 }
 
 // Fetch time, not quote time, decides staleness: a stock's weekend close, fetched fine, is not stale.
@@ -425,12 +491,12 @@ const server = http.createServer({ connectionsCheckingInterval: 2_000, headersTi
     res.writeHead(status, { ...SECURITY_HEADERS, ...headers, ...more, 'content-length': out.length });
     res.end(req.method === 'HEAD' ? undefined : out);
   };
-  if (req.method !== 'GET' && req.method !== 'HEAD') return send(405, { allow: 'GET, HEAD', 'content-type': 'text/plain' }, 'Method not allowed');
+  if (req.method !== 'GET' && req.method !== 'HEAD') return send(405, { allow: 'GET, HEAD', 'content-type': 'text/plain', 'cache-control': 'no-store' }, 'Method not allowed');
   let url;
   // "//anything" and its backslash spelling "/\anything" would both parse as a host and reach a real route; neither
   // is a path this site has.
-  if (/^\/[\/\\]/.test(req.url ?? '')) return send(404, { 'content-type': 'text/plain' }, 'Not found');
-  try { url = new URL(req.url ?? '/', 'http://localhost'); } catch { return send(400, { 'content-type': 'text/plain' }, 'Bad request'); }
+  if (/^\/[\/\\]/.test(req.url ?? '')) return send(404, { 'content-type': 'text/plain', 'cache-control': 'no-store' }, 'Not found');
+  try { url = new URL(req.url ?? '/', 'http://localhost'); } catch { return send(400, { 'content-type': 'text/plain', 'cache-control': 'no-store' }, 'Bad request'); }
   const p = url.pathname;
 
   if (p === '/' || p === '/index.html') return send(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }, page.body, page);
@@ -442,6 +508,15 @@ const server = http.createServer({ connectionsCheckingInterval: 2_000, headersTi
       () => send(503, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }, '{"error":"unavailable"}'),
     );
     return;
+  }
+  // The week lines take no parameter: any query string is refused, a bare "?" too (read off the request line: the
+  // parsed URL's search is empty for one), so the one body has one address. Until the first chart is warm there is no
+  // line to draw and the answer is a 503 that nothing keeps.
+  if (p === '/api/week') {
+    if (req.url.includes('?')) return send(400, { 'content-type': 'text/plain', 'cache-control': 'no-store' }, 'Bad request');
+    const w = weekBody();
+    if (!w.src.at) return send(503, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }, '{"error":"unavailable"}');
+    return send(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=300' }, w.body, chartPack('week', w.body));
   }
   // Ready once the coins' first round has ended, well or not.
   if (p === '/healthz') return send(coinSide.tried() ? 200 : 503, { 'content-type': 'text/plain', 'cache-control': 'no-store' }, coinSide.tried() ? 'ok' : 'starting');
@@ -455,7 +530,11 @@ const server = http.createServer({ connectionsCheckingInterval: 2_000, headersTi
   if (brandFile) return send(200, { 'content-type': brandFile.type, 'cache-control': 'public, max-age=86400', ...(brandFile.type === 'image/svg+xml' ? {} : IMG_CSP) }, brandFile.body);
   const icon = ICON_FILES.get(p);
   if (icon) return send(200, { 'content-type': icon.type, 'cache-control': url.searchParams.get('v') === icon.v ? YEAR : 'public, max-age=86400', ...IMG_CSP }, icon.body);
-  return send(404, { 'content-type': 'text/plain' }, 'Not found');
+  // Nothing keeps a miss: an address that answers on the next deploy must not stay a 404 in a cache.
+  // Not here. A page load (the request takes HTML) gets the site's own page for it; a file or an API path that is not
+  // there keeps the plain answer, which is all a script or an image tag can use.
+  if (/\btext\/html\b/.test(String(req.headers.accept ?? ''))) return send(404, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }, lostPage.body, lostPage);
+  return send(404, { 'content-type': 'text/plain', 'cache-control': 'no-store' }, 'Not found');
 });
 
 // Open the port first (with the coin list and no prices yet), then fetch, so a deploy never refuses visitors.

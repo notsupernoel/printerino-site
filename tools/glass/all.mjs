@@ -1,11 +1,12 @@
 // Every liquid glass map the site serves (server.js GLASS_FILES, in src/web/public/glass/), made again from its
 // generator with the numbers it shipped with:
-//   e/gen.mjs, e/light.mjs  the coins sealed in glass: e-ref, e-nrm, e-env, e-bar
 //   k/gen-lens.mjs          the droplet's magnifier: k-lens
 //   t/gen-lens.mjs          the theme change's drop lens: t-lens
-//   m/gen-merge.mjs         the top bar's merge, 24 frames: m-mask, m-rim, m-lens
+//   m/gen-merge.mjs         the top bar's merge, 24 frames: m-mask, m-rim, m-lens; and the merged body holding the
+//                           list's switch as a fourth control, one frame: m4-rim, m4-lens
 //   d/gen-dock.mjs          the dock's rim lens and its round button's: d-lens, d-round-lens
-//   p/gen-pill.mjs          the dock pill's lens (flat middle, bending rim): p-lens
+//   p/gen-pill.mjs          the dock pill's lens (flat middle, bending rim): p-lens; and the same lens on UIKit's
+//                           numbers, a bend map and a dispersion map: p-apple-lens, p-apple-split
 // Usage: node tools/glass/all.mjs            writes them into src/web/public/glass/ (then restart the server)
 //        node tools/glass/all.mjs --check    writes them into a temporary folder and compares every served map with
 //                                            its copy byte for byte (exit 1 on any difference); changes nothing
@@ -32,8 +33,6 @@ const check = args[0] === '--check';
 const out = check ? mkdtempSync(path.join(tmpdir(), 'printerino-glass-')) : SHIPPED;
 
 const run = (script, args = [], env = {}) => execFileSync(process.execPath, [path.join(HERE, script), ...args], { env: { ...process.env, ...env, OUT: out }, stdio: check ? 'pipe' : 'inherit' });
-run('e/gen.mjs');
-run('e/light.mjs');
 run('k/gen-lens.mjs', ['2', path.join(out, 'k-lens.png')]);
 run('t/gen-lens.mjs', ['512', '0.16', path.join(out, 't-lens.png')]);
 run('m/gen-merge.mjs', [out]);

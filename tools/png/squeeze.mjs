@@ -3,7 +3,8 @@
 // of the five fixed filters, and the per-row least residual choice) and three deflate strategies at level 9; the smallest is kept and decoded back, so a file is only
 // ever replaced by one with the very same pixels. (sharp's PNG re-encode, tried first, moved visible pixels of the
 // glass maps by up to 32 levels: it premultiplies.) The same pixels always give the same bytes on the same Node.
-// The icons and every glass map go through it: the maps through tools/glass/e/png.mjs, the icons here.
+// The icons, their light twins and every glass map go through it: the maps through tools/glass/e/png.mjs, the twins
+// through tools/png/light.mjs (both call encodeBest, so what they write is what --check here expects), the icons here.
 // Usage: node tools/png/squeeze.mjs <png>...     squeezes each file in place (never larger, never different)
 //        node tools/png/squeeze.mjs --check       names any served PNG that could still be smaller (exit 1 if one can)
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -13,6 +14,9 @@ import zlib from 'node:zlib';
 const CRC = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
 const crc32 = (b) => { let c = 0xffffffff; for (const x of b) c = CRC[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
 const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const td = Buffer.concat([Buffer.from(type, 'ascii'), data]); const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td)); return Buffer.concat([len, td, crc]); };
+// The folders whose PNGs the page serves: the icons, their light twins and the glass maps. tools/png/webp.mjs walks
+// the same list.
+export const SERVED_DIRS = ['assets/coin-icons/192', 'assets/coin-icons/192/light', 'src/web/public/glass'];
 const paeth = (a, b, c) => { const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c); return pa <= pb && pa <= pc ? a : pb <= pc ? b : c; };
 export function decode(buf) {
   let o = 8, W, H, bd, ct, idat = [], plte = null, trns = null;
@@ -92,12 +96,9 @@ export function squeeze(buf) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const ROOT = fileURLToPath(new URL('../../', import.meta.url));
   const check = process.argv.includes('--check');
-  // What the page serves as PNG: the icons and the glass maps (the maps are written by their generators, which
-  // already squeeze; this checks them too).
-  const served = () => [
-    ...readdirSync(path.join(ROOT, 'assets/coin-icons/192')).filter((f) => f.endsWith('.png')).map((f) => path.join(ROOT, 'assets/coin-icons/192', f)),
-    ...readdirSync(path.join(ROOT, 'src/web/public/glass')).filter((f) => f.endsWith('.png')).map((f) => path.join(ROOT, 'src/web/public/glass', f)),
-  ];
+  // What the page serves as PNG (the twins and the maps are written by their own tools, which already squeeze; this
+  // checks them too).
+  const served = () => SERVED_DIRS.flatMap((dir) => readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.png')).map((f) => path.join(ROOT, dir, f)));
   const files = check ? served() : process.argv.slice(2).filter((a) => !a.startsWith('--'));
   let before = 0, after = 0;
   const loose = [];
