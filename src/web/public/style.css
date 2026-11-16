@@ -260,8 +260,11 @@
   /* On paper the glass on a card is light with dark ink, as Apple draws its own light screens (the Health and Calendar
      pictures on Apple's guideline pages: white buttons with dark glyphs, a pale track with a white pill). The dock's
      grey smoke with white ink reads on these as grey slabs on a white card.
+     The face is a pale grey, not white: a white button on a white card has no body (2 L* off the card), and its hover
+     and press glow, which is white, has nothing to lighten. At this strength it stands 5 L* off the card, the glow shows,
+     and Muted ink on it keeps 4.5:1 (4.57).
      The ink and the pickers' track need no line here: they follow the theme's own text colours and track. */
-  --glass-card: rgb(18 22 38 / 0.03);
+  --glass-card: rgb(115 115 123 / 0.11);
   --glass-card-touch: var(--g-contact);
   --glass-glow-h: 0.55;
   --glass-glow-p: 0.9;
