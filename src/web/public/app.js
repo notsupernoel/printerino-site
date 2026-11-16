@@ -1125,6 +1125,9 @@ if (viewTwin && typeof IntersectionObserver === 'function') {
 // the card's box in the old form.
 function setView(choice, { byUser = true, keep = true } = {}) {
   const next = choice === 'tiles' ? 'tiles' : 'board';
+  // A click on the side already chosen chooses nothing: the press itself answers it (the pill swells and settles),
+  // as on the dock. Placed again as a choice, the pill would have its glyph play its arrival once more.
+  if (byUser && !listView.can(next)) return;
   if (listView.can(next)) {
     landNow();
     const animate = !entrance.is('due') && !document.hidden && !REDUCED.matches && (!PANEL || panel.is('closed'));
@@ -4899,6 +4902,32 @@ const THEME_KEY = 'printerino-theme';
 const THEME_BAR = { light: '#f1f2f6', dark: '#0a0b0f' };
 const rootEl = document.documentElement;
 const themeSwitch = document.querySelector('.top .theme-switch');
+// The side of the theme switch a point is on: 'light' (the sun's half), 'dark' (the moon's), or '' at its very
+// middle and anywhere off it.
+function themeSide(x, y) {
+  const r = themeSwitch?.getBoundingClientRect();
+  if (!r || x < r.left || x > r.right || y < r.top || y > r.bottom) return '';
+  const mid = r.left + r.width / 2;
+  return x < mid ? 'light' : x > mid ? 'dark' : '';
+}
+// The side a mouse rests over, so that side's glyph lights as a hovered button's does (the stylesheet, by data-aim)
+// and the tip names it:
+//   off    no mouse on the switch;
+//   light  over the sun's half;
+//   dark   over the moon's half.
+const themeAim = machine('off', { off: ['light', 'dark'], light: ['off', 'dark'], dark: ['off', 'light'] });
+// The switch's tip: the side under the mouse by name, as the switches beside it name theirs; from the keyboard,
+// which turns it whole, what a key will do.
+function themeTip() {
+  const to = themeAim.state;
+  themeSwitch?.setAttribute('data-tip', to === 'light' ? 'Light' : to === 'dark' ? 'Dark' : rootEl.dataset.theme === 'dark' ? 'Switch to light' : 'Switch to dark');
+}
+themeAim.on((to) => {
+  if (!themeSwitch) return;
+  if (to === 'off') delete themeSwitch.dataset.aim;
+  else themeSwitch.dataset.aim = to;
+  themeTip();
+});
 function storedTheme() {
   const v = recall(THEME_KEY);
   return v === 'dark' || v === 'light' ? v : null;
@@ -4918,7 +4947,7 @@ function logoNamed() {
 // card's, and an open panel's) takes that ground's picture of it.
 function groundShow(to) {
   rootEl.dataset.theme = to;
-  themeSwitch?.setAttribute('data-tip', to === 'dark' ? 'Switch to light' : 'Switch to dark');
+  themeTip();
   logoNamed();
   const bar = document.querySelector('meta[name="theme-color"]');
   if (bar) bar.content = THEME_BAR[to];
@@ -5002,7 +5031,16 @@ otherArt.on(() => {
 if (themeSwitch) {
   for (const type of ['pointerenter', 'pointerdown', 'focus']) themeSwitch.addEventListener(type, () => otherArt.go('warm'), { passive: true });
   themeSwitch.setAttribute('aria-checked', String(theme === 'dark'));
-  themeSwitch.addEventListener('click', () => setTheme(theme === 'dark' ? 'light' : 'dark'));
+  // The switch is one control drawn as two sides, the sun and the moon, beside switches that are two buttons: a
+  // click chooses the side it lands on, as theirs does, so a click on the side already chosen changes nothing (the
+  // pill's press answers it). A click with no place of its own still turns the switch: a key's (detail 0), and one
+  // an assistive tool sends, which arrives at the control's middle or at no point of it.
+  themeSwitch.addEventListener('click', (e) => {
+    const side = e.detail > 0 ? themeSide(e.clientX, e.clientY) : '';
+    if (side !== theme) setTheme(theme === 'dark' ? 'light' : 'dark');
+  });
+  for (const type of ['pointerenter', 'pointermove']) themeSwitch.addEventListener(type, (e) => { if (e.pointerType === 'mouse') themeAim.go(themeSide(e.clientX, e.clientY) || 'off'); }, { passive: true });
+  themeSwitch.addEventListener('pointerleave', () => themeAim.go('off'), { passive: true });
   // From here aria-checked draws the switch, not the theme the boot script set.
   themeSwitch.classList.add('ready');
 }
@@ -5215,6 +5253,8 @@ function glassShow(to) {
 glassLook.on(glassShow);
 function setGlass(choice, { byUser = true, keep = true } = {}) {
   const next = choice === 'clear' ? 'clear' : 'frosted';
+  // A click on the side already chosen chooses nothing (see setView).
+  if (byUser && !glassLook.can(next)) return;
   glassLook.go(next);
   if (keep) remember(GLASS_KEY, next);
   glassPlace(byUser && !REDUCED.matches, byUser);
@@ -5320,7 +5360,7 @@ if (tipEl) {
   document.addEventListener('keydown', (e) => { if (e.key === 'Tab') tip.tabAt = performance.now(); else if (e.key === 'Escape') tipAim(null); }, true);
   // A control whose words change while its tip is up (the theme switch, toggled by a key) says the new ones; the top
   // bar regrouping (the list's switch coming in or leaving) moves its controls, so a tip there is put away.
-  ground.on(() => { if (tip.is('on') && tip.for === themeSwitch) { tipEl.textContent = tipText(tip.for); tipPlace(); } });
+  for (const m of [ground, themeAim]) m.on(() => { if (tip.is('on') && tip.for === themeSwitch) { tipEl.textContent = tipText(tip.for); tipPlace(); } });
   viewJoin.on(() => { if (tip.for?.closest('.top')) tipAim(null); });
   // A scroll puts a mouse's tip away (the control has moved from under the pointer); the keyboard's follows its control.
   addEventListener('scroll', () => { if (tip.is('on') && tip.for === document.activeElement && ringed(tip.for)) tipPlace(); else tipAim(null); }, { capture: true, passive: true });

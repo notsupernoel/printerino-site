@@ -2855,8 +2855,9 @@ export function install(api) {
   };
   const activate = (el, e) => {
     const act = el.closest('button, a, [role="switch"], label, summary');
-    if (act) act.click();
-    else el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, view: window, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY, detail: 1, button: 0 }));
+    // The theme switch reads where on it the click fell (its two sides), so its click carries the press's point.
+    if (act && act !== sw) act.click();
+    else (act || el).dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, view: window, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY, detail: 1, button: 0 }));
   };
   // The press was handed to el: the click the browser sends for it is not another one.
   const handed = (el, e) => {

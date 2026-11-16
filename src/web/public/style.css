@@ -722,14 +722,15 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 .theme-switch[aria-checked="true"] .drop, :root[data-theme="dark"] .theme-switch:not(.ready) .drop { transform: translate(26px, 2px); }
 .theme-glyph {
   position: absolute; top: 6px; z-index: 1; width: 16px; height: 16px; overflow: visible; pointer-events: none;
-  color: var(--g-glyph); transition: color 220ms var(--ease);
+  color: var(--g-glyph); transition: color 220ms var(--ease), scale 220ms var(--ease);
 }
 .theme-sun { left: 10px; }
 .theme-moon { left: 34px; }
 .theme-switch[aria-checked="false"] .theme-sun, .theme-switch[aria-checked="true"] .theme-moon { color: var(--g-glyph-on); }
 :root[data-theme="dark"] .theme-switch:not(.ready) .theme-sun { color: var(--g-glyph); }
 :root[data-theme="dark"] .theme-switch:not(.ready) .theme-moon { color: var(--g-glyph-on); }
-@media (hover: hover) { .theme-switch:hover .theme-glyph { color: var(--g-glyph-on); } }
+/* Under a mouse only the side it is over lights (app.js, data-aim), as one hovered button of a two-button switch does. */
+@media (hover: hover) { .theme-switch[data-aim="light"] .theme-sun, .theme-switch[data-aim="dark"] .theme-moon { color: var(--g-glyph-on); } }
 /* (.seg.seg-glass, doubled as above. The body the bar's controls merge into goes with the two switches: its frames are
    drawn for three controls, so the X link, alone in the bar, keeps its own capsule down the page.) */
 @media (scripting: none) {
@@ -1651,6 +1652,17 @@ html.glass-clear.blob-lens .top-blob > i { -webkit-backdrop-filter: url(#m-lens-
 .seg-show.tracking:has(> .seg-ind.lifted) button.over :is(.dock-ic, span),
 .seg-show:not(.tracking):has(> .seg-ind.lifted) button[aria-pressed="true"] :is(.dock-ic, span) { scale: 1.16; }
 @media (prefers-reduced-motion: reduce) { .seg-show button :is(.dock-ic, span) { transition: none; } }
+/* The switches' glyphs do the same in their own lifted pills (the glass switch, the list's board-or-tiles switch and its
+   twin, the panel's line-or-candles picker, and the theme switch's sun and moon): a press on the side already chosen
+   chooses nothing, and this is what answers it, on every one of them alike. */
+:is(.seg-glass, .seg-view, .seg-twin, .seg-type) button svg { transition: scale 220ms var(--ease); }
+:is(.seg-glass, .seg-view, .seg-twin, .seg-type).tracking:has(> .seg-ind.lifted) button.over svg,
+:is(.seg-glass, .seg-view, .seg-twin, .seg-type):not(.tracking):has(> .seg-ind.lifted) button[aria-pressed="true"] svg { scale: 1.16; }
+.theme-switch.tracking:has(> .drop.lifted)[data-over="light"] .theme-sun,
+.theme-switch.tracking:has(> .drop.lifted)[data-over="dark"] .theme-moon,
+.theme-switch:not(.tracking):has(> .drop.lifted)[aria-checked="false"] .theme-sun,
+.theme-switch:not(.tracking):has(> .drop.lifted)[aria-checked="true"] .theme-moon { scale: 1.16; }
+@media (prefers-reduced-motion: reduce) { :is(.seg-glass, .seg-view, .seg-twin, .seg-type) button svg, .theme-glyph { transition: none; } }
 /* Lifted, the dock's pill is edged by one thin crisp line, not by a soft dark halo: a hairline just outside it, with
    the pill's own rim light inside. The pickers' and the switches' pills keep their lift shadow; they sit on solid
    tracks. */
