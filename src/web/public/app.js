@@ -399,6 +399,9 @@ function sortGrid() {
 // The dock's states:
 //   under  below the window, inert (no card yet, or the stage not reached);
 //   up     over the page (.on), taking clicks.
+// The observer only reports a crossing, so its box reaches far above the window: a stage above the window is then
+// inside it like one on screen, and a jump straight past the stage (the End key, a restored scroll in a window too
+// short to show the stage at the top) is a crossing too. With the window's own box such a jump was never reported.
 const dockBar = machine('under', { under: ['up'], up: ['under'] });
 dockBar.on((to) => {
   dock.classList.toggle('on', to === 'up');
@@ -413,7 +416,7 @@ if (dock && grid && typeof IntersectionObserver === 'function') {
   new IntersectionObserver(([e]) => {
     dockReach = e.isIntersecting || e.boundingClientRect.top < 0;
     dockSync();
-  }, { rootMargin: '0px 0px -96px 0px' }).observe(stage ?? grid);
+  }, { rootMargin: '100000px 0px -96px 0px' }).observe(stage ?? grid);
 }
 dockSeg?.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setShow(b.getAttribute('data-k')); });
 // The pill stands where a press put it, in pixels, and the dock's segments change width with the window (the
