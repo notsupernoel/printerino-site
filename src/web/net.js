@@ -3,7 +3,7 @@
 // memory. history.js guards its chart calls the same way, inside its own limiter, which the price feeds do not use.
 export const UA = 'printerino-site/1.0 (price page)';
 export const TIMEOUT_MS = 8000;
-// The same cap as the charts'; the largest real answer here (CNBC's quotes for the 23 stocks) is about a hundred KB.
+// The same cap as the charts'; the largest real answer here (CNBC's quotes for the 24 stocks) is about a hundred KB.
 export const MAX_BODY = 4 * 1024 * 1024;
 
 export const valid = (n) => Number.isFinite(n) && n > 0;

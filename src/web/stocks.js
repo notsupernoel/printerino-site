@@ -14,6 +14,7 @@ import { getJson, num, valid } from './net.js';
 // only the fallback, and they are the sources' own share counts on 2026-11-14 (Robinhood's fundamentals, which agree
 // with CNBC's cap over price), not yet read off a filing's cover page; SPY and QQQ are funds, so theirs are units
 // outstanding and their "market cap" is the fund's size. GOOGL is Alphabet's Class A; its count is all classes.
+// ANT (listed 2026-11-19): the same kind of count, read on 2026-11-20; its first 10-Q will give the cover-page one.
 // STRC is Strategy's Stretch preferred, not a company: CNBC gives it no market cap and Robinhood gives the whole
 // company's, so ownCap makes its cap always price x its own shares, the size of the issue.
 // Its count is Strategy's stated notional of $9,316.2M at the $100 stated amount (strategy.com/strc, record date
@@ -29,6 +30,7 @@ export const STOCKS = [
   { symbol: 'META', name: 'Meta', exchange: 'Nasdaq', shares: 2_556_240_994 },
   { symbol: 'AVGO', name: 'Broadcom', exchange: 'Nasdaq', shares: 4_773_630_000 },
   { symbol: 'TSLA', name: 'Tesla', exchange: 'Nasdaq', shares: 3_952_760_000 },
+  { symbol: 'ANT', name: 'Anthropic', exchange: 'Nasdaq', shares: 13_086_672_591 },
   { symbol: 'SKHY', name: 'SK hynix', exchange: 'Nasdaq', shares: 7_288_651_350 },
   { symbol: 'MU', name: 'Micron', exchange: 'Nasdaq', shares: 1_131_423_212 }, // one class of common stock
   { symbol: 'AMD', name: 'AMD', exchange: 'Nasdaq', shares: 1_640_090_000 },

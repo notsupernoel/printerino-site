@@ -882,7 +882,7 @@ svg.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer
 }
 /* The ghost tape runs behind the card in five rows laid out on the hero's own height (not on its type size, which
    shrinks with the window while the hero does not): BTC's row is cut by the top edge and only the tops of the fourth
-   row (MET, MU) show above the bottom one, at every width, a strip passing behind the card, cropped on both sides. */
+   row (MET, ANT) show above the bottom one, at every width, a strip passing behind the card, cropped on both sides. */
 .tape {
   position: absolute; top: -0.3em; bottom: -13%; right: 44px;
   display: none; grid-template-columns: auto auto; grid-template-rows: repeat(5, 1fr); align-items: start; column-gap: 0.96em;

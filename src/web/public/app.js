@@ -31,8 +31,8 @@ const NA = 'n/a';
 // The hero's ghost tape, five rows whatever the market-cap order: the trifecta, MET and ZEC (only the tops of ZEC's row
 // show above the hero's bottom edge).
 const TAPE = ['BTC', 'ETH', 'SOL', 'MET', 'ZEC'];
-// Beside it on wide screens, row for row: the stock trio, MU and SPCX.
-const TAPE_STOCKS = ['COIN', 'HOOD', 'CRCL', 'MU', 'SPCX'];
+// Beside it on wide screens, row for row: the stock trio, ANT and SPCX.
+const TAPE_STOCKS = ['COIN', 'HOOD', 'CRCL', 'ANT', 'SPCX'];
 let data = null;
 let retry = 0;
 // What the tape and the status line show now, so each is written only when its words change.
@@ -796,14 +796,16 @@ async function weekFetch(run, retry) {
   if (lines) { weekLines = lines; to = 'ready'; }
   week.go(to);
 }
-// An answer's lines, each checked: at least two closes (a line), at most 96, every one a number. Null for an answer
-// of another shape.
+// An answer's lines, each checked: at least two closes (a line), at most 96 places, every close a number; a young
+// market's line begins with nulls, the hours before its listing. Null for an answer of another shape.
 function weekClean(body) {
   const src = body?.lines;
   if (!src || typeof src !== 'object' || Array.isArray(src)) return null;
   const lines = new Map();
   for (const [sym, h] of Object.entries(src)) {
-    if (Array.isArray(h) && h.length >= 2 && h.length <= 96 && h.every((v) => Number.isFinite(v))) lines.set(sym, h);
+    if (!Array.isArray(h) || h.length < 2 || h.length > 96) continue;
+    const k = h.findIndex((v) => v !== null);
+    if (k >= 0 && h.length - k >= 2 && h.every((v, i) => (i < k ? v === null : Number.isFinite(v)))) lines.set(sym, h);
   }
   return lines;
 }
@@ -851,12 +853,16 @@ function lineSet(n) {
   const h = weekLines.get(n.item.symbol);
   if (!h) return;
   const r = n.refs;
+  // k: the line's first close (after a young market's empty hours, which keep their room on the left).
+  const k = h.findIndex((v) => v !== null);
   let lo = Infinity;
   let hi = -Infinity;
-  for (const v of h) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  for (let i = k; i < h.length; i++) { lo = Math.min(lo, h[i]); hi = Math.max(hi, h[i]); }
   const span = hi - lo || 1;
   const y = (v) => (8 + (1 - (v - lo) / span) * 84).toFixed(2);
-  const d = `M${h.map((v, i) => `${((i / (h.length - 1)) * 100).toFixed(2)} ${y(v)}`).join('L')}`;
+  const x = (i) => ((i / (h.length - 1)) * 100).toFixed(2);
+  let d = '';
+  for (let i = k; i < h.length; i++) d += `${i === k ? 'M' : 'L'}${x(i)} ${y(h[i])}`;
   // A card with no line yet (none) has no parts either: they are built here, once, just before it leaves that state.
   const first = n.line.is('none');
   if (first) {
@@ -869,11 +875,11 @@ function lineSet(n) {
   }
   if (r.ln.getAttribute('d') !== d) {
     r.ln.setAttribute('d', d);
-    r.ar.setAttribute('d', `${d}L100 100L0 100Z`);
+    r.ar.setAttribute('d', `${d}L100 100L${x(k)} 100Z`);
     r.end.style.top = `${y(h[h.length - 1])}%`;
   }
   // The same line in words: the change from its first close to its last, as the board's column names it.
-  setText(r.week7, h[0] > 0 ? `Last 7 days ${fmtChange((h[h.length - 1] / h[0] - 1) * 100).text}` : '');
+  setText(r.week7, h[k] > 0 ? `Last 7 days ${fmtChange((h[h.length - 1] / h[k] - 1) * 100).text}` : '');
   // Its first line: held back until the card is on screen, or just there where nothing draws in (reduced motion, no
   // observer to say when the card is seen).
   if (first) n.line.go(REDUCED.matches || !revealIO ? 'drawn' : 'held');
@@ -1360,7 +1366,7 @@ function render() {
   if (stockCountEl) setText(stockCountEl, String(stocks.length));
   if (commodCountEl) setText(commodCountEl, String(commodities.length));
   // The hero's ghost tape, drawn faintly and never animated: BTC, ETH, SOL, MET and ZEC with their 24h change, and on wide
-  // screens COIN, HOOD, CRCL, MU and SPCX beside them (the .stk cells, hidden by the stylesheet until there is room). Written
+  // screens COIN, HOOD, CRCL, ANT and SPCX beside them (the .stk cells, hidden by the stylesheet until there is room). Written
   // only when a word in it changed.
   const pick = (list, sym) => (Array.isArray(list) ? list : []).find((c) => c.symbol === sym);
   const words = (c) => [c ? c.symbol : '', c ? fmtChange(c.change24h).text : ''];
@@ -1565,7 +1571,8 @@ function cleanHist(d, sym, size) {
     if (candles.length && t <= candles[candles.length - 1][0]) continue;
     candles.push([t, o, Math.max(hi, o, cl), Math.min(lo, o, cl), cl]);
   }
-  if (candles.length < 2) return null;
+  // One candle is a chart too: a stock's daily on its listing day, its weekly through its first week.
+  if (!candles.length) return null;
   return {
     i: size,
     src: typeof d.src === 'string' ? d.src.slice(0, 40) : '',

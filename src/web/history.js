@@ -125,8 +125,8 @@ const SYMBOLS = new Set([...COINS.map((c) => c.symbol), ...STOCK_SYMBOLS, ...COM
 // The listing days of the markets younger than the window of some size. A chart that starts late says "since listing"
 // only when it starts then; a source whose history is shorter than the market's, or any other late start, says "from"
 // its first day.
-// SNDK, SPCX and SKHY: the listing days Robinhood's instruments give.
-const LISTED = Object.fromEntries(Object.entries({ MET: '2025-10-23', MON: '2025-11-24', LIT: '2026-01-15', BP: '2026-03-23', CRCL: '2025-06-05', STRK: '2024-02-20', SNDK: '2025-02-21', SPCX: '2026-06-12', SKHY: '2026-07-10', STRC: '2025-07-25' })
+// SNDK, SPCX, SKHY and ANT: the listing days Robinhood's instruments give.
+const LISTED = Object.fromEntries(Object.entries({ MET: '2025-10-23', MON: '2025-11-24', LIT: '2026-01-15', BP: '2026-03-23', CRCL: '2025-06-05', STRK: '2024-02-20', SNDK: '2025-02-21', SPCX: '2026-06-12', SKHY: '2026-07-10', STRC: '2025-07-25', ANT: '2026-11-19' })
   .map(([sym, date]) => [sym, Date.parse(date)]));
 
 // ---- upstream calls: at most PARALLEL in flight (PER_HOST to one host), spaced per host, with a timeout and a body
@@ -665,7 +665,7 @@ function quoteIsSession(date) {
   return date === now.date || CLOSED.has(now.date) || !(wd >= 1 && wd <= 5 && now.hm >= '09:30' && now.hm < '16:00');
 }
 
-// One Robinhood call holds four stocks (the stock's own group of four: with 23 stocks one call for all of them would
+// One Robinhood call holds four stocks (the stock's own group of four: with 24 stocks one call for all of them would
 // be several MB, past the body cap). bounds=regular trims each session (half-days included). Interpolated bars
 // are placeholders (the latest daily bar is one until the next day: open = high = low = close = the previous close; so
 // are CRCL's dailies before its listing). Intraday begins_at is a real UTC time; a daily "2026-10-05T00:00:00Z" is only
@@ -707,6 +707,11 @@ function robinhoodFundamentals() {
 // to the minute): need.m30, the 30-minute bars (a month from Robinhood; from CNBC 57 days, or 115 when it is 'long');
 // need.days, the dailies over Robinhood's span 'year' or '5year' (CNBC: 1100 days), with the latest session's official
 // open, high and low. ttl: the asking chart's, which bounds the age of what it reuses.
+// A stock in its first days has no bars yet where an older one always has: no daily bar until its first session is
+// over (the session in progress is patched in from the 5-minute bars), and no 30-minute bars from before its listing.
+// For such a stock "no bars" there is an empty list, not a failed source; for any other it stays a failure.
+const listedWithin = (sym, days) => LISTED[sym] > Date.now() - days * D;
+const orNone = (bars, young) => bars.catch((e) => { if (young && e.message === 'no bars') return []; throw e; });
 async function robinhoodKit(sym, need, ttl) {
   const bars = async (interval, span, maxAge) => {
     const x = (await robinhood(interval, span, maxAge, sym)).get(sym);
@@ -717,7 +722,7 @@ async function robinhoodKit(sym, need, ttl) {
   const m5 = await bars('5minute', 'week', 50_000);
   const kit = { m5: m5.bars };
   if (need.m30) kit.m30 = (await bars('30minute', 'month', fresh)).bars;
-  if (need.days) kit.days = (await bars('day', need.days, fresh)).bars;
+  if (need.days) kit.days = await orNone(bars('day', need.days, fresh).then((x) => x.bars), listedWithin(sym, 5));
   if (kit.days) kit.official = await robinhoodFundamentals().then((m) => m.get(m5.instrument), () => undefined);
   return kit;
 }
@@ -766,9 +771,9 @@ async function cnbcKit(sym, need, ttl) {
   const kit = { m5: await cnbc(sym, '5M', 50_000) };
   const latest = kit.m5.at(-1)[5];
   if (need.m30) kit.m30 = await cnbc(sym, '30M', fresh);
-  if (need.m30 === 'long') kit.m30 = tidy([...await cnbc(sym, '30M before', 6 * H), ...kit.m30]);
+  if (need.m30 === 'long') kit.m30 = tidy([...await orNone(cnbc(sym, '30M before', 6 * H), listedWithin(sym, CNBC_DAYS['30M before'][0])), ...kit.m30]);
   if (need.days) {
-    kit.days = await cnbc(sym, '1D', fresh);
+    kit.days = await orNone(cnbc(sym, '1D', fresh), listedWithin(sym, 5));
     // CNBC's own bar for the latest session (final after the close) holds the official open, high and low.
     const own = kit.days.find((b) => b[5] === latest);
     if (own) kit.official = { date: latest, o: own[1], h: own[2], l: own[3] };
@@ -855,7 +860,10 @@ async function stockCandles(venue, sym, interval, live) {
   // Fewer candles than asked: the stock is younger than the window (CRCL's weeks) or the source holds less (Robinhood's
   // 4H: a month of 30-minute bars).
   const late = candles.length < CANDLES;
-  const young = late && openOf(bars[0][5]) <= LISTED[sym] + INTERVALS[interval].slack;
+  // A stock's listing day is a date, and its first bar is that day's 09:30 open in New York, hours after the date's own
+  // start: the slack runs from that open, so the hourly chart of a stock in its first days also says "since listing".
+  const listedOpen = LISTED[sym] === undefined ? NaN : openOf(new Date(LISTED[sym]).toISOString().slice(0, 10));
+  const young = late && openOf(bars[0][5]) <= listedOpen + INTERVALS[interval].slack;
   return {
     since: young ? bars[0][5] : null, from: late && !young ? bars[0][5] : null, candles,
     last: quoteFits ? session.at(-1)[4] : NaN, checked: quoteFits,
@@ -1031,6 +1039,8 @@ export function warmHistory(livePrice) {
 // How many of the latest hourly candles make a line: a coin trades every hour, so 150 are a little over six days; a
 // stock has seven session hours a day, so 35 are five sessions; a future about 23 hours on five days, so 115 are a
 // trading week. A longer line is thinned evenly to WEEK_POINTS closes, the first and the last always kept.
+// A market younger than that (its hourly chart starts at its listing) has no closes for the hours before it: those
+// places are null, so its line stands over the hours it has traded and not across the whole week.
 const WEEK_POINTS = 48;
 const WEEK_TAIL = new Map([
   ...COINS.map((c) => [c.symbol, 150]), ...STOCKS.map((s) => [s.symbol, 35]), ...COMMODITIES.map((c) => [c.symbol, 115]),
@@ -1038,7 +1048,10 @@ const WEEK_TAIL = new Map([
 // 5 significant figures: a line is drawn a few dozen pixels tall, and the shorter numbers keep the answer small.
 const r5 = (n) => Number(n.toPrecision(5));
 function weekLine(sym, body) {
-  const closes = JSON.parse(body).candles.slice(-WEEK_TAIL.get(sym)).map((c) => r5(c[4]));
+  const chart = JSON.parse(body);
+  const tail = WEEK_TAIL.get(sym);
+  let closes = chart.candles.slice(-tail).map((c) => r5(c[4]));
+  if (chart.since && closes.length < tail) closes = [...new Array(tail - closes.length).fill(null), ...closes];
   if (closes.length <= WEEK_POINTS) return closes;
   const last = closes.length - 1;
   return Array.from({ length: WEEK_POINTS }, (_, k) => closes[Math.round((k * last) / (WEEK_POINTS - 1))]);
@@ -1049,11 +1062,12 @@ let weekOut = { at: 0, lines: {} };
 
 /**
  * The week lines of every symbol whose 1H chart the cache holds right now: { at, lines }. lines maps a symbol to its
- * closes, oldest first (at most 48 numbers); a symbol without a usable chart (never built, or its last good one older
- * than a day) is absent. at is when the newest of the charts read was fetched (ms), 0 when there is none. Reads the
- * cache only and never starts a build: the warm-up keeps the charts current. The same object is returned for as long
- * as no line changed, so a caller can keep one serialised copy per object.
- * @returns {{ at: number, lines: Record<string, number[]> }}
+ * closes, oldest first (at most 48 numbers, after nulls for the hours before a young market's listing); a symbol
+ * without a usable chart (never built, or its last good one older than a day) is absent. at is when the newest of the
+ * charts read was fetched (ms), 0 when there is none. Reads the cache only and never starts a build: the warm-up keeps
+ * the charts current. The same object is returned for as long as no line changed, so a caller can keep one serialised
+ * copy per object.
+ * @returns {{ at: number, lines: Record<string, (number | null)[]> }}
  */
 export function weekLines() {
   const now = Date.now();
